@@ -111,7 +111,7 @@ export default function LoginPage() {
           ) : (
             <form onSubmit={verifyOtp} className="space-y-4">
               <p className="text-sm text-gray-600">
-                We sent a 6-digit code to <strong>{email}</strong>. Enter it below.
+                We sent a code to <strong>{email}</strong>. Enter it below.
               </p>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -120,8 +120,7 @@ export default function LoginPage() {
                 <input
                   type="text"
                   inputMode="numeric"
-                  pattern="[0-9]{6}"
-                  maxLength={6}
+                  maxLength={8}
                   required
                   value={otp}
                   onChange={e => setOtp(e.target.value)}
