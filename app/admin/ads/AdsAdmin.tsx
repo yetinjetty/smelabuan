@@ -1,0 +1,163 @@
+'use client'
+
+import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import { format } from 'date-fns'
+import { createClient } from '@/lib/supabase/client'
+import type { Advertisement } from '@/lib/types'
+
+type AdForm = {
+  advertiser_name: string
+  headline: string
+  period_start: string
+  period_end: string
+  status: 'active' | 'inactive'
+}
+
+const empty: AdForm = { advertiser_name: '', headline: '', period_start: '', period_end: '', status: 'active' }
+
+export default function AdsAdmin({ ads }: { ads: Advertisement[] }) {
+  const router = useRouter()
+  const [, startTransition] = useTransition()
+  const [showForm, setShowForm] = useState(false)
+  const [editing, setEditing] = useState<Advertisement | null>(null)
+  const [form, setForm] = useState<AdForm>(empty)
+  const [saving, setSaving] = useState(false)
+
+  function openNew() { setForm(empty); setEditing(null); setShowForm(true) }
+  function openEdit(ad: Advertisement) {
+    setForm({
+      advertiser_name: ad.advertiser_name,
+      headline: ad.headline,
+      period_start: ad.period_start ?? '',
+      period_end: ad.period_end ?? '',
+      status: ad.status,
+    })
+    setEditing(ad)
+    setShowForm(true)
+  }
+
+  async function save() {
+    setSaving(true)
+    const supabase = createClient()
+    const payload = {
+      advertiser_name: form.advertiser_name,
+      headline: form.headline,
+      period_start: form.period_start || null,
+      period_end: form.period_end || null,
+      status: form.status,
+    }
+    if (editing) {
+      await supabase.from('advertisements').update(payload).eq('id', editing.id)
+    } else {
+      await supabase.from('advertisements').insert(payload)
+    }
+    setSaving(false)
+    setShowForm(false)
+    startTransition(() => router.refresh())
+  }
+
+  async function deleteAd(id: string) {
+    if (!confirm('Delete this ad?')) return
+    const supabase = createClient()
+    await supabase.from('advertisements').delete().eq('id', id)
+    startTransition(() => router.refresh())
+  }
+
+  const activeCount = ads.filter(a => a.status === 'active').length
+
+  return (
+    <>
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-sm text-gray-500">
+          {activeCount}/3 active banners (max 3 shown on home screen)
+        </p>
+        <button onClick={openNew} className="px-4 py-2 rounded-lg text-white text-sm font-medium" style={{ backgroundColor: '#E05A4E' }}>
+          + Add banner
+        </button>
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
+            <tr>
+              <th className="px-4 py-3 text-left">Advertiser</th>
+              <th className="px-4 py-3 text-left">Headline</th>
+              <th className="px-4 py-3 text-left">Period</th>
+              <th className="px-4 py-3 text-left">Clicks</th>
+              <th className="px-4 py-3 text-left">Status</th>
+              <th className="px-4 py-3" />
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {ads.map(ad => (
+              <tr key={ad.id} className="hover:bg-gray-50">
+                <td className="px-4 py-3 font-medium text-gray-900">{ad.advertiser_name}</td>
+                <td className="px-4 py-3 text-gray-600 max-w-[200px] truncate">{ad.headline}</td>
+                <td className="px-4 py-3 text-gray-500 text-xs">
+                  {ad.period_start ? format(new Date(ad.period_start), 'd MMM') : '—'}
+                  {' – '}
+                  {ad.period_end ? format(new Date(ad.period_end), 'd MMM yyyy') : '—'}
+                </td>
+                <td className="px-4 py-3 text-gray-600">{ad.click_count}</td>
+                <td className="px-4 py-3">
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${ad.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                    {ad.status}
+                  </span>
+                </td>
+                <td className="px-4 py-3 flex gap-2 justify-end">
+                  <button onClick={() => openEdit(ad)} className="text-xs text-blue-600 hover:underline">Edit</button>
+                  <button onClick={() => deleteAd(ad.id)} className="text-xs text-red-500 hover:underline">Delete</button>
+                </td>
+              </tr>
+            ))}
+            {!ads.length && (
+              <tr><td colSpan={6} className="px-4 py-10 text-center text-gray-400">No ads yet</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {showForm && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
+            <h2 className="text-lg font-bold text-gray-900 mb-4">{editing ? 'Edit Banner' : 'New Banner'}</h2>
+            <div className="space-y-3">
+              {([['Advertiser name', 'advertiser_name'], ['Headline', 'headline']] as const).map(([label, key]) => (
+                <div key={key}>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
+                  <input value={form[key]} onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))} className={inp} />
+                </div>
+              ))}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Start date</label>
+                  <input type="date" value={form.period_start} onChange={e => setForm(f => ({ ...f, period_start: e.target.value }))} className={inp} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">End date</label>
+                  <input type="date" value={form.period_end} onChange={e => setForm(f => ({ ...f, period_end: e.target.value }))} className={inp} />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
+                <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value as 'active' | 'inactive' }))} className={inp}>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex gap-2 mt-4">
+              <button onClick={() => setShowForm(false)} className="flex-1 py-2 rounded-xl border border-gray-300 text-sm text-gray-600">Cancel</button>
+              <button onClick={save} disabled={saving} className="flex-1 py-2 rounded-xl text-white text-sm font-medium disabled:opacity-60" style={{ backgroundColor: '#E05A4E' }}>
+                {saving ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
+const inp = 'w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#E05A4E]'

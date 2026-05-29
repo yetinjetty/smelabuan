@@ -1,0 +1,12 @@
+{
+  "name": "SME Association Labuan",
+  "short_name": "SME Labuan",
+  "start_url": "/home",
+  "display": "standalone",
+  "background_color": "#1c1c1e",
+  "theme_color": "#E05A4E",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
