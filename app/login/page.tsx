@@ -19,11 +19,11 @@ export default function LoginPage() {
     setError('')
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { shouldCreateUser: false },
+      options: { shouldCreateUser: true },
     })
     setLoading(false)
     if (error) {
-      setError('Email not found. Please contact the secretariat.')
+      setError('Could not send code. Please try again.')
     } else {
       setSent(true)
     }
