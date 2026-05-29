@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 
@@ -8,6 +8,9 @@ export const metadata: Metadata = {
   title: 'SME Association Labuan',
   description: 'Member management portal for SME Association of Labuan',
   manifest: '/manifest.json',
+}
+
+export const viewport: Viewport = {
   themeColor: '#E05A4E',
 }
 
