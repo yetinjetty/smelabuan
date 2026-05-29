@@ -193,42 +193,8 @@ DROP POLICY IF EXISTS "service_write_log" ON activity_log;
 CREATE POLICY "service_write_log" ON activity_log
   FOR INSERT WITH CHECK (true);
 
--- ============================================================
--- 4. LINK auth users to admin_users ON FIRST LOGIN
--- ============================================================
-
-CREATE OR REPLACE FUNCTION link_admin_on_login()
-RETURNS TRIGGER AS $$
-BEGIN
-  UPDATE admin_users
-  SET auth_user_id = NEW.id
-  WHERE email = NEW.email
-    AND auth_user_id IS NULL;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION link_admin_on_login();
-
--- Also link existing auth users to their member row
-CREATE OR REPLACE FUNCTION link_member_on_login()
-RETURNS TRIGGER AS $$
-BEGIN
-  UPDATE members
-  SET auth_user_id = NEW.id
-  WHERE email = NEW.email
-    AND auth_user_id IS NULL;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-DROP TRIGGER IF EXISTS on_auth_user_created_member ON auth.users;
-CREATE TRIGGER on_auth_user_created_member
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION link_member_on_login();
+-- NOTE: auth_user_id linking is handled in the app after OTP verify
+-- (triggers on auth.users cause "Database error saving new user" on Supabase free tier)
 
 -- ============================================================
 -- DONE. Next steps:
