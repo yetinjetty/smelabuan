@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { createClient } from '@/lib/supabase/client'
 
 const schema = z.object({
   full_name: z.string().min(2, 'Full name is required'),
@@ -47,38 +46,22 @@ export default function ApplyPage() {
   async function onSubmit(data: FormData) {
     setSubmitting(true)
     setServerError('')
-    const supabase = createClient()
-    const { data: inserted, error } = await supabase.from('members').insert({
-      full_name: data.full_name,
-      email: data.email,
-      phone: data.phone,
-      business_name: data.business_name,
-      business_sector: data.business_sector,
-      business_size: data.business_size,
-      membership_type: data.membership_type,
-      status: 'pending',
-    }).select()
-    setSubmitting(false)
-
-    if (error) {
-      if (error.code === '23505') setServerError('This email is already registered.')
-      else setServerError(`Submission failed: ${error.message}`)
-    } else if (!inserted || inserted.length === 0) {
-      setServerError('Submission failed: record was not saved. Please contact the secretariat.')
-    } else {
-      // Only send emails if record was confirmed saved
-      await fetch('/api/notify-application', {
+    try {
+      const res = await fetch('/api/apply', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          full_name: data.full_name,
-          email: data.email,
-          business_name: data.business_name,
-          membership_type: data.membership_type,
-          business_size: data.business_size,
-        }),
+        body: JSON.stringify(data),
       })
-      setSubmitted(true)
+      const json = await res.json()
+      if (!res.ok) {
+        setServerError(json.error ?? 'Submission failed. Please try again.')
+      } else {
+        setSubmitted(true)
+      }
+    } catch {
+      setServerError('Network error. Please check your connection and try again.')
+    } finally {
+      setSubmitting(false)
     }
   }
 
