@@ -16,16 +16,33 @@ export async function POST(request: NextRequest) {
 
     const service = await createServiceClient()
 
+    // Get the member's auth_user_id before deleting
+    const { data: member } = await service
+      .from('members')
+      .select('auth_user_id, full_name')
+      .eq('id', memberId)
+      .single()
+
     // Log before deleting
     await service.from('activity_log').insert({
       member_id: memberId,
       admin_id: adminUser.id,
       action: 'edited',
-      details: 'Member record deleted by admin',
+      details: `Member record deleted by admin${member?.full_name ? `: ${member.full_name}` : ''}`,
     })
 
+    // Delete the member row
     const { error } = await service.from('members').delete().eq('id', memberId)
     if (error) return Response.json({ error: error.message }, { status: 500 })
+
+    // Also delete the Supabase auth user if one exists
+    if (member?.auth_user_id) {
+      const { error: authError } = await service.auth.admin.deleteUser(member.auth_user_id)
+      if (authError) {
+        // Non-fatal — member row is already deleted, log the warning
+        console.warn('Could not delete auth user:', authError.message)
+      }
+    }
 
     return Response.json({ ok: true })
   } catch (err) {
