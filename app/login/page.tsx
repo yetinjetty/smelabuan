@@ -19,16 +19,38 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true)
     setError('')
-    const supabase = createClient()
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { shouldCreateUser: true },
-    })
-    setLoading(false)
-    if (error) {
-      setError(error.message)
-    } else {
-      setSent(true)
+
+    try {
+      // Step 1: check email is registered in members or admin_users
+      const checkRes = await fetch('/api/auth/check-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+      const check = await checkRes.json()
+
+      if (!checkRes.ok || !check.allowed) {
+        setError(check.reason ?? 'This email is not registered. Please apply for membership first.')
+        setLoading(false)
+        return
+      }
+
+      // Step 2: send OTP via Supabase
+      const supabase = createClient()
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: { shouldCreateUser: true },
+      })
+
+      if (error) {
+        setError(error.message)
+      } else {
+        setSent(true)
+      }
+    } catch {
+      setError('Network error. Please try again.')
+    } finally {
+      setLoading(false)
     }
   }
 
