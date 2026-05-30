@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { format } from 'date-fns'
 import type { Member } from '@/lib/types'
+import SignOutButton from './SignOutButton'
 
 export default async function CardPage() {
   const supabase = await createClient()
@@ -81,6 +82,8 @@ export default async function CardPage() {
         <img src={qrUrl} alt="Member QR code" className="w-48 h-48" />
         <p className="text-xs text-gray-400 font-mono">{member.member_id}</p>
       </div>
+
+      <SignOutButton />
     </div>
   )
 }
