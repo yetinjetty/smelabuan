@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { format } from 'date-fns'
 import type { Member, Advertisement, Event } from '@/lib/types'
 
@@ -8,13 +8,15 @@ export default async function HomePage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
+  const service = createServiceClient()
+
   const [{ data: member }, { data: ads }, { data: events }] = await Promise.all([
-    supabase
+    service
       .from('members')
       .select('*')
-      .eq('auth_user_id', user.id)
+      .eq('email', user.email!)
       .single<Member>(),
-    supabase
+    service
       .from('advertisements')
       .select('*')
       .eq('status', 'active')
@@ -22,7 +24,7 @@ export default async function HomePage() {
       .gte('period_end', new Date().toISOString().split('T')[0])
       .limit(3)
       .returns<Advertisement[]>(),
-    supabase
+    service
       .from('events')
       .select('*')
       .gte('event_date', new Date().toISOString().split('T')[0])

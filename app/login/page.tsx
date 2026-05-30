@@ -80,18 +80,8 @@ export default function LoginPage() {
       return
     }
     if (data.user) {
-      // Link auth_user_id to admin_users or members on first login
-      await supabase
-        .from('admin_users')
-        .update({ auth_user_id: data.user.id })
-        .eq('email', data.user.email!)
-        .is('auth_user_id', null)
-
-      await supabase
-        .from('members')
-        .update({ auth_user_id: data.user.id })
-        .eq('email', data.user.email!)
-        .is('auth_user_id', null)
+      // Link auth_user_id via server API (service role bypasses RLS)
+      await fetch('/api/auth/link', { method: 'POST' })
 
       // Store session persistence preference
       if (rememberMe) {

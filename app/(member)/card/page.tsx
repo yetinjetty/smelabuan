@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { format } from 'date-fns'
 import type { Member } from '@/lib/types'
 import SignOutButton from './SignOutButton'
@@ -9,10 +9,11 @@ export default async function CardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: member } = await supabase
+  const service = createServiceClient()
+  const { data: member } = await service
     .from('members')
     .select('*')
-    .eq('auth_user_id', user.id)
+    .eq('email', user.email!)
     .single<Member>()
 
   if (!member || member.status === 'pending') {
