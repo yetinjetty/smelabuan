@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     }
 
     const normalised = email.toLowerCase().trim()
-    const service = await createServiceClient()
+    const service = createServiceClient()
 
     // Check admin_users (case-insensitive)
     const { data: admin } = await service

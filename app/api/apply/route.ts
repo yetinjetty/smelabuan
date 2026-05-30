@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    const service = await createServiceClient()
+    const service = createServiceClient()
 
     const { data: inserted, error } = await service
       .from('members')

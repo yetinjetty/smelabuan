@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     const { memberId } = await request.json()
     if (!memberId) return Response.json({ error: 'memberId required' }, { status: 400 })
 
-    const service = await createServiceClient()
+    const service = createServiceClient()
 
     // Get the member's auth_user_id before deleting
     const { data: member } = await service

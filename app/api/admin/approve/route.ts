@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     if (!memberId) return Response.json({ error: 'memberId required' }, { status: 400 })
 
     // Use service client to bypass RLS
-    const service = await createServiceClient()
+    const service = createServiceClient()
 
     // Generate member_id
     const prefix = `SMEL-${membershipType === 'Life' ? 'L' : 'O'}`
