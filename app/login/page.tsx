@@ -120,7 +120,7 @@ export default function LoginPage() {
                 <input
                   type="text"
                   inputMode="numeric"
-                  maxLength={8}
+                  maxLength={6}
                   required
                   value={otp}
                   onChange={e => setOtp(e.target.value)}
