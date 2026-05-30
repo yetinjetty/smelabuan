@@ -3,7 +3,6 @@
 import { useState, useTransition } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { format } from 'date-fns'
-import { createClient } from '@/lib/supabase/client'
 import type { Member } from '@/lib/types'
 
 export default function MembersTable({
@@ -33,84 +32,26 @@ export default function MembersTable({
 
   async function approveMember(member: Member) {
     setActionError('')
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-
-    const { data: adminUser } = await supabase
-      .from('admin_users')
-      .select('id')
-      .eq('auth_user_id', user.id)
-      .single()
-
-    // Generate member_id
-    const prefix = `SMEL-${member.membership_type === 'Life' ? 'L' : 'O'}`
-    const { data: existing } = await supabase
-      .from('members')
-      .select('member_id')
-      .like('member_id', `${prefix}-%`)
-      .order('member_id', { ascending: false })
-      .limit(1)
-
-    const lastNum = existing?.[0]?.member_id
-      ? parseInt(existing[0].member_id.split('-')[2], 10)
-      : 0
-    const memberId = `${prefix}-${String(lastNum + 1).padStart(3, '0')}`
-
-    const today = new Date().toISOString().split('T')[0]
-    const expiryDate = member.membership_type === 'Ordinary'
-      ? new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0]
-      : null
-
-    const { error } = await supabase
-      .from('members')
-      .update({
-        status: 'active',
-        member_id: memberId,
-        member_since: today,
-        expiry_date: expiryDate,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', member.id)
-
-    if (error) { setActionError(error.message); return }
-
-    await supabase.from('activity_log').insert({
-      member_id: member.id,
-      admin_id: adminUser?.id,
-      action: 'approved',
-      details: `Approved as ${memberId}`,
+    const res = await fetch('/api/admin/approve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ memberId: member.id, membershipType: member.membership_type }),
     })
-
+    const json = await res.json()
+    if (!res.ok) { setActionError(json.error ?? 'Approval failed'); return }
     setSelected(null)
     startTransition(() => router.refresh())
   }
 
   async function rejectMember(member: Member) {
     setActionError('')
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-
-    const { data: adminUser } = await supabase
-      .from('admin_users')
-      .select('id')
-      .eq('auth_user_id', user?.id)
-      .single()
-
-    const { error } = await supabase
-      .from('members')
-      .update({ status: 'expired', updated_at: new Date().toISOString() })
-      .eq('id', member.id)
-
-    if (error) { setActionError(error.message); return }
-
-    await supabase.from('activity_log').insert({
-      member_id: member.id,
-      admin_id: adminUser?.id,
-      action: 'rejected',
-      details: 'Application rejected',
+    const res = await fetch('/api/admin/reject', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ memberId: member.id }),
     })
-
+    const json = await res.json()
+    if (!res.ok) { setActionError(json.error ?? 'Rejection failed'); return }
     setSelected(null)
     startTransition(() => router.refresh())
   }
