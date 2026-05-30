@@ -1,8 +1,9 @@
--- Run this entire file in the Supabase SQL Editor (Dashboard → SQL Editor → New query)
--- https://ntplehmhhruzflvitool.supabase.co
+-- SME Association Labuan — Supabase Setup
+-- Run in: Supabase Dashboard → SQL Editor → New query
+-- Project: https://ntplehmhhruzflvitool.supabase.co
 
 -- ============================================================
--- 1. TABLES
+-- TABLES
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS members (
@@ -16,7 +17,7 @@ CREATE TABLE IF NOT EXISTS members (
   business_sector text,
   business_size   text CHECK (business_size IN ('Micro', 'Small', 'Medium')),
   membership_type text CHECK (membership_type IN ('Life', 'Ordinary')),
-  status          text DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'expired')),
+  status          text DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'expired', 'inactive')),
   member_since    date,
   expiry_date     date,
   payment_ref     text,
@@ -86,7 +87,7 @@ CREATE TABLE IF NOT EXISTS activity_log (
 );
 
 -- ============================================================
--- 2. AUTO-UPDATE updated_at ON members
+-- AUTO-UPDATE updated_at
 -- ============================================================
 
 CREATE OR REPLACE FUNCTION update_updated_at()
@@ -103,103 +104,77 @@ CREATE TRIGGER members_updated_at
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 -- ============================================================
--- 3. ROW-LEVEL SECURITY
+-- ROW-LEVEL SECURITY
 -- ============================================================
 
-ALTER TABLE members ENABLE ROW LEVEL SECURITY;
-ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE members           ENABLE ROW LEVEL SECURITY;
+ALTER TABLE admin_users       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE events            ENABLE ROW LEVEL SECURITY;
 ALTER TABLE event_registrations ENABLE ROW LEVEL SECURITY;
-ALTER TABLE deals ENABLE ROW LEVEL SECURITY;
-ALTER TABLE advertisements ENABLE ROW LEVEL SECURITY;
-ALTER TABLE activity_log ENABLE ROW LEVEL SECURITY;
+ALTER TABLE deals             ENABLE ROW LEVEL SECURITY;
+ALTER TABLE advertisements    ENABLE ROW LEVEL SECURITY;
+ALTER TABLE activity_log      ENABLE ROW LEVEL SECURITY;
 
--- Helper: is caller an admin?
+-- Helper: is the caller an admin?
 CREATE OR REPLACE FUNCTION is_admin()
 RETURNS boolean AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM admin_users WHERE auth_user_id = auth.uid()
-  );
+  SELECT EXISTS (SELECT 1 FROM admin_users WHERE auth_user_id = auth.uid());
 $$ LANGUAGE sql SECURITY DEFINER;
 
--- members
-DROP POLICY IF EXISTS "member_read_own" ON members;
-CREATE POLICY "member_read_own" ON members
-  FOR SELECT USING (auth.uid() = auth_user_id);
-
+-- members: member reads own row; admins full access; public can apply
+DROP POLICY IF EXISTS "member_read_own"         ON members;
 DROP POLICY IF EXISTS "admin_full_access_members" ON members;
-CREATE POLICY "admin_full_access_members" ON members
-  FOR ALL USING (is_admin());
+DROP POLICY IF EXISTS "public_apply"            ON members;
 
--- Allow unauthenticated INSERT for the /apply form
-DROP POLICY IF EXISTS "public_apply" ON members;
-CREATE POLICY "public_apply" ON members
-  FOR INSERT WITH CHECK (status = 'pending');
+CREATE POLICY "member_read_own"          ON members FOR SELECT USING (auth.uid() = auth_user_id);
+CREATE POLICY "admin_full_access_members" ON members FOR ALL    USING (is_admin());
+CREATE POLICY "public_apply"             ON members FOR INSERT  WITH CHECK (status = 'pending');
 
--- admin_users: admins read all; no self-service write
-DROP POLICY IF EXISTS "admin_read_admins" ON admin_users;
-CREATE POLICY "admin_read_admins" ON admin_users
-  FOR SELECT USING (is_admin());
-
+-- admin_users: admins only
+DROP POLICY IF EXISTS "admin_read_admins"  ON admin_users;
 DROP POLICY IF EXISTS "admin_write_admins" ON admin_users;
-CREATE POLICY "admin_write_admins" ON admin_users
-  FOR ALL USING (is_admin());
 
--- events: members can read; admins full access
-DROP POLICY IF EXISTS "member_read_events" ON events;
-CREATE POLICY "member_read_events" ON events
-  FOR SELECT USING (auth.uid() IS NOT NULL);
+CREATE POLICY "admin_read_admins"  ON admin_users FOR SELECT USING (is_admin());
+CREATE POLICY "admin_write_admins" ON admin_users FOR ALL    USING (is_admin());
 
+-- events: authenticated users read; admins full access
+DROP POLICY IF EXISTS "member_read_events"      ON events;
 DROP POLICY IF EXISTS "admin_full_access_events" ON events;
-CREATE POLICY "admin_full_access_events" ON events
-  FOR ALL USING (is_admin());
 
--- event_registrations: member own rows; admins all
+CREATE POLICY "member_read_events"       ON events FOR SELECT USING (auth.uid() IS NOT NULL);
+CREATE POLICY "admin_full_access_events" ON events FOR ALL    USING (is_admin());
+
+-- event_registrations: members manage own; admins all
 DROP POLICY IF EXISTS "member_own_registrations" ON event_registrations;
-CREATE POLICY "member_own_registrations" ON event_registrations
-  FOR ALL USING (
-    member_id IN (SELECT id FROM members WHERE auth_user_id = auth.uid())
-  );
-
 DROP POLICY IF EXISTS "admin_full_registrations" ON event_registrations;
-CREATE POLICY "admin_full_registrations" ON event_registrations
-  FOR ALL USING (is_admin());
 
--- deals: members read; admins all
+CREATE POLICY "member_own_registrations" ON event_registrations
+  FOR ALL USING (member_id IN (SELECT id FROM members WHERE auth_user_id = auth.uid()));
+CREATE POLICY "admin_full_registrations" ON event_registrations FOR ALL USING (is_admin());
+
+-- deals: authenticated users read; admins full access
 DROP POLICY IF EXISTS "member_read_deals" ON deals;
-CREATE POLICY "member_read_deals" ON deals
-  FOR SELECT USING (auth.uid() IS NOT NULL);
+DROP POLICY IF EXISTS "admin_full_deals"  ON deals;
 
-DROP POLICY IF EXISTS "admin_full_deals" ON deals;
-CREATE POLICY "admin_full_deals" ON deals
-  FOR ALL USING (is_admin());
+CREATE POLICY "member_read_deals" ON deals FOR SELECT USING (auth.uid() IS NOT NULL);
+CREATE POLICY "admin_full_deals"  ON deals FOR ALL    USING (is_admin());
 
--- advertisements: members read; admins all
+-- advertisements: authenticated users read; admins full access
 DROP POLICY IF EXISTS "member_read_ads" ON advertisements;
-CREATE POLICY "member_read_ads" ON advertisements
-  FOR SELECT USING (auth.uid() IS NOT NULL);
+DROP POLICY IF EXISTS "admin_full_ads"  ON advertisements;
 
-DROP POLICY IF EXISTS "admin_full_ads" ON advertisements;
-CREATE POLICY "admin_full_ads" ON advertisements
-  FOR ALL USING (is_admin());
+CREATE POLICY "member_read_ads" ON advertisements FOR SELECT USING (auth.uid() IS NOT NULL);
+CREATE POLICY "admin_full_ads"  ON advertisements FOR ALL    USING (is_admin());
 
--- activity_log: admins only
-DROP POLICY IF EXISTS "admin_full_log" ON activity_log;
-CREATE POLICY "admin_full_log" ON activity_log
-  FOR ALL USING (is_admin());
-
--- Allow service role to write logs (from API routes)
+-- activity_log: admins read/write; API routes (service role) can always insert
+DROP POLICY IF EXISTS "admin_full_log"    ON activity_log;
 DROP POLICY IF EXISTS "service_write_log" ON activity_log;
-CREATE POLICY "service_write_log" ON activity_log
-  FOR INSERT WITH CHECK (true);
 
--- NOTE: auth_user_id linking is handled in the app after OTP verify
--- (triggers on auth.users cause "Database error saving new user" on Supabase free tier)
+CREATE POLICY "admin_full_log"    ON activity_log FOR ALL    USING (is_admin());
+CREATE POLICY "service_write_log" ON activity_log FOR INSERT WITH CHECK (true);
 
 -- ============================================================
--- DONE. Next steps:
--- 1. Go to Authentication → Settings → Enable Email OTP (magic link)
--- 2. Set Resend as SMTP provider (or use Supabase's built-in for dev)
--- 3. Add your first admin: INSERT INTO admin_users (full_name, email, role)
---    VALUES ('Your Name', 'you@example.com', 'president');
+-- DONE — add your first admin:
+-- INSERT INTO admin_users (full_name, email, role)
+-- VALUES ('Your Name', 'you@example.com', 'president');
 -- ============================================================
