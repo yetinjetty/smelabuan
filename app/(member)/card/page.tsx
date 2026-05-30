@@ -10,18 +10,28 @@ export default async function CardPage() {
   if (!user) redirect('/login')
 
   const service = createServiceClient()
-  const { data: member } = await service
-    .from('members')
-    .select('*')
-    .eq('email', user.email!)
-    .single<Member>()
+  const [{ data: member }, { data: adminUser }] = await Promise.all([
+    service.from('members').select('*').eq('email', user.email!).single<Member>(),
+    service.from('admin_users').select('id').eq('auth_user_id', user.id).single(),
+  ])
+
+  const isAdmin = !!adminUser
 
   if (!member || member.status === 'pending') {
     return (
-      <div className="px-4 py-6 flex flex-col items-center justify-center min-h-[60vh] gap-6">
+      <div className="px-4 py-6 flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <p className="text-gray-500 text-center">
           Your membership card will be available once your application is approved.
         </p>
+        {isAdmin && (
+          <a
+            href="/admin"
+            className="w-full max-w-sm py-3 rounded-2xl text-center text-sm font-medium text-white"
+            style={{ backgroundColor: '#E05A4E' }}
+          >
+            ⚙ Switch to Admin Panel
+          </a>
+        )}
         <SignOutButton />
       </div>
     )
@@ -84,6 +94,16 @@ export default async function CardPage() {
         <img src={qrUrl} alt="Member QR code" className="w-48 h-48" />
         <p className="text-xs text-gray-400 font-mono">{member.member_id}</p>
       </div>
+
+      {isAdmin && (
+        <a
+          href="/admin"
+          className="w-full max-w-sm mt-2 py-3 rounded-2xl text-center text-sm font-medium text-white"
+          style={{ backgroundColor: '#E05A4E' }}
+        >
+          ⚙ Switch to Admin Panel
+        </a>
+      )}
 
       <SignOutButton />
     </div>
