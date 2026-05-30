@@ -63,6 +63,18 @@ export default function ApplyPage() {
       if (error.code === '23505') setServerError('This email is already registered.')
       else setServerError('Submission failed. Please try again.')
     } else {
+      // Send confirmation + admin notification emails
+      await fetch('/api/notify-application', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          full_name: data.full_name,
+          email: data.email,
+          business_name: data.business_name,
+          membership_type: data.membership_type,
+          business_size: data.business_size,
+        }),
+      })
       setSubmitted(true)
     }
   }
