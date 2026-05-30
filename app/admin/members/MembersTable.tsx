@@ -39,14 +39,16 @@ export default function MembersTable({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
-      const json = await res.json()
+      // Parse JSON safely — if Cloudflare returns an HTML error page, res.json() throws
+      let json: Record<string, string> = {}
+      try { json = await res.json() } catch { /* non-JSON body */ }
       if (!res.ok) {
-        setActionError(json.error ?? `${action} failed`)
+        setActionError(json.error ?? `${action} failed (HTTP ${res.status})`)
         return false
       }
       return true
-    } catch {
-      setActionError('Network error — please try again')
+    } catch (err) {
+      setActionError(`Request failed: ${err instanceof Error ? err.message : 'unknown error'}`)
       return false
     } finally {
       setLoadingAction(null)
