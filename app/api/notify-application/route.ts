@@ -1,13 +1,26 @@
 import { NextRequest } from 'next/server'
+import nodemailer from 'nodemailer'
+
+function createTransporter() {
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_APP_PASSWORD,
+    },
+  })
+}
 
 export async function POST(request: NextRequest) {
   const body = await request.json()
   const { full_name, email, business_name, membership_type, business_size } = body
 
-  const resendKey = process.env.RESEND_API_KEY
-  if (!resendKey) return Response.json({ error: 'Resend not configured' }, { status: 500 })
+  const gmailUser = process.env.GMAIL_USER
+  const adminEmail = process.env.ADMIN_EMAIL ?? gmailUser
 
-  const adminEmail = process.env.ADMIN_EMAIL ?? 'justintanjw06@gmail.com'
+  if (!gmailUser || !process.env.GMAIL_APP_PASSWORD) {
+    return Response.json({ error: 'Gmail not configured' }, { status: 500 })
+  }
 
   const feeMap: Record<string, Record<string, string>> = {
     Life:     { Micro: 'RM 500 + RM 50 entry fee', Small: 'RM 1,000 + RM 50 entry fee', Medium: 'RM 2,000 + RM 50 entry fee' },
@@ -15,12 +28,9 @@ export async function POST(request: NextRequest) {
   }
   const fee = feeMap[membership_type]?.[business_size] ?? 'To be confirmed'
 
-  // 1. Confirmation email to applicant
-  const applicantEmail = {
-    from: 'SME Association Labuan <noreply@smelabuan.pages.dev>',
-    to: [email],
-    subject: 'We received your membership application — SME Association Labuan',
-    html: `
+  const transporter = createTransporter()
+
+  const applicantHtml = `
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /></head>
@@ -50,9 +60,8 @@ export async function POST(request: NextRequest) {
                 <tr><td style="color:#6b7280;padding:4px 0;">Fees due</td><td style="color:#E05A4E;font-weight:600;text-align:right;">${fee}</td></tr>
               </table>
             </div>
-            <p style="margin:0 0 8px;font-size:14px;color:#6b7280;line-height:1.6;"><strong>What happens next?</strong></p>
             <p style="margin:0;font-size:14px;color:#6b7280;line-height:1.6;">
-              Our secretariat will review your application within 3–5 working days. Once approved, you will receive payment instructions via email. Membership is activated upon receipt of payment.
+              Our secretariat will review your application within 3–5 working days. Once approved, you will receive payment instructions via email.
             </p>
           </td>
         </tr>
@@ -66,15 +75,9 @@ export async function POST(request: NextRequest) {
     </td></tr>
   </table>
 </body>
-</html>`,
-  }
+</html>`
 
-  // 2. Notification email to admin
-  const adminNotif = {
-    from: 'SME Association Labuan <noreply@smelabuan.pages.dev>',
-    to: [adminEmail],
-    subject: `New membership application — ${full_name}`,
-    html: `
+  const adminHtml = `
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /></head>
@@ -90,11 +93,8 @@ export async function POST(request: NextRequest) {
         </tr>
         <tr>
           <td style="padding:40px 32px;">
-            <p style="margin:0 0 24px;font-size:14px;color:#6b7280;line-height:1.6;">
-              A new membership application has been submitted and is awaiting your review.
-            </p>
+            <p style="margin:0 0 24px;font-size:14px;color:#6b7280;line-height:1.6;">A new membership application is awaiting your review.</p>
             <div style="background:#f9fafb;border-radius:12px;padding:20px;margin-bottom:24px;">
-              <p style="margin:0 0 12px;font-size:12px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.1em;">Applicant Details</p>
               <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;">
                 <tr><td style="color:#6b7280;padding:4px 0;">Name</td><td style="color:#111827;font-weight:500;text-align:right;">${full_name}</td></tr>
                 <tr><td style="color:#6b7280;padding:4px 0;">Email</td><td style="color:#111827;font-weight:500;text-align:right;">${email}</td></tr>
@@ -118,26 +118,25 @@ export async function POST(request: NextRequest) {
     </td></tr>
   </table>
 </body>
-</html>`,
+</html>`
+
+  try {
+    await Promise.all([
+      transporter.sendMail({
+        from: `"SME Association Labuan" <${gmailUser}>`,
+        to: email,
+        subject: 'We received your membership application — SME Association Labuan',
+        html: applicantHtml,
+      }),
+      transporter.sendMail({
+        from: `"SME Association Labuan" <${gmailUser}>`,
+        to: adminEmail,
+        subject: `New membership application — ${full_name}`,
+        html: adminHtml,
+      }),
+    ])
+    return Response.json({ ok: true })
+  } catch (err: any) {
+    return Response.json({ error: err.message }, { status: 500 })
   }
-
-  // Send both emails
-  const [r1, r2] = await Promise.all([
-    fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(applicantEmail),
-    }),
-    fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(adminNotif),
-    }),
-  ])
-
-  if (!r1.ok || !r2.ok) {
-    return Response.json({ error: 'Failed to send one or more emails' }, { status: 500 })
-  }
-
-  return Response.json({ ok: true })
 }
