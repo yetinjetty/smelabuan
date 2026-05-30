@@ -48,7 +48,7 @@ export default function ApplyPage() {
     setSubmitting(true)
     setServerError('')
     const supabase = createClient()
-    const { error } = await supabase.from('members').insert({
+    const { data: inserted, error } = await supabase.from('members').insert({
       full_name: data.full_name,
       email: data.email,
       phone: data.phone,
@@ -57,13 +57,16 @@ export default function ApplyPage() {
       business_size: data.business_size,
       membership_type: data.membership_type,
       status: 'pending',
-    })
+    }).select()
     setSubmitting(false)
+
     if (error) {
       if (error.code === '23505') setServerError('This email is already registered.')
-      else setServerError('Submission failed. Please try again.')
+      else setServerError(`Submission failed: ${error.message}`)
+    } else if (!inserted || inserted.length === 0) {
+      setServerError('Submission failed: record was not saved. Please contact the secretariat.')
     } else {
-      // Send confirmation + admin notification emails
+      // Only send emails if record was confirmed saved
       await fetch('/api/notify-application', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
