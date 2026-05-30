@@ -1,6 +1,7 @@
 'use client'
 
-export const dynamic = 'force-dynamic'
+// createClient() is intentionally NOT called at module/component level —
+// only inside event handlers — so Next.js prerender never touches Supabase.
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -8,7 +9,6 @@ import { createClient } from '@/lib/supabase/client'
 
 export default function LoginPage() {
   const router = useRouter()
-  const supabase = createClient()
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(false)
@@ -19,6 +19,7 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true)
     setError('')
+    const supabase = createClient()
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: { shouldCreateUser: true },
@@ -35,6 +36,7 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true)
     setError('')
+    const supabase = createClient()
     const { data, error } = await supabase.auth.verifyOtp({
       email,
       token: otp,
