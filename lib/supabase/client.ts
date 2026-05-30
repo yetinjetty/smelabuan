@@ -1,11 +1,10 @@
 import { createBrowserClient } from '@supabase/ssr'
 
+// These are public values (not secrets) — safe to commit.
+// Get them from: Supabase Dashboard → Settings → API
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://ntplehmhhruzflvitool.supabase.co'
+const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''
+
 export function createClient() {
-  // NEXT_PUBLIC_ vars are embedded at build time.
-  // Fallback to empty string prevents build-time throws; actual values
-  // must be set in Cloudflare Pages → Settings → Environment variables.
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''
-  )
+  return createBrowserClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 }
