@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import MemberNav from '@/components/MemberNav'
+import SessionGuard from '@/components/SessionGuard'
 
 export default async function MemberLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -15,6 +16,7 @@ export default async function MemberLayout({ children }: { children: React.React
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
+      <SessionGuard />
       <main className="flex-1 pb-20">{children}</main>
       <MemberNav />
     </div>

@@ -14,6 +14,7 @@ export default function LoginPage() {
   const [sent, setSent] = useState(false)
   const [otp, setOtp] = useState('')
   const [error, setError] = useState('')
+  const [rememberMe, setRememberMe] = useState(true)
 
   async function sendOtp(e: React.FormEvent) {
     e.preventDefault()
@@ -92,6 +93,16 @@ export default function LoginPage() {
         .eq('email', data.user.email!)
         .is('auth_user_id', null)
 
+      // Store session persistence preference
+      if (rememberMe) {
+        const sevenDays = Date.now() + 7 * 24 * 60 * 60 * 1000
+        localStorage.setItem('sme_remember_until', String(sevenDays))
+        sessionStorage.removeItem('sme_session')
+      } else {
+        sessionStorage.setItem('sme_session', 'active')
+        localStorage.removeItem('sme_remember_until')
+      }
+
       // Check if admin
       const { data: adminUser } = await supabase
         .from('admin_users')
@@ -133,6 +144,17 @@ export default function LoginPage() {
                   className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#E05A4E] focus:border-transparent"
                 />
               </div>
+              {/* Remember me */}
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={e => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 rounded accent-[#E05A4E]"
+                />
+                <span className="text-sm text-gray-600">Stay logged in for 7 days</span>
+              </label>
+
               {error && <p className="text-red-500 text-sm">{error}</p>}
               <button
                 type="submit"

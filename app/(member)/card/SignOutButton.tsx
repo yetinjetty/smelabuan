@@ -7,6 +7,10 @@ export default function SignOutButton() {
   const router = useRouter()
 
   async function signOut() {
+    // Clear persistence flags
+    localStorage.removeItem('sme_remember_until')
+    sessionStorage.removeItem('sme_session')
+
     const supabase = createClient()
     await supabase.auth.signOut()
     router.push('/login')
