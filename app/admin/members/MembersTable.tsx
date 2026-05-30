@@ -56,6 +56,33 @@ export default function MembersTable({
     startTransition(() => router.refresh())
   }
 
+  async function setStatus(member: Member, status: string) {
+    setActionError('')
+    const res = await fetch('/api/admin/set-status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ memberId: member.id, status }),
+    })
+    const json = await res.json()
+    if (!res.ok) { setActionError(json.error ?? 'Failed to update status'); return }
+    setSelected(null)
+    startTransition(() => router.refresh())
+  }
+
+  async function deleteMember(member: Member) {
+    if (!confirm(`Delete ${member.full_name}? This cannot be undone.`)) return
+    setActionError('')
+    const res = await fetch('/api/admin/delete-member', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ memberId: member.id }),
+    })
+    const json = await res.json()
+    if (!res.ok) { setActionError(json.error ?? 'Delete failed'); return }
+    setSelected(null)
+    startTransition(() => router.refresh())
+  }
+
   const totalPages = Math.ceil(total / pageSize)
 
   return (
@@ -204,22 +231,53 @@ export default function MembersTable({
 
             {actionError && <p className="text-red-500 text-sm mt-4">{actionError}</p>}
 
-            {selected.status === 'pending' && (
-              <div className="mt-8 flex gap-3">
+            <div className="mt-8 space-y-3">
+              {/* Pending: approve / reject */}
+              {selected.status === 'pending' && (
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => approveMember(selected)}
+                    className="flex-1 py-2.5 rounded-xl text-white font-medium text-sm bg-green-600 hover:bg-green-700"
+                  >
+                    Approve
+                  </button>
+                  <button
+                    onClick={() => rejectMember(selected)}
+                    className="flex-1 py-2.5 rounded-xl text-white font-medium text-sm bg-red-500 hover:bg-red-600"
+                  >
+                    Reject
+                  </button>
+                </div>
+              )}
+
+              {/* Active: deactivate */}
+              {selected.status === 'active' && (
                 <button
-                  onClick={() => approveMember(selected)}
-                  className="flex-1 py-2.5 rounded-xl text-white font-medium text-sm bg-green-600 hover:bg-green-700"
+                  onClick={() => setStatus(selected, 'inactive')}
+                  className="w-full py-2.5 rounded-xl font-medium text-sm border border-orange-300 text-orange-600 hover:bg-orange-50"
                 >
-                  Approve
+                  Deactivate membership
                 </button>
+              )}
+
+              {/* Inactive: reactivate */}
+              {selected.status === 'inactive' && (
                 <button
-                  onClick={() => rejectMember(selected)}
-                  className="flex-1 py-2.5 rounded-xl text-white font-medium text-sm bg-red-500 hover:bg-red-600"
+                  onClick={() => setStatus(selected, 'active')}
+                  className="w-full py-2.5 rounded-xl text-white font-medium text-sm bg-green-600 hover:bg-green-700"
                 >
-                  Reject
+                  Reactivate membership
                 </button>
-              </div>
-            )}
+              )}
+
+              {/* Always: delete */}
+              <button
+                onClick={() => deleteMember(selected)}
+                className="w-full py-2.5 rounded-xl font-medium text-sm border border-red-200 text-red-500 hover:bg-red-50"
+              >
+                Delete member record
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -229,8 +287,9 @@ export default function MembersTable({
 
 function StatusBadge({ status }: { status: string }) {
   const cls =
-    status === 'active' ? 'bg-green-100 text-green-700' :
-    status === 'expired' ? 'bg-red-100 text-red-700' :
+    status === 'active'   ? 'bg-green-100 text-green-700' :
+    status === 'expired'  ? 'bg-red-100 text-red-700' :
+    status === 'inactive' ? 'bg-gray-100 text-gray-500' :
     'bg-yellow-100 text-yellow-700'
   return <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${cls}`}>{status}</span>
 }

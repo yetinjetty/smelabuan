@@ -1,4 +1,4 @@
-export type MemberStatus = 'pending' | 'active' | 'expired'
+export type MemberStatus = 'pending' | 'active' | 'expired' | 'inactive'
 export type MembershipType = 'Life' | 'Ordinary'
 export type BusinessSize = 'Micro' | 'Small' | 'Medium'
 export type AdminRole = 'president' | 'editor'
