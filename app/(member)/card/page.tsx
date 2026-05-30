@@ -17,10 +17,11 @@ export default async function CardPage() {
 
   if (!member || member.status === 'pending') {
     return (
-      <div className="px-4 py-6 flex flex-col items-center justify-center min-h-[60vh]">
+      <div className="px-4 py-6 flex flex-col items-center justify-center min-h-[60vh] gap-6">
         <p className="text-gray-500 text-center">
           Your membership card will be available once your application is approved.
         </p>
+        <SignOutButton />
       </div>
     )
   }
