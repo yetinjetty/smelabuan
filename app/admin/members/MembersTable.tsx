@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { format } from 'date-fns'
 import type { Member } from '@/lib/types'
 
@@ -19,8 +19,8 @@ export default function MembersTable({
   const [search, setSearch] = useState(q ?? '')
   const [filter, setFilter] = useState(status ?? '')
   const [selected, setSelected] = useState<Member | null>(null)
-  const [isPending, startTransition] = useTransition()
   const [actionError, setActionError] = useState('')
+  const [loadingAction, setLoadingAction] = useState<string | null>(null)
 
   function applyFilters(newSearch: string, newFilter: string) {
     const params = new URLSearchParams()
@@ -30,57 +30,48 @@ export default function MembersTable({
     router.push(`/admin/members?${params}`)
   }
 
-  async function approveMember(member: Member) {
+  async function callApi(action: string, body: object) {
     setActionError('')
-    const res = await fetch('/api/admin/approve', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ memberId: member.id, membershipType: member.membership_type }),
-    })
-    const json = await res.json()
-    if (!res.ok) { setActionError(json.error ?? 'Approval failed'); return }
-    setSelected(null)
-    startTransition(() => router.refresh())
+    setLoadingAction(action)
+    try {
+      const res = await fetch(`/api/admin/${action}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const json = await res.json()
+      if (!res.ok) {
+        setActionError(json.error ?? `${action} failed`)
+        return false
+      }
+      return true
+    } catch {
+      setActionError('Network error — please try again')
+      return false
+    } finally {
+      setLoadingAction(null)
+    }
+  }
+
+  async function approveMember(member: Member) {
+    const ok = await callApi('approve', { memberId: member.id, membershipType: member.membership_type })
+    if (ok) { setSelected(null); window.location.reload() }
   }
 
   async function rejectMember(member: Member) {
-    setActionError('')
-    const res = await fetch('/api/admin/reject', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ memberId: member.id }),
-    })
-    const json = await res.json()
-    if (!res.ok) { setActionError(json.error ?? 'Rejection failed'); return }
-    setSelected(null)
-    startTransition(() => router.refresh())
+    const ok = await callApi('reject', { memberId: member.id })
+    if (ok) { setSelected(null); window.location.reload() }
   }
 
-  async function setStatus(member: Member, status: string) {
-    setActionError('')
-    const res = await fetch('/api/admin/set-status', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ memberId: member.id, status }),
-    })
-    const json = await res.json()
-    if (!res.ok) { setActionError(json.error ?? 'Failed to update status'); return }
-    setSelected(null)
-    startTransition(() => router.refresh())
+  async function setStatus(member: Member, newStatus: string) {
+    const ok = await callApi('set-status', { memberId: member.id, status: newStatus })
+    if (ok) { setSelected(null); window.location.reload() }
   }
 
   async function deleteMember(member: Member) {
     if (!confirm(`Delete ${member.full_name}? This cannot be undone.`)) return
-    setActionError('')
-    const res = await fetch('/api/admin/delete-member', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ memberId: member.id }),
-    })
-    const json = await res.json()
-    if (!res.ok) { setActionError(json.error ?? 'Delete failed'); return }
-    setSelected(null)
-    startTransition(() => router.refresh())
+    const ok = await callApi('delete-member', { memberId: member.id })
+    if (ok) { setSelected(null); window.location.reload() }
   }
 
   const totalPages = Math.ceil(total / pageSize)
@@ -236,16 +227,18 @@ export default function MembersTable({
               {selected.status === 'pending' && (
                 <div className="flex gap-3">
                   <button
+                    disabled={!!loadingAction}
                     onClick={() => approveMember(selected)}
-                    className="flex-1 py-2.5 rounded-xl text-white font-medium text-sm bg-green-600 hover:bg-green-700"
+                    className="flex-1 py-2.5 rounded-xl text-white font-medium text-sm bg-green-600 hover:bg-green-700 disabled:opacity-60"
                   >
-                    Approve
+                    {loadingAction === 'approve' ? 'Approving…' : 'Approve'}
                   </button>
                   <button
+                    disabled={!!loadingAction}
                     onClick={() => rejectMember(selected)}
-                    className="flex-1 py-2.5 rounded-xl text-white font-medium text-sm bg-red-500 hover:bg-red-600"
+                    className="flex-1 py-2.5 rounded-xl text-white font-medium text-sm bg-red-500 hover:bg-red-600 disabled:opacity-60"
                   >
-                    Reject
+                    {loadingAction === 'reject' ? 'Rejecting…' : 'Reject'}
                   </button>
                 </div>
               )}
@@ -253,29 +246,32 @@ export default function MembersTable({
               {/* Active: deactivate */}
               {selected.status === 'active' && (
                 <button
+                  disabled={!!loadingAction}
                   onClick={() => setStatus(selected, 'inactive')}
-                  className="w-full py-2.5 rounded-xl font-medium text-sm border border-orange-300 text-orange-600 hover:bg-orange-50"
+                  className="w-full py-2.5 rounded-xl font-medium text-sm border border-orange-300 text-orange-600 hover:bg-orange-50 disabled:opacity-60"
                 >
-                  Deactivate membership
+                  {loadingAction === 'set-status' ? 'Deactivating…' : 'Deactivate membership'}
                 </button>
               )}
 
               {/* Inactive: reactivate */}
               {selected.status === 'inactive' && (
                 <button
+                  disabled={!!loadingAction}
                   onClick={() => setStatus(selected, 'active')}
-                  className="w-full py-2.5 rounded-xl text-white font-medium text-sm bg-green-600 hover:bg-green-700"
+                  className="w-full py-2.5 rounded-xl text-white font-medium text-sm bg-green-600 hover:bg-green-700 disabled:opacity-60"
                 >
-                  Reactivate membership
+                  {loadingAction === 'set-status' ? 'Reactivating…' : 'Reactivate membership'}
                 </button>
               )}
 
               {/* Always: delete */}
               <button
+                disabled={!!loadingAction}
                 onClick={() => deleteMember(selected)}
-                className="w-full py-2.5 rounded-xl font-medium text-sm border border-red-200 text-red-500 hover:bg-red-50"
+                className="w-full py-2.5 rounded-xl font-medium text-sm border border-red-200 text-red-500 hover:bg-red-50 disabled:opacity-60"
               >
-                Delete member record
+                {loadingAction === 'delete-member' ? 'Deleting…' : 'Delete member record'}
               </button>
             </div>
           </div>

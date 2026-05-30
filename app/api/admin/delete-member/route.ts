@@ -15,11 +15,11 @@ export async function POST(request: NextRequest) {
 
   const service = await createServiceClient()
 
-  // Log before deleting
+  // Log before deleting (member_id will be set to NULL by cascade after delete)
   await service.from('activity_log').insert({
     member_id: memberId,
     admin_id: adminUser.id,
-    action: 'rejected',
+    action: 'edited',
     details: 'Member record deleted by admin',
   })
 
