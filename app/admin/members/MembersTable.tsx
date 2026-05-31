@@ -20,6 +20,7 @@ export default function MembersTable({
   const [filter, setFilter] = useState(status ?? '')
   const [selected, setSelected] = useState<Member | null>(null)
   const [actionError, setActionError] = useState('')
+  const [actionInfo, setActionInfo] = useState('')
   const [loadingAction, setLoadingAction] = useState<string | null>(null)
 
   function applyFilters(newSearch: string, newFilter: string) {
@@ -32,6 +33,7 @@ export default function MembersTable({
 
   async function callApi(action: string, body: object) {
     setActionError('')
+    setActionInfo('')
     setLoadingAction(action)
     try {
       const res = await fetch(`/api/admin/${action}`, {
@@ -39,41 +41,47 @@ export default function MembersTable({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
-      // Parse JSON safely — if Cloudflare returns an HTML error page, res.json() throws
-      let json: Record<string, string> = {}
+      let json: Record<string, unknown> = {}
       try { json = await res.json() } catch { /* non-JSON body */ }
       if (!res.ok) {
-        setActionError(json.error ?? `${action} failed (HTTP ${res.status})`)
-        return false
+        setActionError((json.error as string) ?? `${action} failed (HTTP ${res.status})`)
+        return { ok: false, json }
       }
-      return true
+      return { ok: true, json }
     } catch (err) {
       setActionError(`Request failed: ${err instanceof Error ? err.message : 'unknown error'}`)
-      return false
+      return { ok: false, json: {} }
     } finally {
       setLoadingAction(null)
     }
   }
 
   async function approveMember(member: Member) {
-    const ok = await callApi('approve', { memberId: member.id, membershipType: member.membership_type })
-    if (ok) { setSelected(null); window.location.reload() }
+    const result = await callApi('approve', { memberId: member.id, membershipType: member.membership_type })
+    if (result.ok) {
+      const json = result.json as { emailSent?: boolean; emailError?: string }
+      if (json.emailSent === false && json.emailError) {
+        setActionInfo(`Member approved ✓ — Email not sent: ${json.emailError}`)
+      }
+      setSelected(null)
+      setTimeout(() => window.location.reload(), json.emailSent === false ? 3000 : 0)
+    }
   }
 
   async function rejectMember(member: Member) {
-    const ok = await callApi('reject', { memberId: member.id })
-    if (ok) { setSelected(null); window.location.reload() }
+    const result = await callApi('reject', { memberId: member.id })
+    if (result.ok) { setSelected(null); window.location.reload() }
   }
 
   async function setStatus(member: Member, newStatus: string) {
-    const ok = await callApi('set-status', { memberId: member.id, status: newStatus })
-    if (ok) { setSelected(null); window.location.reload() }
+    const result = await callApi('set-status', { memberId: member.id, status: newStatus })
+    if (result.ok) { setSelected(null); window.location.reload() }
   }
 
   async function deleteMember(member: Member) {
     if (!confirm(`Delete ${member.full_name}? This cannot be undone.`)) return
-    const ok = await callApi('delete-member', { memberId: member.id })
-    if (ok) { setSelected(null); window.location.reload() }
+    const result = await callApi('delete-member', { memberId: member.id })
+    if (result.ok) { setSelected(null); window.location.reload() }
   }
 
   const totalPages = Math.ceil(total / pageSize)
@@ -223,6 +231,7 @@ export default function MembersTable({
             </dl>
 
             {actionError && <p className="text-red-500 text-sm mt-4">{actionError}</p>}
+            {actionInfo && <p className="text-amber-600 text-sm mt-4">{actionInfo}</p>}
 
             <div className="mt-8 space-y-3">
               {/* Pending: approve / reject */}

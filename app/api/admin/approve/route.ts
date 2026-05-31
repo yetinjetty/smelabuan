@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
 
     const service = createServiceClient()
 
-    // Get member details for the email
+    // Fetch member details before updating
     const { data: memberData } = await service
       .from('members')
       .select('full_name, email, business_name')
@@ -70,25 +70,33 @@ export async function POST(request: NextRequest) {
       details: `Approved as ${newMemberId}`,
     })
 
-    // Send approval email to member
-    if (memberData?.email) {
+    // Send approval email
+    let emailSent = false
+    let emailError: string | null = null
+
+    const gmailUser = process.env.GMAIL_USER
+    const gmailPass = process.env.GMAIL_APP_PASSWORD
+
+    if (!gmailUser || !gmailPass) {
+      emailError = 'GMAIL_USER or GMAIL_APP_PASSWORD env var not set'
+      console.error('Approval email skipped:', emailError)
+    } else if (memberData?.email) {
       try {
         const transporter = nodemailer.createTransport({
-          service: 'gmail',
-          auth: {
-            user: process.env.GMAIL_USER,
-            pass: process.env.GMAIL_APP_PASSWORD,
-          },
+          host: 'smtp.gmail.com',
+          port: 465,
+          secure: true,
+          auth: { user: gmailUser, pass: gmailPass },
         })
 
         const expiryText = expiryDate
-          ? `Valid until: <strong>${new Date(expiryDate).toLocaleDateString('en-MY', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>`
+          ? `Valid until <strong>${new Date(expiryDate).toLocaleDateString('en-MY', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>`
           : 'Lifetime membership — no expiry'
 
         await transporter.sendMail({
-          from: `"SME Association Labuan" <${process.env.GMAIL_USER}>`,
+          from: `"SME Association Labuan" <${gmailUser}>`,
           to: memberData.email,
-          subject: `Welcome to SME Association Labuan — Membership Approved`,
+          subject: `Membership Approved — SME Association Labuan`,
           html: `
             <!DOCTYPE html>
             <html>
@@ -105,9 +113,7 @@ export async function POST(request: NextRequest) {
                     <tr><td style="background:#fff;border-radius:16px;padding:32px 28px;border:1px solid #e5e7eb">
 
                       <div style="text-align:center;margin-bottom:24px">
-                        <div style="width:56px;height:56px;background:#dcfce7;border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center">
-                          <span style="font-size:28px">✓</span>
-                        </div>
+                        <div style="width:56px;height:56px;background:#dcfce7;border-radius:50%;margin:0 auto 12px;line-height:56px;font-size:28px">✓</div>
                         <h1 style="margin:0;font-size:20px;font-weight:700;color:#111827">Membership Approved!</h1>
                         <p style="margin:8px 0 0;font-size:14px;color:#6b7280">Welcome to the SME Association Labuan</p>
                       </div>
@@ -121,7 +127,7 @@ export async function POST(request: NextRequest) {
                         <p style="margin:8px 0 0;font-size:12px;color:#6b7280">${membershipType} Membership &nbsp;·&nbsp; ${expiryText}</p>
                       </div>
 
-                      <p style="font-size:14px;color:#374151">You can now log in to the member portal to access your digital membership card, member directory, events, and exclusive deals.</p>
+                      <p style="font-size:14px;color:#374151">Log in to access your digital membership card, member directory, upcoming events, and exclusive deals.</p>
 
                       <div style="text-align:center;margin-top:24px">
                         <a href="https://tanjw06.workers.dev/login" style="display:inline-block;background:#E05A4E;color:#fff;text-decoration:none;padding:12px 32px;border-radius:10px;font-size:14px;font-weight:600">
@@ -142,13 +148,17 @@ export async function POST(request: NextRequest) {
             </html>
           `,
         })
-      } catch (emailErr) {
-        // Email failure is non-fatal — approval already saved
-        console.error('Approval email failed:', emailErr)
+
+        emailSent = true
+      } catch (err) {
+        emailError = err instanceof Error ? err.message : 'Unknown email error'
+        console.error('Approval email failed:', emailError)
       }
+    } else {
+      emailError = 'Member email address not found'
     }
 
-    return Response.json({ ok: true, member_id: newMemberId })
+    return Response.json({ ok: true, member_id: newMemberId, emailSent, emailError })
   } catch (err) {
     console.error('approve error:', err)
     return Response.json(
