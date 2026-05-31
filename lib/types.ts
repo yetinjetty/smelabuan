@@ -85,5 +85,5 @@ export interface ActivityLog {
   payment_ref: string | null
   created_at: string
   members?: Pick<Member, 'full_name' | 'member_id'>
-  admin_users?: Pick<AdminUser, 'full_name'>
+  admin_users?: Pick<AdminUser, 'full_name' | 'role'>
 }
