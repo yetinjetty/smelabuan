@@ -11,8 +11,6 @@ type AdForm = {
 const empty: AdForm = { advertiser_name: '', headline: '', period_start: '', period_end: '', status: 'active' }
 
 export default function AdsAdmin({ ads }: { ads: Advertisement[] }) {
-  const router = useRouter()
-  const [, startTransition] = useTransition()
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Advertisement | null>(null)
   const [form, setForm] = useState<AdForm>(empty)
