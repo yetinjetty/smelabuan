@@ -64,13 +64,13 @@ export default function AdsAdmin({ ads }: { ads: Advertisement[] }) {
             {ads.map(ad => (
               <tr key={ad.id} className="hover:bg-white/5 transition-colors">
                 <td className="px-4 py-3 font-medium text-white">{ad.advertiser_name}</td>
-                <td className="px-4 py-3 text-gray-300 max-w-[200px] truncate">{ad.headline}</td>
-                <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">
+                <td className="px-4 py-3 text-white max-w-[200px] truncate">{ad.headline}</td>
+                <td className="px-4 py-3 text-white text-xs whitespace-nowrap">
                   {ad.period_start ? format(new Date(ad.period_start), 'd MMM') : '—'}
                   {' – '}
                   {ad.period_end ? format(new Date(ad.period_end), 'd MMM yyyy') : '—'}
                 </td>
-                <td className="px-4 py-3 text-gray-300">{ad.click_count}</td>
+                <td className="px-4 py-3 text-white">{ad.click_count}</td>
                 <td className="px-4 py-3">
                   <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${ad.status === 'active' ? 'bg-green-900/60 text-green-300' : 'bg-gray-700 text-gray-400'}`}>
                     {ad.status}

@@ -146,8 +146,8 @@ export default function MembersTable({
                     <p className="font-medium text-white">{m.full_name}</p>
                     <p className="text-xs text-gray-400">{m.email}</p>
                   </td>
-                  <td className="px-4 py-3 font-mono text-gray-400">{m.member_id || '—'}</td>
-                  <td className="px-4 py-3 text-gray-300">{m.membership_type ?? '—'}</td>
+                  <td className="px-4 py-3 font-mono text-white">{m.member_id || '—'}</td>
+                  <td className="px-4 py-3 text-white">{m.membership_type ?? '—'}</td>
                   <td className="px-4 py-3">
                     <p className="text-gray-300 truncate max-w-[160px]">{m.business_name ?? '—'}</p>
                     <p className="text-xs text-gray-500">{m.business_sector ?? ''}</p>
@@ -155,7 +155,7 @@ export default function MembersTable({
                   <td className="px-4 py-3">
                     <StatusBadge status={m.status} />
                   </td>
-                  <td className="px-4 py-3 text-gray-400">
+                  <td className="px-4 py-3 text-white">
                     {m.expiry_date ? format(new Date(m.expiry_date), 'd MMM yyyy') : '—'}
                   </td>
                   <td className="px-4 py-3 text-gray-500 text-xs">

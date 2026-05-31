@@ -56,7 +56,7 @@ export default function EventsAdmin({ events }: { events: Event[] }) {
 
       <div className="rounded-xl border border-gray-700 overflow-hidden" style={{ backgroundColor: '#1f2937' }}>
         <table className="w-full text-sm">
-          <thead className="border-b border-gray-700 text-gray-300 text-xs uppercase tracking-wide">
+          <thead className="border-b border-gray-700 text-white text-xs uppercase tracking-wide">
             <tr>
               {['Title', 'Date', 'Venue', 'Access', 'Registrations', ''].map(h => (
                 <th key={h} className="px-4 py-3 text-left">{h}</th>
@@ -67,18 +67,18 @@ export default function EventsAdmin({ events }: { events: Event[] }) {
             {events.map(e => (
               <tr key={e.id} className="hover:bg-white/5 transition-colors">
                 <td className="px-4 py-3 font-medium text-white">{e.title}</td>
-                <td className="px-4 py-3 text-gray-300">{format(new Date(e.event_date), 'd MMM yyyy')}</td>
-                <td className="px-4 py-3 text-gray-300">{e.venue ?? '—'}</td>
+                <td className="px-4 py-3 text-white">{format(new Date(e.event_date), 'd MMM yyyy')}</td>
+                <td className="px-4 py-3 text-white">{e.venue ?? '—'}</td>
                 <td className="px-4 py-3">
                   <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
                     e.access_type === 'members_only'
                       ? 'bg-purple-900/60 text-purple-300'
-                      : 'bg-gray-700 text-gray-300'
+                      : 'bg-gray-700 text-white'
                   }`}>
                     {e.access_type === 'members_only' ? 'Members only' : 'Open'}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-gray-300">{e.registered_count}</td>
+                <td className="px-4 py-3 text-white">{e.registered_count}</td>
                 <td className="px-4 py-3 flex gap-3 justify-end">
                   <button onClick={() => openEdit(e)} className="text-xs text-blue-400 hover:text-blue-300 hover:underline">Edit</button>
                   <button onClick={() => deleteEvent(e.id)} className="text-xs text-red-400 hover:text-red-300 hover:underline">Delete</button>

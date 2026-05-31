@@ -51,7 +51,7 @@ export default function DealsAdmin({ deals }: { deals: Deal[] }) {
 
       <div className="rounded-xl border border-gray-700 overflow-hidden" style={{ backgroundColor: '#1f2937' }}>
         <table className="w-full text-sm">
-          <thead className="border-b border-gray-700 text-gray-300 text-xs uppercase tracking-wide">
+          <thead className="border-b border-gray-700 text-white text-xs uppercase tracking-wide">
             <tr>
               {['Merchant', 'Category', 'Discount', 'Valid until', 'Status', ''].map(h => (
                 <th key={h} className="px-4 py-3 text-left">{h}</th>
@@ -65,9 +65,9 @@ export default function DealsAdmin({ deals }: { deals: Deal[] }) {
                   <p className="font-medium text-white">{d.merchant_name}</p>
                   {d.offer_description && <p className="text-xs text-gray-500 truncate max-w-[200px]">{d.offer_description}</p>}
                 </td>
-                <td className="px-4 py-3 text-gray-300">{d.category ?? '—'}</td>
+                <td className="px-4 py-3 text-white">{d.category ?? '—'}</td>
                 <td className="px-4 py-3 font-medium" style={{ color: '#E05A4E' }}>{d.discount_value ?? '—'}</td>
-                <td className="px-4 py-3 text-gray-300">{d.valid_until ? format(new Date(d.valid_until), 'd MMM yyyy') : '—'}</td>
+                <td className="px-4 py-3 text-white">{d.valid_until ? format(new Date(d.valid_until), 'd MMM yyyy') : '—'}</td>
                 <td className="px-4 py-3">
                   <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${d.status === 'active' ? 'bg-green-900/60 text-green-300' : 'bg-gray-700 text-gray-400'}`}>
                     {d.status}
