@@ -20,8 +20,9 @@ export default async function HomePage() {
       .from('advertisements')
       .select('*')
       .eq('status', 'active')
-      .lte('period_start', new Date().toISOString().split('T')[0])
-      .gte('period_end', new Date().toISOString().split('T')[0])
+      .or(`period_start.is.null,period_start.lte.${new Date().toISOString().split('T')[0]}`)
+      .or(`period_end.is.null,period_end.gte.${new Date().toISOString().split('T')[0]}`)
+      .order('created_at', { ascending: false })
       .returns<Advertisement[]>(),
     service
       .from('events')

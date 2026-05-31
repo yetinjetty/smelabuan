@@ -1,9 +1,7 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import { format } from 'date-fns'
-import { createClient } from '@/lib/supabase/client'
 import type { Advertisement } from '@/lib/types'
 
 type AdForm = {
@@ -28,18 +26,31 @@ export default function AdsAdmin({ ads }: { ads: Advertisement[] }) {
 
   async function save() {
     setSaving(true)
-    const supabase = createClient()
-    const payload = { advertiser_name: form.advertiser_name, headline: form.headline, period_start: form.period_start || null, period_end: form.period_end || null, status: form.status }
-    if (editing) { await supabase.from('advertisements').update(payload).eq('id', editing.id) }
-    else { await supabase.from('advertisements').insert(payload) }
-    setSaving(false); setShowForm(false)
-    startTransition(() => router.refresh())
+    const payload = {
+      id: editing?.id,
+      advertiser_name: form.advertiser_name,
+      headline: form.headline,
+      period_start: form.period_start || null,
+      period_end: form.period_end || null,
+      status: form.status,
+    }
+    const res = await fetch('/api/admin/save-ad', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    setSaving(false)
+    if (res.ok) { setShowForm(false); window.location.reload() }
   }
 
   async function deleteAd(id: string) {
     if (!confirm('Delete this ad?')) return
-    await createClient().from('advertisements').delete().eq('id', id)
-    startTransition(() => router.refresh())
+    await fetch('/api/admin/delete-ad', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    })
+    window.location.reload()
   }
 
   const activeCount = ads.filter(a => a.status === 'active').length
