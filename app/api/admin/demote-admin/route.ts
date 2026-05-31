@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     // Verify caller is an admin
     const { data: callerAdmin } = await supabase
       .from('admin_users')
-      .select('id')
+      .select('id, role')
       .eq('auth_user_id', user.id)
       .single()
     if (!callerAdmin) return Response.json({ error: 'Forbidden' }, { status: 403 })
@@ -28,11 +28,16 @@ export async function POST(request: NextRequest) {
     // Get the admin record before deleting
     const { data: targetAdmin } = await service
       .from('admin_users')
-      .select('email, full_name, auth_user_id')
+      .select('email, full_name, auth_user_id, role')
       .eq('id', adminId)
       .single()
 
     if (!targetAdmin) return Response.json({ error: 'Admin not found' }, { status: 404 })
+
+    // Only president can demote another president
+    if (targetAdmin.role === 'president' && callerAdmin.role !== 'president') {
+      return Response.json({ error: 'Only a president can demote another president.' }, { status: 403 })
+    }
 
     // Check if they already have a member record
     const { data: existingMember } = await service

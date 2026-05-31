@@ -22,7 +22,6 @@ export default async function HomePage() {
       .eq('status', 'active')
       .lte('period_start', new Date().toISOString().split('T')[0])
       .gte('period_end', new Date().toISOString().split('T')[0])
-      .limit(3)
       .returns<Advertisement[]>(),
     service
       .from('events')
