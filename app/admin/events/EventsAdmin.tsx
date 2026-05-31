@@ -7,13 +7,9 @@ import { createClient } from '@/lib/supabase/client'
 import type { Event } from '@/lib/types'
 
 type EventForm = {
-  title: string
-  venue: string
-  event_date: string
-  access_type: 'open' | 'members_only'
-  description: string
+  title: string; venue: string; event_date: string
+  access_type: 'open' | 'members_only'; description: string
 }
-
 const empty: EventForm = { title: '', venue: '', event_date: '', access_type: 'open', description: '' }
 
 export default function EventsAdmin({ events }: { events: Event[] }) {
@@ -28,8 +24,7 @@ export default function EventsAdmin({ events }: { events: Event[] }) {
   function openNew() { setForm(empty); setEditing(null); setShowForm(true) }
   function openEdit(e: Event) {
     setForm({ title: e.title, venue: e.venue ?? '', event_date: e.event_date, access_type: e.access_type, description: e.description ?? '' })
-    setEditing(e)
-    setShowForm(true)
+    setEditing(e); setShowForm(true)
   }
 
   async function save() {
@@ -41,94 +36,81 @@ export default function EventsAdmin({ events }: { events: Event[] }) {
     } else {
       await supabase.from('events').insert({ ...form, venue: form.venue || null, description: form.description || null })
     }
-    setSaving(false)
-    setShowForm(false)
+    setSaving(false); setShowForm(false)
     startTransition(() => router.refresh())
   }
 
   async function deleteEvent(id: string) {
     if (!confirm('Delete this event?')) return
-    const supabase = createClient()
-    await supabase.from('events').delete().eq('id', id)
+    await createClient().from('events').delete().eq('id', id)
     startTransition(() => router.refresh())
   }
 
   return (
     <>
       <div className="flex justify-end mb-4">
-        <button
-          onClick={openNew}
-          className="px-4 py-2 rounded-lg text-white text-sm font-medium"
-          style={{ backgroundColor: '#E05A4E' }}
-        >
+        <button onClick={openNew} className="px-4 py-2 rounded-lg text-white text-sm font-medium" style={{ backgroundColor: '#E05A4E' }}>
           + Add event
         </button>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="rounded-xl border border-gray-700 overflow-hidden" style={{ backgroundColor: '#1f2937' }}>
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
+          <thead className="border-b border-gray-700 text-gray-500 text-xs uppercase tracking-wide">
             <tr>
-              <th className="px-4 py-3 text-left">Title</th>
-              <th className="px-4 py-3 text-left">Date</th>
-              <th className="px-4 py-3 text-left">Venue</th>
-              <th className="px-4 py-3 text-left">Access</th>
-              <th className="px-4 py-3 text-left">Registrations</th>
-              <th className="px-4 py-3" />
+              {['Title', 'Date', 'Venue', 'Access', 'Registrations', ''].map(h => (
+                <th key={h} className="px-4 py-3 text-left">{h}</th>
+              ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-gray-700/50">
             {events.map(e => (
-              <tr key={e.id} className="hover:bg-gray-50">
-                <td className="px-4 py-3 font-medium text-gray-900">{e.title}</td>
-                <td className="px-4 py-3 text-gray-600">{format(new Date(e.event_date), 'd MMM yyyy')}</td>
-                <td className="px-4 py-3 text-gray-600">{e.venue ?? '—'}</td>
+              <tr key={e.id} className="hover:bg-white/5 transition-colors">
+                <td className="px-4 py-3 font-medium text-white">{e.title}</td>
+                <td className="px-4 py-3 text-gray-300">{format(new Date(e.event_date), 'd MMM yyyy')}</td>
+                <td className="px-4 py-3 text-gray-300">{e.venue ?? '—'}</td>
                 <td className="px-4 py-3">
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${e.access_type === 'members_only' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'}`}>
+                  <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+                    e.access_type === 'members_only'
+                      ? 'bg-purple-900/60 text-purple-300'
+                      : 'bg-gray-700 text-gray-300'
+                  }`}>
                     {e.access_type === 'members_only' ? 'Members only' : 'Open'}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-gray-600">{e.registered_count}</td>
-                <td className="px-4 py-3 flex gap-2 justify-end">
-                  <button onClick={() => openEdit(e)} className="text-xs text-blue-600 hover:underline">Edit</button>
-                  <button onClick={() => deleteEvent(e.id)} className="text-xs text-red-500 hover:underline">Delete</button>
+                <td className="px-4 py-3 text-gray-300">{e.registered_count}</td>
+                <td className="px-4 py-3 flex gap-3 justify-end">
+                  <button onClick={() => openEdit(e)} className="text-xs text-blue-400 hover:text-blue-300 hover:underline">Edit</button>
+                  <button onClick={() => deleteEvent(e.id)} className="text-xs text-red-400 hover:text-red-300 hover:underline">Delete</button>
                 </td>
               </tr>
             ))}
             {!events.length && (
-              <tr><td colSpan={6} className="px-4 py-10 text-center text-gray-400">No events yet</td></tr>
+              <tr><td colSpan={6} className="px-4 py-10 text-center text-gray-500">No events yet</td></tr>
             )}
           </tbody>
         </table>
       </div>
 
       {showForm && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">{editing ? 'Edit Event' : 'New Event'}</h2>
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+          <div className="rounded-2xl p-6 w-full max-w-md shadow-2xl border border-gray-700" style={{ backgroundColor: '#1f2937' }}>
+            <h2 className="text-lg font-bold text-white mb-4">{editing ? 'Edit Event' : 'New Event'}</h2>
             <div className="space-y-3">
-              <Field label="Title">
-                <input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className={inp} />
-              </Field>
-              <Field label="Date">
-                <input type="date" value={form.event_date} onChange={e => setForm(f => ({ ...f, event_date: e.target.value }))} className={inp} />
-              </Field>
-              <Field label="Venue">
-                <input value={form.venue} onChange={e => setForm(f => ({ ...f, venue: e.target.value }))} className={inp} />
-              </Field>
+              <Field label="Title"><input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className={inp} /></Field>
+              <Field label="Date"><input type="date" value={form.event_date} onChange={e => setForm(f => ({ ...f, event_date: e.target.value }))} className={inp} /></Field>
+              <Field label="Venue"><input value={form.venue} onChange={e => setForm(f => ({ ...f, venue: e.target.value }))} className={inp} /></Field>
               <Field label="Access">
                 <select value={form.access_type} onChange={e => setForm(f => ({ ...f, access_type: e.target.value as 'open' | 'members_only' }))} className={inp}>
                   <option value="open">Open to public</option>
                   <option value="members_only">Members only</option>
                 </select>
               </Field>
-              <Field label="Description">
-                <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={3} className={inp} />
-              </Field>
+              <Field label="Description"><textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={3} className={inp} /></Field>
             </div>
-            {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+            {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
             <div className="flex gap-2 mt-4">
-              <button onClick={() => setShowForm(false)} className="flex-1 py-2 rounded-xl border border-gray-300 text-sm text-gray-600">Cancel</button>
+              <button onClick={() => setShowForm(false)} className="flex-1 py-2 rounded-xl border border-gray-600 text-sm text-gray-400">Cancel</button>
               <button onClick={save} disabled={saving} className="flex-1 py-2 rounded-xl text-white text-sm font-medium disabled:opacity-60" style={{ backgroundColor: '#E05A4E' }}>
                 {saving ? 'Saving…' : 'Save'}
               </button>
@@ -140,7 +122,7 @@ export default function EventsAdmin({ events }: { events: Event[] }) {
   )
 }
 
-const inp = 'w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#E05A4E]'
+const inp = 'w-full border border-gray-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#E05A4E] bg-gray-800 placeholder-gray-500'
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div><label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>{children}</div>
+  return <div><label className="block text-xs font-medium text-gray-400 mb-1">{label}</label>{children}</div>
 }

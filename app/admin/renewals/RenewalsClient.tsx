@@ -1,51 +1,34 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import { format } from 'date-fns'
 import { createClient } from '@/lib/supabase/client'
 import type { Member } from '@/lib/types'
 
-export default function RenewalsClient({
-  overdue,
-  dueSoon,
-}: {
-  overdue: Member[]
-  dueSoon: Member[]
-}) {
+export default function RenewalsClient({ overdue, dueSoon }: { overdue: Member[]; dueSoon: Member[] }) {
   return (
     <div className="space-y-8">
-      <Section title="Overdue" members={overdue} badge="bg-red-100 text-red-700" />
-      <Section title="Due This Month" members={dueSoon} badge="bg-yellow-100 text-yellow-700" />
+      <Section title="Overdue" members={overdue} badgeCls="bg-red-900/60 text-red-300" />
+      <Section title="Due This Month" members={dueSoon} badgeCls="bg-yellow-900/60 text-yellow-300" />
     </div>
   )
 }
 
-function Section({
-  title,
-  members,
-  badge,
-}: {
-  title: string
-  members: Member[]
-  badge: string
-}) {
+function Section({ title, members, badgeCls }: { title: string; members: Member[]; badgeCls: string }) {
   return (
     <div>
       <div className="flex items-center gap-2 mb-4">
-        <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
-        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${badge}`}>
+        <h2 className="text-lg font-semibold text-white">{title}</h2>
+        <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold ${badgeCls}`}>
           {members.length}
         </span>
       </div>
       {members.length > 0 ? (
-        <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
-          {members.map(m => (
-            <MemberRow key={m.id} member={m} />
-          ))}
+        <div className="rounded-xl border border-gray-700 divide-y divide-gray-700/50" style={{ backgroundColor: '#1f2937' }}>
+          {members.map(m => <MemberRow key={m.id} member={m} />)}
         </div>
       ) : (
-        <p className="text-gray-400 text-sm">None</p>
+        <p className="text-gray-500 text-sm">None</p>
       )}
     </div>
   )
@@ -56,8 +39,6 @@ function MemberRow({ member }: { member: Member }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [done, setDone] = useState(false)
-  const [, startTransition] = useTransition()
-  const router = useRouter()
 
   async function approve() {
     if (!paymentRef.trim()) { setError('Enter payment reference'); return }
@@ -93,17 +74,16 @@ function MemberRow({ member }: { member: Member }) {
 
     setLoading(false)
     setDone(true)
-    startTransition(() => router.refresh())
   }
 
   if (done) return null
 
   return (
-    <div className="px-4 py-4 flex flex-wrap items-center gap-4">
+    <div className="px-5 py-4 flex flex-wrap items-center gap-4">
       <div className="flex-1 min-w-[200px]">
-        <p className="font-medium text-gray-900">{member.full_name}</p>
-        <p className="text-sm text-gray-500">{member.member_id} · {member.business_name}</p>
-        <p className="text-xs text-red-500 mt-0.5">
+        <p className="font-semibold text-white">{member.full_name}</p>
+        <p className="text-sm text-gray-400">{member.member_id} · {member.business_name}</p>
+        <p className="text-xs text-red-400 mt-0.5">
           Expired {member.expiry_date ? format(new Date(member.expiry_date), 'd MMM yyyy') : '—'}
         </p>
       </div>
@@ -113,7 +93,8 @@ function MemberRow({ member }: { member: Member }) {
           placeholder="Payment reference"
           value={paymentRef}
           onChange={e => setPaymentRef(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-[#E05A4E]"
+          className="border border-gray-600 rounded-lg px-3 py-1.5 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-[#E05A4E] text-white placeholder-gray-500"
+          style={{ backgroundColor: '#374151' }}
         />
         <button
           onClick={approve}
@@ -124,7 +105,7 @@ function MemberRow({ member }: { member: Member }) {
           {loading ? '…' : 'Approve'}
         </button>
       </div>
-      {error && <p className="w-full text-xs text-red-500">{error}</p>}
+      {error && <p className="w-full text-xs text-red-400">{error}</p>}
     </div>
   )
 }
