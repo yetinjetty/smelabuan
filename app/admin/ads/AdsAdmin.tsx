@@ -60,7 +60,7 @@ export default function AdsAdmin({ ads }: { ads: Advertisement[] }) {
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-700/50">
+          <tbody className="divide-y divide-gray-700/50" style={{ color: '#ffffff' }}>
             {ads.map(ad => (
               <tr key={ad.id} className="hover:bg-white/5 transition-colors">
                 <td className="px-4 py-3 font-medium text-white">{ad.advertiser_name}</td>

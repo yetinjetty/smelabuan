@@ -135,7 +135,7 @@ export default function MembersTable({
                 <th className="px-4 py-3 text-left">Joined</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-700/50">
+            <tbody className="divide-y divide-gray-700/50" style={{ color: '#ffffff' }}>
               {members.map(m => (
                 <tr
                   key={m.id}

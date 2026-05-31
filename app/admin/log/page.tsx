@@ -68,7 +68,7 @@ export default async function AdminLogPage({
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-700/50">
+          <tbody className="divide-y divide-gray-700/50" style={{ color: '#ffffff' }}>
             {(logs ?? []).map(log => (
               <tr key={log.id} className="hover:bg-white/5 transition-colors">
                 <td className="px-4 py-3 text-xs text-gray-400 whitespace-nowrap">

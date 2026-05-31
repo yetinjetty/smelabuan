@@ -201,7 +201,7 @@ export default async function AdminDashboard() {
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-700/50">
+          <tbody className="divide-y divide-gray-700/50" style={{ color: '#ffffff' }}>
             {(recentActivity ?? []).map(log => (
               <tr key={log.id} className="hover:bg-white/5 transition-colors">
                 <td className="px-5 py-3 font-mono text-xs text-gray-400">

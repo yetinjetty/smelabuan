@@ -63,7 +63,7 @@ export default function EventsAdmin({ events }: { events: Event[] }) {
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-700/50">
+          <tbody className="divide-y divide-gray-700/50" style={{ color: '#ffffff' }}>
             {events.map(e => (
               <tr key={e.id} className="hover:bg-white/5 transition-colors">
                 <td className="px-4 py-3 font-medium text-white">{e.title}</td>

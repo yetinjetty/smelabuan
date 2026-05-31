@@ -58,7 +58,7 @@ export default function DealsAdmin({ deals }: { deals: Deal[] }) {
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-700/50">
+          <tbody className="divide-y divide-gray-700/50" style={{ color: '#ffffff' }}>
             {deals.map(d => (
               <tr key={d.id} className="hover:bg-white/5 transition-colors">
                 <td className="px-4 py-3">
