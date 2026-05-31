@@ -124,7 +124,7 @@ export default function MembersTable({
       <div className="rounded-xl border border-gray-700 overflow-hidden" style={{ backgroundColor: '#1f2937' }}>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b border-gray-700 text-gray-500 text-xs uppercase tracking-wide">
+            <thead className="border-b border-gray-700 text-gray-300 text-xs uppercase tracking-wide">
               <tr>
                 <th className="px-4 py-3 text-left">Name</th>
                 <th className="px-4 py-3 text-left">Member ID</th>

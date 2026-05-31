@@ -51,7 +51,7 @@ export default function DealsAdmin({ deals }: { deals: Deal[] }) {
 
       <div className="rounded-xl border border-gray-700 overflow-hidden" style={{ backgroundColor: '#1f2937' }}>
         <table className="w-full text-sm">
-          <thead className="border-b border-gray-700 text-gray-500 text-xs uppercase tracking-wide">
+          <thead className="border-b border-gray-700 text-gray-300 text-xs uppercase tracking-wide">
             <tr>
               {['Merchant', 'Category', 'Discount', 'Valid until', 'Status', ''].map(h => (
                 <th key={h} className="px-4 py-3 text-left">{h}</th>

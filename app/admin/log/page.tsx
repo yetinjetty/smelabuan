@@ -62,7 +62,7 @@ export default async function AdminLogPage({
           <thead className="border-b border-gray-700">
             <tr>
               {['Time', 'Action', 'Member', 'Admin', 'Details', 'Payment Ref'].map(h => (
-                <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wide">
                   {h}
                 </th>
               ))}
