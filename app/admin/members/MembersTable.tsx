@@ -96,12 +96,14 @@ export default function MembersTable({
           value={search}
           onChange={e => setSearch(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && applyFilters(search, filter)}
-          className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-[#E05A4E]"
+          className="border border-gray-600 rounded-lg px-3 py-2 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-[#E05A4E] text-white placeholder-gray-500"
+          style={{ backgroundColor: '#1f2937' }}
         />
         <select
           value={filter}
           onChange={e => { setFilter(e.target.value); applyFilters(search, e.target.value) }}
-          className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#E05A4E]"
+          className="border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#E05A4E] text-white"
+          style={{ backgroundColor: '#1f2937' }}
         >
           <option value="">All statuses</option>
           <option value="pending">Pending</option>
@@ -119,10 +121,10 @@ export default function MembersTable({
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="rounded-xl border border-gray-700 overflow-hidden" style={{ backgroundColor: '#1f2937' }}>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
+            <thead className="border-b border-gray-700 text-gray-500 text-xs uppercase tracking-wide">
               <tr>
                 <th className="px-4 py-3 text-left">Name</th>
                 <th className="px-4 py-3 text-left">Member ID</th>
@@ -133,36 +135,36 @@ export default function MembersTable({
                 <th className="px-4 py-3 text-left">Joined</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-700/50">
               {members.map(m => (
                 <tr
                   key={m.id}
                   onClick={() => setSelected(m)}
-                  className="hover:bg-gray-50 cursor-pointer"
+                  className="hover:bg-white/5 cursor-pointer transition-colors"
                 >
                   <td className="px-4 py-3">
-                    <p className="font-medium text-gray-900">{m.full_name}</p>
+                    <p className="font-medium text-white">{m.full_name}</p>
                     <p className="text-xs text-gray-400">{m.email}</p>
                   </td>
-                  <td className="px-4 py-3 font-mono text-gray-600">{m.member_id || '—'}</td>
-                  <td className="px-4 py-3 text-gray-600">{m.membership_type ?? '—'}</td>
+                  <td className="px-4 py-3 font-mono text-gray-400">{m.member_id || '—'}</td>
+                  <td className="px-4 py-3 text-gray-300">{m.membership_type ?? '—'}</td>
                   <td className="px-4 py-3">
-                    <p className="text-gray-900 truncate max-w-[160px]">{m.business_name ?? '—'}</p>
-                    <p className="text-xs text-gray-400">{m.business_sector ?? ''}</p>
+                    <p className="text-gray-300 truncate max-w-[160px]">{m.business_name ?? '—'}</p>
+                    <p className="text-xs text-gray-500">{m.business_sector ?? ''}</p>
                   </td>
                   <td className="px-4 py-3">
                     <StatusBadge status={m.status} />
                   </td>
-                  <td className="px-4 py-3 text-gray-600">
+                  <td className="px-4 py-3 text-gray-400">
                     {m.expiry_date ? format(new Date(m.expiry_date), 'd MMM yyyy') : '—'}
                   </td>
-                  <td className="px-4 py-3 text-gray-400 text-xs">
+                  <td className="px-4 py-3 text-gray-500 text-xs">
                     {format(new Date(m.created_at), 'd MMM yyyy')}
                   </td>
                 </tr>
               ))}
               {!members.length && (
-                <tr><td colSpan={7} className="px-4 py-12 text-center text-gray-400">No members found</td></tr>
+                <tr><td colSpan={7} className="px-4 py-12 text-center text-gray-500">No members found</td></tr>
               )}
             </tbody>
           </table>
@@ -170,15 +172,13 @@ export default function MembersTable({
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="px-4 py-3 border-t border-gray-200 flex items-center justify-between text-sm">
-            <span className="text-gray-500">
-              Page {page} of {totalPages}
-            </span>
+          <div className="px-4 py-3 border-t border-gray-700 flex items-center justify-between text-sm">
+            <span className="text-gray-500">Page {page} of {totalPages}</span>
             <div className="flex gap-2">
               {page > 1 && (
                 <button
                   onClick={() => { const p = new URLSearchParams(); if (q) p.set('q', q); if (status) p.set('status', status); p.set('page', String(page - 1)); router.push(`/admin/members?${p}`) }}
-                  className="px-3 py-1 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50"
+                  className="px-3 py-1 border border-gray-600 rounded-lg text-gray-400 hover:bg-gray-700"
                 >
                   Previous
                 </button>
@@ -186,7 +186,7 @@ export default function MembersTable({
               {page < totalPages && (
                 <button
                   onClick={() => { const p = new URLSearchParams(); if (q) p.set('q', q); if (status) p.set('status', status); p.set('page', String(page + 1)); router.push(`/admin/members?${p}`) }}
-                  className="px-3 py-1 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50"
+                  className="px-3 py-1 border border-gray-600 rounded-lg text-gray-400 hover:bg-gray-700"
                 >
                   Next
                 </button>
@@ -294,9 +294,9 @@ export default function MembersTable({
 
 function StatusBadge({ status }: { status: string }) {
   const cls =
-    status === 'active'   ? 'bg-green-100 text-green-700' :
-    status === 'expired'  ? 'bg-red-100 text-red-700' :
-    status === 'inactive' ? 'bg-gray-100 text-gray-500' :
-    'bg-yellow-100 text-yellow-700'
-  return <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${cls}`}>{status}</span>
+    status === 'active'   ? 'bg-green-900/60 text-green-300' :
+    status === 'expired'  ? 'bg-red-900/60 text-red-300' :
+    status === 'inactive' ? 'bg-gray-700 text-gray-400' :
+    'bg-yellow-900/60 text-yellow-300'
+  return <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${cls}`}>{status}</span>
 }

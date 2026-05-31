@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+﻿import { createClient } from '@/lib/supabase/server'
 import RenewalsClient from './RenewalsClient'
 import type { Member } from '@/lib/types'
 
@@ -28,9 +28,10 @@ export default async function RenewalsPage() {
     .returns<Member[]>()
 
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Renewals</h1>
+    <div className="p-8 min-h-screen" style={{ backgroundColor: '#111827' }}>
+      <h1 className="text-2xl font-bold text-white mb-6">Renewals</h1>
       <RenewalsClient overdue={overdue ?? []} dueSoon={dueSoon ?? []} />
     </div>
   )
 }
+

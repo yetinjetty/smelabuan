@@ -1,4 +1,4 @@
-import { createClient, createServiceClient } from '@/lib/supabase/server'
+﻿import { createClient, createServiceClient } from '@/lib/supabase/server'
 import SettingsClient from './SettingsClient'
 import type { AdminUser } from '@/lib/types'
 
@@ -21,9 +21,10 @@ export default async function AdminSettingsPage() {
     .single()
 
   return (
-    <div className="p-8 max-w-2xl">
-      <h1 className="text-2xl font-bold text-gray-900 mb-8">Settings</h1>
+    <div className="p-8 max-w-2xl min-h-screen" style={{ backgroundColor: '#111827' }}>
+      <h1 className="text-2xl font-bold text-white mb-8">Settings</h1>
       <SettingsClient admins={admins ?? []} currentAdminId={currentAdmin?.id ?? ''} />
     </div>
   )
 }
+

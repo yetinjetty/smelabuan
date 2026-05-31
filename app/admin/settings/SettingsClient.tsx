@@ -59,8 +59,8 @@ export default function SettingsClient({ admins, currentAdminId }: { admins: Adm
 
       {/* Association details */}
       <section>
-        <h2 className="text-base font-semibold text-gray-900 mb-4">Association Details</h2>
-        <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-3 text-sm">
+        <h2 className="text-base font-semibold text-white mb-4">Association Details</h2>
+        <div className="rounded-xl border border-gray-700 p-6 space-y-3 text-sm" style={{ backgroundColor: '#1f2937' }}>
           <Row label="Name" value="SME Association Labuan" />
           <Row label="Member ID prefix" value="SMEL" />
           <Row label="Live URL" value="tanjw06.workers.dev" />
@@ -69,17 +69,17 @@ export default function SettingsClient({ admins, currentAdminId }: { admins: Adm
 
       {/* Membership fees */}
       <section>
-        <h2 className="text-base font-semibold text-gray-900 mb-4">Membership Fees</h2>
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <h2 className="text-base font-semibold text-white mb-4">Membership Fees</h2>
+        <div className="rounded-xl border border-gray-700 overflow-hidden" style={{ backgroundColor: '#1f2937' }}>
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
+            <thead className="border-b border-gray-700 text-gray-500 text-xs uppercase">
               <tr>
                 <th className="px-4 py-3 text-left">Type</th>
                 <th className="px-4 py-3 text-left">Size</th>
                 <th className="px-4 py-3 text-left">Fee</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-700/50">
               {[
                 ['Life', 'Medium', 'RM 2,000 (one-time)'],
                 ['Life', 'Small', 'RM 1,000 (one-time)'],
@@ -103,12 +103,12 @@ export default function SettingsClient({ admins, currentAdminId }: { admins: Adm
 
       {/* Admin users */}
       <section>
-        <h2 className="text-base font-semibold text-gray-900 mb-4">Admin Users</h2>
+        <h2 className="text-base font-semibold text-white mb-4">Admin Users</h2>
 
         {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
         {info && <p className="text-amber-600 text-sm mb-3">{info}</p>}
 
-        <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100 mb-4">
+        <div className="rounded-xl border border-gray-700 divide-y divide-gray-700 mb-4" style={{ backgroundColor: '#1f2937' }}>
           {admins.map(a => {
             const isSelf = a.id === currentAdminId
             const isLoading = loadingId === a.id
@@ -116,7 +116,7 @@ export default function SettingsClient({ admins, currentAdminId }: { admins: Adm
               <div key={a.id} className="px-4 py-3 flex items-center justify-between gap-4">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium text-gray-900 truncate">{a.full_name}</p>
+                    <p className="text-sm font-medium text-white truncate">{a.full_name}</p>
                     {isSelf && (
                       <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">You</span>
                     )}
@@ -140,8 +140,8 @@ export default function SettingsClient({ admins, currentAdminId }: { admins: Adm
         </div>
 
         {/* Add admin */}
-        <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
-          <p className="text-sm font-medium text-gray-700">Add admin user</p>
+        <div className="rounded-xl border border-gray-700 p-4 space-y-3" style={{ backgroundColor: '#1f2937' }}>
+          <p className="text-sm font-medium text-gray-300">Add admin user</p>
           <div className="grid grid-cols-2 gap-3">
             <input
               placeholder="Full name"
@@ -177,13 +177,13 @@ export default function SettingsClient({ admins, currentAdminId }: { admins: Adm
   )
 }
 
-const inp = 'w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#E05A4E]'
+const inp = 'w-full border border-gray-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#E05A4E] bg-gray-800'
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between">
-      <span className="text-gray-500">{label}</span>
-      <span className="font-medium text-gray-900">{value}</span>
+      <span className="text-gray-400">{label}</span>
+      <span className="font-medium text-white">{value}</span>
     </div>
   )
 }

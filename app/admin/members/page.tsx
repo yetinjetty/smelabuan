@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+﻿import { createClient } from '@/lib/supabase/server'
 import MembersTable from './MembersTable'
 import type { Member } from '@/lib/types'
 
@@ -26,8 +26,8 @@ export default async function AdminMembersPage({
   const { data: members, count } = await query.returns<Member[]>()
 
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Members</h1>
+    <div className="p-8 min-h-screen" style={{ backgroundColor: '#111827' }}>
+      <h1 className="text-2xl font-bold text-white mb-6">Members</h1>
       <MembersTable
         members={members ?? []}
         total={count ?? 0}
@@ -39,3 +39,4 @@ export default async function AdminMembersPage({
     </div>
   )
 }
+
