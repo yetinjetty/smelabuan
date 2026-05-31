@@ -1,64 +1,69 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { useState } from 'react'
 import type { AdminUser } from '@/lib/types'
 
-export default function SettingsClient({ admins }: { admins: AdminUser[] }) {
-  const router = useRouter()
-  const [, startTransition] = useTransition()
+export default function SettingsClient({ admins, currentAdminId }: { admins: AdminUser[], currentAdminId: string }) {
   const [newEmail, setNewEmail] = useState('')
   const [newName, setNewName] = useState('')
   const [newRole, setNewRole] = useState<'president' | 'editor'>('editor')
-  const [addingAdmin, setAddingAdmin] = useState(false)
+  const [adding, setAdding] = useState(false)
+  const [loadingId, setLoadingId] = useState<string | null>(null)
   const [error, setError] = useState('')
-  const [syncStatus, setSyncStatus] = useState<'idle' | 'running' | 'done' | 'error'>('idle')
+  const [info, setInfo] = useState('')
+
+  async function callApi(path: string, body: object): Promise<{ ok: boolean; json: Record<string, unknown> }> {
+    const res = await fetch(path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    let json: Record<string, unknown> = {}
+    try { json = await res.json() } catch { /* ignore */ }
+    return { ok: res.ok, json }
+  }
 
   async function addAdmin() {
-    if (!newEmail || !newName) { setError('Name and email required'); return }
-    setAddingAdmin(true)
+    if (!newEmail || !newName) { setError('Name and email are required'); return }
+    setAdding(true)
     setError('')
-    const supabase = createClient()
-    const { error: err } = await supabase.from('admin_users').insert({
-      full_name: newName,
-      email: newEmail,
-      role: newRole,
-      auth_user_id: '00000000-0000-0000-0000-000000000000',
-    })
-    setAddingAdmin(false)
-    if (err) { setError(err.message); return }
-    setNewEmail(''); setNewName('')
-    startTransition(() => router.refresh())
+    setInfo('')
+    const { ok, json } = await callApi('/api/admin/add-admin', { full_name: newName, email: newEmail, role: newRole })
+    setAdding(false)
+    if (!ok) { setError((json.error as string) ?? 'Failed to add admin'); return }
+    setNewEmail('')
+    setNewName('')
+    setInfo('Admin added. They must log in once via OTP to activate their account.')
+    window.location.reload()
   }
 
-  async function removeAdmin(id: string) {
-    if (!confirm('Remove this admin user?')) return
-    const supabase = createClient()
-    await supabase.from('admin_users').delete().eq('id', id)
-    startTransition(() => router.refresh())
-  }
-
-  async function triggerSync() {
-    setSyncStatus('running')
-    try {
-      const res = await fetch('/api/sheets-webhook', { method: 'POST', body: JSON.stringify({ action: 'manual_sync' }) })
-      setSyncStatus(res.ok ? 'done' : 'error')
-    } catch {
-      setSyncStatus('error')
-    }
+  async function demoteAdmin(adminId: string, name: string) {
+    if (!confirm(`Demote ${name} from admin to regular member? They will lose admin access immediately.`)) return
+    setLoadingId(adminId)
+    setError('')
+    setInfo('')
+    const { ok, json } = await callApi('/api/admin/demote-admin', { adminId })
+    setLoadingId(null)
+    if (!ok) { setError((json.error as string) ?? 'Failed to demote admin'); return }
+    const had = json.hadMemberRecord
+    setInfo(
+      had
+        ? `${name} has been demoted. Their existing member record is unchanged.`
+        : `${name} has been removed as admin. They do not have a member record.`
+    )
+    setTimeout(() => window.location.reload(), 1500)
   }
 
   return (
     <div className="space-y-10">
+
       {/* Association details */}
       <section>
         <h2 className="text-base font-semibold text-gray-900 mb-4">Association Details</h2>
         <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-3 text-sm">
           <Row label="Name" value="SME Association Labuan" />
           <Row label="Member ID prefix" value="SMEL" />
-          <Row label="Live URL" value="smelabuan.pages.dev" />
-          <Row label="Email sender" value="noreply@smelabuan.pages.dev" />
+          <Row label="Live URL" value="tanjw06.workers.dev" />
         </div>
       </section>
 
@@ -96,40 +101,45 @@ export default function SettingsClient({ admins }: { admins: AdminUser[] }) {
         <p className="text-xs text-gray-400 mt-2">Contact your developer to update fee amounts.</p>
       </section>
 
-      {/* Google Sheets sync */}
-      <section>
-        <h2 className="text-base font-semibold text-gray-900 mb-4">Google Sheets Sync</h2>
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <p className="text-sm text-gray-600 mb-4">
-            Supabase is the primary database. Google Sheets is a two-way mirror updated on every admin save, and synced hourly via Apps Script.
-          </p>
-          <button
-            onClick={triggerSync}
-            disabled={syncStatus === 'running'}
-            className="px-4 py-2 text-sm rounded-lg text-white font-medium disabled:opacity-60"
-            style={{ backgroundColor: '#E05A4E' }}
-          >
-            {syncStatus === 'running' ? 'Syncing…' : syncStatus === 'done' ? 'Sync complete ✓' : syncStatus === 'error' ? 'Sync failed — retry' : 'Trigger manual sync'}
-          </button>
-        </div>
-      </section>
-
       {/* Admin users */}
       <section>
         <h2 className="text-base font-semibold text-gray-900 mb-4">Admin Users</h2>
+
+        {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
+        {info && <p className="text-amber-600 text-sm mb-3">{info}</p>}
+
         <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100 mb-4">
-          {admins.map(a => (
-            <div key={a.id} className="px-4 py-3 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-900">{a.full_name}</p>
-                <p className="text-xs text-gray-400">{a.email} · <span className="capitalize">{a.role}</span></p>
+          {admins.map(a => {
+            const isSelf = a.id === currentAdminId
+            const isLoading = loadingId === a.id
+            return (
+              <div key={a.id} className="px-4 py-3 flex items-center justify-between gap-4">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium text-gray-900 truncate">{a.full_name}</p>
+                    {isSelf && (
+                      <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">You</span>
+                    )}
+                    <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full capitalize">{a.role}</span>
+                  </div>
+                  <p className="text-xs text-gray-400 truncate">{a.email}</p>
+                </div>
+                {!isSelf && (
+                  <button
+                    onClick={() => demoteAdmin(a.id, a.full_name)}
+                    disabled={!!loadingId}
+                    className="shrink-0 text-xs px-3 py-1.5 rounded-lg border border-orange-200 text-orange-600 hover:bg-orange-50 disabled:opacity-50 transition-colors"
+                  >
+                    {isLoading ? 'Demoting…' : 'Demote to Member'}
+                  </button>
+                )}
               </div>
-              <button onClick={() => removeAdmin(a.id)} className="text-xs text-red-500 hover:underline">Remove</button>
-            </div>
-          ))}
+            )
+          })}
           {!admins.length && <p className="px-4 py-6 text-sm text-gray-400 text-center">No admins</p>}
         </div>
 
+        {/* Add admin */}
         <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
           <p className="text-sm font-medium text-gray-700">Add admin user</p>
           <div className="grid grid-cols-2 gap-3">
@@ -151,18 +161,18 @@ export default function SettingsClient({ admins }: { admins: AdminUser[] }) {
             <option value="editor">Editor</option>
             <option value="president">President</option>
           </select>
-          {error && <p className="text-red-500 text-xs">{error}</p>}
           <button
             onClick={addAdmin}
-            disabled={addingAdmin}
+            disabled={adding}
             className="px-4 py-2 rounded-lg text-white text-sm font-medium disabled:opacity-60"
             style={{ backgroundColor: '#E05A4E' }}
           >
-            {addingAdmin ? 'Adding…' : 'Add admin'}
+            {adding ? 'Adding…' : 'Add admin'}
           </button>
-          <p className="text-xs text-gray-400">The new admin must log in once via OTP to link their auth account.</p>
+          <p className="text-xs text-gray-400">The new admin must log in once via OTP to activate their account.</p>
         </div>
       </section>
+
     </div>
   )
 }
