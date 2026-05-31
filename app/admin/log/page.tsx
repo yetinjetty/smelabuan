@@ -1,4 +1,4 @@
-import { createServiceClient } from '@/lib/supabase/server'
+﻿import { createServiceClient } from '@/lib/supabase/server'
 import { format } from 'date-fns'
 import type { ActivityLog } from '@/lib/types'
 import LogExport from './LogExport'
@@ -31,7 +31,7 @@ export default async function AdminLogPage({
   return (
     <div className="p-8 min-h-screen" style={{ backgroundColor: '#111827' }}>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-white">Activity Log</h1>
+        <h1 className="text-2xl font-bold" style={{ color: '#ffffff' }}>Activity Log</h1>
         <LogExport />
       </div>
 
@@ -83,11 +83,11 @@ export default async function AdminLogPage({
                       <p className="font-medium text-white">{log.members.full_name}</p>
                       <p className="text-xs text-gray-400">{log.members.member_id}</p>
                     </>
-                  ) : <span className="text-gray-600">—</span>}
+                  ) : <span className="text-gray-600">â€”</span>}
                 </td>
-                <td className="px-4 py-3 text-gray-300">{log.admin_users?.full_name ?? '—'}</td>
-                <td className="px-4 py-3 text-gray-400 max-w-[220px] truncate">{log.details ?? '—'}</td>
-                <td className="px-4 py-3 font-mono text-xs text-gray-500">{log.payment_ref ?? '—'}</td>
+                <td className="px-4 py-3 text-gray-300">{log.admin_users?.full_name ?? 'â€”'}</td>
+                <td className="px-4 py-3 text-gray-400 max-w-[220px] truncate">{log.details ?? 'â€”'}</td>
+                <td className="px-4 py-3 font-mono text-xs text-gray-500">{log.payment_ref ?? 'â€”'}</td>
               </tr>
             ))}
             {!logs?.length && (
@@ -141,3 +141,4 @@ function ActionBadge({ action }: { action: string }) {
     </span>
   )
 }
+

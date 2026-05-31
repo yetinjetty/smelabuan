@@ -27,7 +27,7 @@ export default async function AdminMembersPage({
 
   return (
     <div className="p-8 min-h-screen" style={{ backgroundColor: '#111827' }}>
-      <h1 className="text-2xl font-bold text-white mb-6">Members</h1>
+      <h1 className="text-2xl font-bold mb-6" style={{ color: "#ffffff" }} >Members</h1>
       <MembersTable
         members={members ?? []}
         total={count ?? 0}
@@ -39,4 +39,5 @@ export default async function AdminMembersPage({
     </div>
   )
 }
+
 

@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+﻿import { createClient } from '@/lib/supabase/server'
 import DealsAdmin from './DealsAdmin'
 import type { Deal } from '@/lib/types'
 
@@ -11,9 +11,10 @@ export default async function AdminDealsPage() {
     .returns<Deal[]>()
 
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Merchant Deals</h1>
+    <div className="p-8 min-h-screen" style={{ backgroundColor: '#111827' }}>
+      <h1 className="text-2xl font-bold mb-6" style={{ color: '#ffffff' }}>Merchant Deals</h1>
       <DealsAdmin deals={deals ?? []} />
     </div>
   )
 }
+

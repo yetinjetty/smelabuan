@@ -22,9 +22,10 @@ export default async function AdminSettingsPage() {
 
   return (
     <div className="p-8 max-w-2xl min-h-screen" style={{ backgroundColor: '#111827' }}>
-      <h1 className="text-2xl font-bold text-white mb-8">Settings</h1>
+      <h1 className="text-2xl font-bold mb-8" style={{ color: '#ffffff' }}>Settings</h1>
       <SettingsClient admins={admins ?? []} currentAdminId={currentAdmin?.id ?? ''} />
     </div>
   )
 }
+
 

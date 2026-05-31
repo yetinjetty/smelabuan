@@ -29,9 +29,10 @@ export default async function RenewalsPage() {
 
   return (
     <div className="p-8 min-h-screen" style={{ backgroundColor: '#111827' }}>
-      <h1 className="text-2xl font-bold text-white mb-6">Renewals</h1>
+      <h1 className="text-2xl font-bold mb-6" style={{ color: "#ffffff" }} >Renewals</h1>
       <RenewalsClient overdue={overdue ?? []} dueSoon={dueSoon ?? []} />
     </div>
   )
 }
+
 

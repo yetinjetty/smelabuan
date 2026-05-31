@@ -65,7 +65,7 @@ export default async function AdminDashboard() {
 
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-bold text-white">Dashboard</h1>
+        <h1 className="text-2xl font-bold" style={{ color: '#ffffff' }}>Dashboard</h1>
         <div className="flex gap-3">
           <a
             href="/api/admin/export-members"
