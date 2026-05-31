@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import nodemailer from 'nodemailer'
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,8 +22,14 @@ export async function POST(request: NextRequest) {
 
     if (!memberId) return Response.json({ error: 'memberId required' }, { status: 400 })
 
-    // Use service client to bypass RLS
     const service = createServiceClient()
+
+    // Get member details for the email
+    const { data: memberData } = await service
+      .from('members')
+      .select('full_name, email, business_name')
+      .eq('id', memberId)
+      .single()
 
     // Generate member_id
     const prefix = `SMEL-${membershipType === 'Life' ? 'L' : 'O'}`
@@ -62,6 +69,84 @@ export async function POST(request: NextRequest) {
       action: 'approved',
       details: `Approved as ${newMemberId}`,
     })
+
+    // Send approval email to member
+    if (memberData?.email) {
+      try {
+        const transporter = nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+            user: process.env.GMAIL_USER,
+            pass: process.env.GMAIL_APP_PASSWORD,
+          },
+        })
+
+        const expiryText = expiryDate
+          ? `Valid until: <strong>${new Date(expiryDate).toLocaleDateString('en-MY', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>`
+          : 'Lifetime membership — no expiry'
+
+        await transporter.sendMail({
+          from: `"SME Association Labuan" <${process.env.GMAIL_USER}>`,
+          to: memberData.email,
+          subject: `Welcome to SME Association Labuan — Membership Approved`,
+          html: `
+            <!DOCTYPE html>
+            <html>
+            <body style="margin:0;padding:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:40px 16px">
+                <tr><td align="center">
+                  <table width="100%" cellpadding="0" cellspacing="0" style="max-width:480px">
+
+                    <tr><td align="center" style="padding-bottom:24px">
+                      <div style="display:inline-block;width:56px;height:56px;background:#E05A4E;border-radius:14px;text-align:center;line-height:56px;font-size:22px;font-weight:700;color:#fff">S</div>
+                      <p style="margin:8px 0 0;font-size:15px;font-weight:600;color:#111827">SME Association Labuan</p>
+                    </td></tr>
+
+                    <tr><td style="background:#fff;border-radius:16px;padding:32px 28px;border:1px solid #e5e7eb">
+
+                      <div style="text-align:center;margin-bottom:24px">
+                        <div style="width:56px;height:56px;background:#dcfce7;border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center">
+                          <span style="font-size:28px">✓</span>
+                        </div>
+                        <h1 style="margin:0;font-size:20px;font-weight:700;color:#111827">Membership Approved!</h1>
+                        <p style="margin:8px 0 0;font-size:14px;color:#6b7280">Welcome to the SME Association Labuan</p>
+                      </div>
+
+                      <p style="font-size:14px;color:#374151">Dear <strong>${memberData.full_name}</strong>,</p>
+                      <p style="font-size:14px;color:#374151">We are pleased to inform you that your membership application has been approved. You now have full access to the member portal.</p>
+
+                      <div style="background:#fef2f2;border:2px solid #E05A4E;border-radius:12px;padding:20px;margin:24px 0;text-align:center">
+                        <p style="margin:0 0 4px;font-size:11px;font-weight:600;color:#E05A4E;letter-spacing:0.08em;text-transform:uppercase">Your Member ID</p>
+                        <p style="margin:0;font-size:28px;font-weight:700;color:#111827;letter-spacing:0.15em;font-family:monospace">${newMemberId}</p>
+                        <p style="margin:8px 0 0;font-size:12px;color:#6b7280">${membershipType} Membership &nbsp;·&nbsp; ${expiryText}</p>
+                      </div>
+
+                      <p style="font-size:14px;color:#374151">You can now log in to the member portal to access your digital membership card, member directory, events, and exclusive deals.</p>
+
+                      <div style="text-align:center;margin-top:24px">
+                        <a href="https://tanjw06.workers.dev/login" style="display:inline-block;background:#E05A4E;color:#fff;text-decoration:none;padding:12px 32px;border-radius:10px;font-size:14px;font-weight:600">
+                          Access Member Portal
+                        </a>
+                      </div>
+
+                    </td></tr>
+
+                    <tr><td align="center" style="padding-top:20px">
+                      <p style="margin:0;font-size:11px;color:#9ca3af">© 2025 SME Association Labuan &nbsp;·&nbsp; Labuan, Malaysia</p>
+                    </td></tr>
+
+                  </table>
+                </td></tr>
+              </table>
+            </body>
+            </html>
+          `,
+        })
+      } catch (emailErr) {
+        // Email failure is non-fatal — approval already saved
+        console.error('Approval email failed:', emailErr)
+      }
+    }
 
     return Response.json({ ok: true, member_id: newMemberId })
   } catch (err) {
