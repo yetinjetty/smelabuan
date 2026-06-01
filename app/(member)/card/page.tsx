@@ -37,9 +37,6 @@ export default async function CardPage() {
     )
   }
 
-  const qrData = `SMEL:${member.member_id}:${member.full_name}`
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrData)}`
-
   return (
     <div className="px-4 py-6 flex flex-col items-center">
       <h1 className="text-2xl font-bold text-gray-900 mb-6 self-start">My Card</h1>
@@ -86,13 +83,6 @@ export default async function CardPage() {
             {member.status.toUpperCase()}
           </span>
         </div>
-      </div>
-
-      {/* QR Code */}
-      <div className="mt-8 bg-white rounded-2xl border border-gray-200 p-6 flex flex-col items-center gap-3 w-full max-w-sm">
-        <p className="text-sm font-medium text-gray-700">Scan to verify</p>
-        <img src={qrUrl} alt="Member QR code" className="w-48 h-48" />
-        <p className="text-xs text-gray-400 font-mono">{member.member_id}</p>
       </div>
 
       {isAdmin && (

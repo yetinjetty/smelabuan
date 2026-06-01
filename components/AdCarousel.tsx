@@ -67,7 +67,7 @@ export default function AdCarousel({ ads }: { ads: Advertisement[] }) {
         <p className="text-xs font-semibold tracking-widest uppercase text-gray-400 mb-2">Advertisement</p>
 
         {/* Card */}
-        <div className="relative rounded-2xl overflow-hidden" style={{ minHeight: 160 }}>
+        <div className="relative rounded-2xl overflow-hidden" style={{ height: 160 }}>
 
           {/* Adaptive background image */}
           {ad.image_url ? (
