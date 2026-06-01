@@ -89,10 +89,10 @@ export default function SettingsClient({ admins, currentAdminId, currentAdminRol
                 ['Ordinary', 'Micro', 'RM 50 / year'],
                 ['All', 'All', 'RM 50 entry fee (one-time)'],
               ].map(([type, size, fee]) => (
-                <tr key={`${type}-${size}`}>
-                  <td className="px-4 py-2 text-gray-700">{type}</td>
-                  <td className="px-4 py-2 text-gray-700">{size}</td>
-                  <td className="px-4 py-2 font-medium text-gray-900">{fee}</td>
+                <tr key={`${type}-${size}`} className="hover:bg-white/5 transition-colors">
+                  <td className="px-4 py-2 text-gray-300">{type}</td>
+                  <td className="px-4 py-2 text-gray-300">{size}</td>
+                  <td className="px-4 py-2 font-medium text-white">{fee}</td>
                 </tr>
               ))}
             </tbody>
