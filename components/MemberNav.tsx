@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 
 const leftLinks = [
@@ -13,28 +14,6 @@ const rightLinks = [
   { href: '/events', label: 'Events', icon: CalendarIcon },
 ]
 
-function SmelaLogoMark({ inverted }: { inverted: boolean }) {
-  const ink = inverted ? '#ffffff' : '#000000'
-  const redTop = inverted ? 'rgba(255,255,255,0.95)' : '#CC0000'
-  const redBot = inverted ? 'rgba(255,255,255,0.60)' : '#8B1111'
-  return (
-    <svg viewBox="0 0 46 34" width="34" height="25" xmlns="http://www.w3.org/2000/svg">
-      {/* SM lettering */}
-      <text
-        y="28"
-        style={{ fontFamily: "'Arial Black', Impact, sans-serif", fontWeight: 900, fontSize: 30 }}
-        fill={ink}
-      >SM</text>
-      {/* E — three horizontal bars */}
-      <rect x="31" y="0"  width="3" height="11" fill={ink} />
-      <rect x="31" y="12" width="3" height="10" fill={ink} />
-      <rect x="31" y="23" width="3" height="11" fill={ink} />
-      {/* Red right-pointing chevron (3-D two-tone) */}
-      <polygon points="34,0  46,17 34,17" fill={redTop} />
-      <polygon points="34,17 46,17 34,34" fill={redBot} />
-    </svg>
-  )
-}
 
 export default function MemberNav() {
   const pathname = usePathname()
@@ -108,7 +87,17 @@ export default function MemberNav() {
               }}
               className="active:scale-90"
             >
-              <SmelaLogoMark inverted={isCard} />
+              <Image
+                src="/SMEA Labuan Logo v1.png"
+                alt="SMELA Labuan"
+                width={42}
+                height={32}
+                className="object-contain"
+                style={{
+                  filter: isCard ? 'brightness(0) invert(1)' : 'none',
+                  transition: 'filter 0.25s ease',
+                }}
+              />
             </div>
             <span
               className="text-[10px] font-medium transition-colors duration-200"
