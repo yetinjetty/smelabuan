@@ -3,32 +3,41 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 
-type Phase = 'loading' | 'enter' | 'blink' | 'zoom' | 'hidden'
+type Phase = 'enter' | 'blink' | 'zoom' | 'hidden'
 
 export default function SplashScreen() {
-  const [phase, setPhase] = useState<Phase>('loading')
+  // Start visible so the white screen covers page content the instant the layout mounts
+  const [phase, setPhase] = useState<Phase>('enter')
 
   useEffect(() => {
-    // Skip if already shown this login session
-    if (sessionStorage.getItem('sme_splashed')) {
+    const navEntry = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined
+    const isReload   = navEntry?.type === 'reload'
+    const isNavigate = !navEntry || navEntry.type === 'navigate'
+    const alreadySeen = !!sessionStorage.getItem('sme_splashed')
+
+    // Show on: first login (navigate, not yet seen) OR any refresh
+    if (!isReload && alreadySeen && !isNavigate) {
+      setPhase('hidden')
+      return
+    }
+    if (!isReload && alreadySeen) {
+      // Hard navigate back to member area after already seeing it this session → hide instantly
       setPhase('hidden')
       return
     }
 
-    // Start the sequence
-    setPhase('enter')
-
-    const t1 = setTimeout(() => setPhase('blink'), 300)          // logo fades in → start blinking
-    const t2 = setTimeout(() => setPhase('zoom'), 1500)           // blink done → zoom + fade
+    // Run the animation
+    const t1 = setTimeout(() => setPhase('blink'), 300)   // fade-in done → blink
+    const t2 = setTimeout(() => setPhase('zoom'),  1500)  // blink done  → zoom + fade
     const t3 = setTimeout(() => {
       setPhase('hidden')
       sessionStorage.setItem('sme_splashed', '1')
-    }, 2050)                                                       // unmount after zoom completes
+    }, 2050)                                               // animation complete
 
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
   }, [])
 
-  if (phase === 'loading' || phase === 'hidden') return null
+  if (phase === 'hidden') return null
 
   const isZooming = phase === 'zoom'
 
@@ -50,9 +59,7 @@ export default function SplashScreen() {
             : isZooming
               ? 'transform 0.55s ease-in, opacity 0.55s ease-in'
               : 'none',
-          animation: phase === 'blink'
-            ? 'splash-blink 0.4s ease-in-out 3'
-            : 'none',
+          animation: phase === 'blink' ? 'splash-blink 0.4s ease-in-out 3' : 'none',
         }}
       >
         <Image
