@@ -106,6 +106,26 @@ function InputField({ label, required, error, children }: {
 
 const inputCls = 'w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E05A4E] focus:border-transparent'
 
+function ReviewSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-2xl overflow-hidden bg-white border border-gray-200">
+      <div className="px-4 py-2 border-b border-gray-100">
+        <p className="text-xs font-bold uppercase tracking-widest text-gray-400">{title}</p>
+      </div>
+      <div className="px-4 py-2 space-y-1">{children}</div>
+    </div>
+  )
+}
+
+function ReviewRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between gap-4 py-1">
+      <span className="text-sm text-gray-500 shrink-0">{label}</span>
+      <span className="text-sm font-medium text-gray-900 text-right">{value || '—'}</span>
+    </div>
+  )
+}
+
 function ContinueBtn({ label = 'Continue →', onClick, disabled }: {
   label?: string; onClick?: () => void; disabled?: boolean
 }) {
@@ -190,6 +210,8 @@ export default function ApplyPage() {
   const [repName, setRepName] = useState('')
   const [repIc, setRepIc] = useState('')
   const [repPhone, setRepPhone] = useState('')
+  const [repEmail, setRepEmail] = useState('')
+  const [repPosition, setRepPosition] = useState('')
 
   // Step 4
   const [icFile, setIcFile] = useState<File | null>(null)
@@ -208,7 +230,8 @@ export default function ApplyPage() {
     if (hasDifferentRep) {
       if (!repName.trim()) e.repName = 'Representative name is required'
       if (!repIc.trim()) e.repIc = 'Representative IC is required'
-      if (!repPhone.trim()) e.repPhone = 'Representative phone is required'
+      if (!repPhone.trim()) e.repPhone = 'Representative mobile is required'
+      if (!repPosition.trim()) e.repPosition = 'Position / designation is required'
     }
     setErrors(e)
     return Object.keys(e).length === 0
@@ -242,6 +265,8 @@ export default function ApplyPage() {
         formData.append('rep_name', repName)
         formData.append('rep_ic', repIc)
         formData.append('rep_phone', repPhone)
+        formData.append('rep_email', repEmail)
+        formData.append('rep_position', repPosition)
       }
       if (icFile) formData.append('ic_document', icFile)
       if (ssmFile) formData.append('ssm_document', ssmFile)
@@ -476,16 +501,18 @@ export default function ApplyPage() {
                     placeholder="e.g. Ahmad bin Hassan" className={inputCls} />
                 </InputField>
                 <InputField label="IC number" required error={errors.icNumber}>
-                  <input value={icNumber} onChange={e => setIcNumber(e.target.value)}
-                    placeholder="e.g. 800101-12-3456" className={inputCls} />
+                  <input value={icNumber}
+                    onChange={e => setIcNumber(e.target.value.replace(/[^0-9-]/g, ''))}
+                    placeholder="e.g. 800101-12-3456" inputMode="numeric" className={inputCls} />
                 </InputField>
                 <InputField label="Email address" required error={errors.email}>
                   <input type="email" value={email} onChange={e => setEmail(e.target.value)}
                     placeholder="yourname@email.com" className={inputCls} />
                 </InputField>
                 <InputField label="Mobile number" required error={errors.phone}>
-                  <input type="tel" value={phone} onChange={e => setPhone(e.target.value)}
-                    placeholder="+60 12-345 6789" className={inputCls} />
+                  <input type="tel" value={phone}
+                    onChange={e => setPhone(e.target.value.replace(/[^0-9+\- ]/g, ''))}
+                    placeholder="+60 12-345 6789" inputMode="tel" className={inputCls} />
                 </InputField>
               </div>
             </div>
@@ -498,8 +525,9 @@ export default function ApplyPage() {
                     placeholder="e.g. Ahmad Trading Sdn Bhd" className={inputCls} />
                 </InputField>
                 <InputField label="SSM registration no." required error={errors.ssmRegNo}>
-                  <input value={ssmRegNo} onChange={e => setSsmRegNo(e.target.value)}
-                    placeholder="e.g. 202301012345" className={inputCls} />
+                  <input value={ssmRegNo}
+                    onChange={e => setSsmRegNo(e.target.value.replace(/[^0-9]/g, ''))}
+                    placeholder="e.g. 202301012345" inputMode="numeric" className={inputCls} />
                 </InputField>
                 <InputField label="Business sector" required error={errors.businessSector}>
                   <select value={businessSector} onChange={e => setBusinessSector(e.target.value)} className={inputCls}>
@@ -540,18 +568,39 @@ export default function ApplyPage() {
               </button>
 
               {hasDifferentRep && (
-                <div className="mt-3 space-y-3">
-                  <InputField label="Representative full name" required error={errors.repName}>
-                    <input value={repName} onChange={e => setRepName(e.target.value)} className={inputCls} />
+                <div className="mt-3 rounded-2xl border p-4 space-y-3" style={{ backgroundColor: '#fff1f0', borderColor: '#fecaca' }}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span style={{ color: '#E05A4E' }}>👤</span>
+                    <p className="text-sm font-semibold" style={{ color: '#E05A4E' }}>Nominated representative details</p>
+                  </div>
+                  <InputField label="Full name (as per IC)" required error={errors.repName}>
+                    <input value={repName} onChange={e => setRepName(e.target.value)}
+                      placeholder="e.g. Siti binti Ahmad" className={inputCls} />
                   </InputField>
-                  <InputField label="Representative IC number" required error={errors.repIc}>
-                    <input value={repIc} onChange={e => setRepIc(e.target.value)}
-                      placeholder="e.g. 900101-12-3456" className={inputCls} />
+                  <InputField label="IC number" required error={errors.repIc}>
+                    <input value={repIc}
+                      onChange={e => setRepIc(e.target.value.replace(/[^0-9-]/g, ''))}
+                      placeholder="e.g. 900202-12-5678" inputMode="numeric" className={inputCls} />
                   </InputField>
-                  <InputField label="Representative mobile number" required error={errors.repPhone}>
-                    <input type="tel" value={repPhone} onChange={e => setRepPhone(e.target.value)}
-                      placeholder="+60 12-345 6789" className={inputCls} />
+                  <InputField label="Mobile number" required error={errors.repPhone}>
+                    <input type="tel" value={repPhone}
+                      onChange={e => setRepPhone(e.target.value.replace(/[^0-9+\- ]/g, ''))}
+                      placeholder="+60 12-345 6789" inputMode="tel" className={inputCls} />
                   </InputField>
+                  <InputField label="Email address" error={errors.repEmail}>
+                    <input type="email" value={repEmail} onChange={e => setRepEmail(e.target.value)}
+                      placeholder="representative@email.com" className={inputCls} />
+                  </InputField>
+                  <InputField label="Position / designation" required error={errors.repPosition}>
+                    <input value={repPosition} onChange={e => setRepPosition(e.target.value)}
+                      placeholder="e.g. Director, Manager, Business Owner" className={inputCls} />
+                  </InputField>
+                  <div className="rounded-xl p-3 flex gap-2 bg-white border border-red-100">
+                    <span style={{ color: '#E05A4E' }}>ℹ</span>
+                    <p className="text-xs" style={{ color: '#E05A4E' }}>
+                      The nominated representative will attend association events and meetings on behalf of the registered member.
+                    </p>
+                  </div>
                 </div>
               )}
             </div>
@@ -587,67 +636,98 @@ export default function ApplyPage() {
       {/* ── STEP 5 ── */}
       {step === 5 && (
         <>
-          <StepHeader title="Review application" subtitle="Confirm your details" step={5} onBack={() => setStep(4)} />
+          <StepHeader title="Review & submit" subtitle="Confirm your application" step={5} onBack={() => setStep(4)} />
           <div className="flex-1 flex flex-col px-4 py-6 gap-4 overflow-y-auto">
 
-            <div className="rounded-2xl overflow-hidden bg-white border border-gray-200 divide-y divide-gray-100">
-              {([
-                ['Membership type', `${membershipType} Member`],
+            {/* Membership & Fees */}
+            <ReviewSection title="Membership & Fees">
+              {[
+                ['Type', `${membershipType} Member`],
+                ['Sector type', sectorCategory === 'Manufacturing' ? 'Manufacturing' : 'Services & Others'],
                 ['Business size', businessSize],
-                ['Sector', `${sectorCategory === 'Manufacturing' ? 'Manufacturing' : 'Services & Others'} — ${businessSector}`],
+                [membershipType === 'Life' ? 'Subscription' : 'Subscription', feeLabel(membershipType, businessSize)],
+                ['Entry fee', 'RM 50 (one-time)'],
+              ].map(([l, v]) => <ReviewRow key={l} label={l} value={v} />)}
+              <div className="flex justify-between pt-2 mt-1 border-t border-gray-100">
+                <span className="text-sm font-semibold text-gray-700">Total due now</span>
+                <span className="text-sm font-bold" style={{ color: '#E05A4E' }}>RM {dueNow(membershipType, businessSize).toLocaleString()}</span>
+              </div>
+            </ReviewSection>
+
+            {/* Registered person */}
+            <ReviewSection title="Registered Person">
+              {[
                 ['Full name', fullName],
                 ['IC number', icNumber],
                 ['Email', email],
-                ['Phone', phone],
-                ['Business name', businessName],
-                ['SSM reg. no.', ssmRegNo],
-                ['Business address', businessAddress],
-              ] as [string, string][]).map(([label, value]) => (
-                <div key={label} className="flex gap-3 px-4 py-3">
-                  <span className="text-xs text-gray-400 w-28 shrink-0 pt-0.5">{label}</span>
-                  <span className="text-sm text-gray-900 flex-1">{value}</span>
-                </div>
-              ))}
-              {hasDifferentRep && ([
-                ['Rep. name', repName],
-                ['Rep. IC', repIc],
-                ['Rep. phone', repPhone],
-              ] as [string, string][]).map(([label, value]) => (
-                <div key={label} className="flex gap-3 px-4 py-3">
-                  <span className="text-xs text-gray-400 w-28 shrink-0 pt-0.5">{label}</span>
-                  <span className="text-sm text-gray-900 flex-1">{value}</span>
-                </div>
-              ))}
-              <div className="flex gap-3 px-4 py-3">
-                <span className="text-xs text-gray-400 w-28 shrink-0 pt-0.5">IC document</span>
-                <span className="text-sm text-gray-900 flex-1 truncate">{icFile?.name ?? '—'}</span>
-              </div>
-              <div className="flex gap-3 px-4 py-3">
-                <span className="text-xs text-gray-400 w-28 shrink-0 pt-0.5">SSM document</span>
-                <span className="text-sm text-gray-900 flex-1 truncate">{ssmFile?.name ?? '—'}</span>
-              </div>
-            </div>
+                ['Mobile', phone],
+              ].map(([l, v]) => <ReviewRow key={l} label={l} value={v} />)}
+            </ReviewSection>
 
-            <div className="rounded-2xl p-4 flex justify-between items-center border" style={{ backgroundColor: '#fff1f0', borderColor: '#fecaca' }}>
-              <span className="text-sm font-semibold" style={{ color: '#E05A4E' }}>
-                Due now {membershipType === 'Ordinary' ? '(1st year)' : ''}
-              </span>
-              <span className="text-lg font-bold" style={{ color: '#E05A4E' }}>
-                RM {dueNow(membershipType, businessSize).toLocaleString()}
-              </span>
-            </div>
+            {/* Business details */}
+            <ReviewSection title="Business Details">
+              {[
+                ['Business', businessName],
+                ['SSM no.', ssmRegNo],
+                ['Sector', businessSector],
+                ['Address', businessAddress],
+              ].map(([l, v]) => <ReviewRow key={l} label={l} value={v} />)}
+            </ReviewSection>
 
-            <p className="text-xs text-center text-gray-400">
-              By submitting, you confirm all information is accurate. Payment details will be provided upon approval.
-            </p>
+            {/* Nominated rep */}
+            {hasDifferentRep && (
+              <ReviewSection title="Nominated Representative">
+                {[
+                  ['Name', repName],
+                  ['IC number', repIc],
+                  ['Mobile', repPhone],
+                  ...(repEmail ? [['Email', repEmail] as [string, string]] : []),
+                  ['Position', repPosition],
+                ].map(([l, v]) => <ReviewRow key={l} label={l} value={v} />)}
+              </ReviewSection>
+            )}
+
+            {/* Documents */}
+            <ReviewSection title="Documents">
+              <div className="flex justify-between py-1">
+                <span className="text-sm text-gray-500">IC copy</span>
+                <span className="text-sm font-medium text-green-600">{icFile ? 'Uploaded ✓' : '—'}</span>
+              </div>
+              <div className="flex justify-between py-1">
+                <span className="text-sm text-gray-500">SSM cert.</span>
+                <span className="text-sm font-medium text-green-600">{ssmFile ? 'Uploaded ✓' : '—'}</span>
+              </div>
+            </ReviewSection>
+
+            {/* Confirmation checkbox */}
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input type="checkbox" id="confirm" required className="mt-0.5 w-4 h-4 accent-[#E05A4E]" />
+              <span className="text-xs text-gray-600">
+                I confirm the information is accurate and agree to the{' '}
+                <span className="underline" style={{ color: '#E05A4E' }}>membership terms</span>
+                {' '}of SME Association of Labuan.
+              </span>
+            </label>
 
             {serverError && <p className="text-sm text-center text-red-500">{serverError}</p>}
 
-            <ContinueBtn
-              label={submitting ? 'Submitting…' : 'Submit application'}
-              disabled={submitting}
+            <button
+              type="button"
               onClick={submit}
-            />
+              disabled={submitting}
+              className="w-full py-4 rounded-2xl text-white font-semibold text-base disabled:opacity-50 flex items-center justify-center gap-2"
+              style={{ backgroundColor: '#111827' }}
+            >
+              <span>✈</span>
+              {submitting ? 'Submitting…' : 'Submit application'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setStep(3)}
+              className="w-full py-4 rounded-2xl font-semibold text-sm border border-gray-300 text-gray-700 bg-white"
+            >
+              Edit details
+            </button>
           </div>
         </>
       )}

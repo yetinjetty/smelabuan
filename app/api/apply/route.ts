@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
       full_name, email, phone,
       business_name, business_sector, business_size, membership_type,
       ic_number, ssm_reg_no, business_address, sector_category,
-      rep_name, rep_ic, rep_phone,
+      rep_name, rep_ic, rep_phone, rep_email, rep_position,
     } = fields
 
     if (!full_name || !email || !membership_type) {
@@ -47,6 +47,8 @@ export async function POST(request: NextRequest) {
         rep_name: rep_name ?? null,
         rep_ic: rep_ic ?? null,
         rep_phone: rep_phone ?? null,
+        rep_email: rep_email ?? null,
+        rep_position: rep_position ?? null,
       })
       .select()
       .single()
