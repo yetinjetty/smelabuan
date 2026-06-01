@@ -105,10 +105,7 @@ export default function MemberNav() {
       <Link
         href="/card"
         className="absolute left-1/2 -translate-x-1/2 active:scale-90 transition-transform duration-150"
-        style={{
-          bottom: 18,
-          WebkitTapHighlightColor: 'transparent',
-        }}
+        style={{ bottom: 18, WebkitTapHighlightColor: 'transparent' }}
       >
         <div
           style={{

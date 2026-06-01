@@ -62,6 +62,8 @@ export default function TapEffect() {
       const touch = e instanceof TouchEvent ? e.touches[0] : e
       const target = (e.target as HTMLElement).closest('button, a') as HTMLElement | null
       if (!target) return
+      // Nav bar has its own tap effects — skip to avoid square halo and overflow clipping
+      if (target.closest('nav')) return
 
       const rect = target.getBoundingClientRect()
       const [r, g, b] = getBgColor(target)
