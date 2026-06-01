@@ -166,35 +166,26 @@ export default function AdCarousel({ ads }: { ads: Advertisement[] }) {
             }}
             onClick={e => e.stopPropagation()}
           >
-            {/* Banner with image + overlay */}
-            <div className="relative h-52 overflow-hidden">
+            {/* Banner — clean image, no overlay */}
+            <div className="relative overflow-hidden">
               {modal.image_url ? (
-                <img src={modal.image_url} alt={modal.advertiser_name} className="w-full h-full object-cover" />
+                <img src={modal.image_url} alt={modal.advertiser_name} className="w-full object-cover" style={{ maxHeight: 220 }} />
               ) : (
-                <div className="w-full h-full" style={{ background: 'linear-gradient(135deg, #E05A4E 0%, #c0392b 100%)' }} />
+                <div className="h-32" style={{ background: 'linear-gradient(135deg, #E05A4E 0%, #c0392b 100%)' }} />
               )}
-              {/* Red transparency overlay */}
-              <div
-                className="absolute inset-0"
-                style={{
-                  background: modal.image_url
-                    ? 'linear-gradient(135deg, rgba(224,90,78,0.65) 0%, rgba(140,30,20,0.75) 100%)'
-                    : 'linear-gradient(135deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.25) 100%)',
-                }}
-              />
-              <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-white/10" />
               <button
                 onClick={closeModal}
                 className="absolute top-4 right-4 w-8 h-8 bg-black/30 rounded-full flex items-center justify-center text-white text-lg z-10"
               >×</button>
-              <div className="absolute bottom-4 left-4 right-4 z-10">
-                <p className="text-white font-bold text-xl drop-shadow">{modal.advertiser_name}</p>
-                <p className="text-white/85 text-sm drop-shadow">{modal.headline}</p>
-              </div>
             </div>
 
             {/* Details */}
             <div className="p-6 space-y-4">
+              {/* Title below image, not on top of it */}
+              <div>
+                <p className="text-gray-900 font-bold text-xl">{modal.advertiser_name}</p>
+                <p className="text-gray-500 text-sm mt-0.5">{modal.headline}</p>
+              </div>
               {modal.description && (
                 <p className="text-gray-700 text-sm leading-relaxed">{modal.description}</p>
               )}
