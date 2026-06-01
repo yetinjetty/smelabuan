@@ -12,6 +12,16 @@ export default function AdCarousel({ ads }: { ads: Advertisement[] }) {
   const [modalVisible, setModalVisible] = useState(false)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
+  // Direct DOM refs for the modal sheet drag — avoids re-renders on every touchmove frame
+  const sheetEl = useRef<HTMLDivElement>(null)
+  const backdropEl = useRef<HTMLDivElement>(null)
+  const sheetDragStartY = useRef(0)
+  const sheetDragOffset = useRef(0)
+
+  // Carousel vertical swipe refs
+  const carouselTouchStartX = useRef(0)
+  const carouselTouchStartY = useRef(0)
+
   const goTo = useCallback((next: number, dir: 'right' | 'left') => {
     if (animating || next === current) return
     setDirection(dir)
@@ -46,6 +56,72 @@ export default function AdCarousel({ ads }: { ads: Advertisement[] }) {
     setTimeout(() => setModal(null), 300)
   }
 
+  // ── Carousel vertical swipe ────────────────────────────────────────────────
+  function onCarouselTouchStart(e: React.TouchEvent) {
+    carouselTouchStartX.current = e.touches[0].clientX
+    carouselTouchStartY.current = e.touches[0].clientY
+  }
+
+  function onCarouselTouchEnd(e: React.TouchEvent) {
+    const dx = e.changedTouches[0].clientX - carouselTouchStartX.current
+    const dy = e.changedTouches[0].clientY - carouselTouchStartY.current
+    // Only treat as a vertical swipe when it clearly dominates horizontal movement
+    if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 40) {
+      dy < 0 ? goNext() : goPrev()  // swipe up → next, swipe down → prev
+      resetTimer()
+    }
+  }
+
+  // ── Modal sheet swipe-to-dismiss ───────────────────────────────────────────
+  function onSheetTouchStart(e: React.TouchEvent) {
+    sheetDragStartY.current = e.touches[0].clientY
+    sheetDragOffset.current = 0
+  }
+
+  function onSheetTouchMove(e: React.TouchEvent) {
+    const delta = Math.max(0, e.touches[0].clientY - sheetDragStartY.current)
+    sheetDragOffset.current = delta
+    if (sheetEl.current) {
+      sheetEl.current.style.transition = 'none'
+      sheetEl.current.style.transform = `translateY(${delta}px)`
+    }
+    if (backdropEl.current) {
+      const opacity = Math.max(0, 0.65 * (1 - delta / 350))
+      backdropEl.current.style.backgroundColor = `rgba(0,0,0,${opacity.toFixed(2)})`
+    }
+  }
+
+  function onSheetTouchEnd() {
+    const offset = sheetDragOffset.current
+    sheetDragOffset.current = 0
+
+    if (offset > 80) {
+      // Flick off screen then unmount
+      if (sheetEl.current) {
+        sheetEl.current.style.transition = 'transform 0.25s ease'
+        sheetEl.current.style.transform = 'translateY(110%)'
+      }
+      if (backdropEl.current) {
+        backdropEl.current.style.transition = 'background-color 0.25s ease'
+        backdropEl.current.style.backgroundColor = 'rgba(0,0,0,0)'
+      }
+      setTimeout(() => {
+        setModal(null)
+        setModalVisible(false)
+      }, 250)
+    } else {
+      // Snap back
+      if (sheetEl.current) {
+        sheetEl.current.style.transition = 'transform 0.3s ease'
+        sheetEl.current.style.transform = 'translateY(0)'
+      }
+      if (backdropEl.current) {
+        backdropEl.current.style.transition = 'background-color 0.3s ease'
+        backdropEl.current.style.backgroundColor = 'rgba(0,0,0,0.65)'
+      }
+    }
+  }
+
   if (!ads.length) return null
 
   const ad = ads[current]
@@ -67,10 +143,13 @@ export default function AdCarousel({ ads }: { ads: Advertisement[] }) {
       <div>
         <p className="text-xs font-semibold tracking-widest uppercase text-gray-400 mb-2">Advertisement</p>
 
-        {/* Card */}
-        <div className="relative rounded-2xl overflow-hidden" style={{ height: 160 }}>
-
-          {/* Adaptive background image */}
+        {/* Card — touch-action:none so vertical swipe is captured, not the page scroll */}
+        <div
+          className="relative rounded-2xl overflow-hidden"
+          style={{ height: 160, touchAction: 'none' }}
+          onTouchStart={onCarouselTouchStart}
+          onTouchEnd={onCarouselTouchEnd}
+        >
           {ad.image_url ? (
             <img
               key={ad.id}
@@ -86,24 +165,21 @@ export default function AdCarousel({ ads }: { ads: Advertisement[] }) {
             />
           )}
 
-          {/* Dark + red transparency overlay */}
           <div
             className="absolute inset-0"
             style={{
               background: ad.image_url
                 ? 'linear-gradient(135deg, rgba(224,90,78,0.72) 0%, rgba(140,30,20,0.80) 100%)'
                 : 'linear-gradient(135deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.3) 100%)',
-              backdropFilter: ad.image_url ? 'blur(0px)' : undefined,
             }}
           />
-
 
           {/* Ad badge */}
           <div className="absolute top-3 right-3 z-10">
             <span className="bg-black/30 backdrop-blur-sm text-white text-[10px] font-semibold px-2 py-0.5 rounded-md">Ad</span>
           </div>
 
-          {/* Slide content — absolutely positioned so height is always fixed */}
+          {/* Slide content */}
           <div
             className="absolute inset-0 z-10 flex flex-col items-center justify-center px-12 text-center"
             style={slideStyle}
@@ -123,17 +199,17 @@ export default function AdCarousel({ ads }: { ads: Advertisement[] }) {
             <>
               <button
                 onClick={() => { goPrev(); resetTimer() }}
-                className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 bg-black/25 hover:bg-black/40 rounded-xl flex items-center justify-center text-white text-lg font-bold transition-all active:scale-90"
+                className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 bg-black/25 rounded-xl flex items-center justify-center text-white text-lg font-bold transition-all active:scale-90"
               >‹</button>
               <button
                 onClick={() => { goNext(); resetTimer() }}
-                className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 bg-black/25 hover:bg-black/40 rounded-xl flex items-center justify-center text-white text-lg font-bold transition-all active:scale-90"
+                className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 bg-black/25 rounded-xl flex items-center justify-center text-white text-lg font-bold transition-all active:scale-90"
               >›</button>
             </>
           )}
         </div>
 
-        {/* Dot indicators with countdown progress */}
+        {/* Dot indicators */}
         {ads.length > 1 && (
           <div className="flex justify-center items-center gap-2 mt-2.5">
             {ads.map((_, i) => (
@@ -170,23 +246,38 @@ export default function AdCarousel({ ads }: { ads: Advertisement[] }) {
         `}</style>
       </div>
 
-      {/* Modal — portalled to body so it renders above the nav and hero card */}
+      {/* Modal — portalled to body, above nav and hero card */}
       {modal && createPortal(
         <div
-          className="fixed inset-0 flex items-end justify-center transition-all duration-300"
-          style={{ zIndex: 9999, backgroundColor: modalVisible ? 'rgba(0,0,0,0.65)' : 'rgba(0,0,0,0)' }}
+          ref={backdropEl}
+          className="fixed inset-0 flex items-end justify-center"
+          style={{
+            zIndex: 9999,
+            backgroundColor: modalVisible ? 'rgba(0,0,0,0.65)' : 'rgba(0,0,0,0)',
+            transition: 'background-color 0.3s ease',
+          }}
           onClick={closeModal}
         >
           <div
-            className="w-full max-w-md rounded-t-3xl overflow-hidden shadow-2xl transition-transform duration-300"
+            ref={sheetEl}
+            className="w-full max-w-md rounded-t-3xl overflow-hidden shadow-2xl"
             style={{
               backgroundColor: '#fff',
               transform: modalVisible ? 'translateY(0)' : 'translateY(100%)',
+              transition: 'transform 0.3s ease',
             }}
             onClick={e => e.stopPropagation()}
+            onTouchStart={onSheetTouchStart}
+            onTouchMove={onSheetTouchMove}
+            onTouchEnd={onSheetTouchEnd}
           >
-            {/* Tall banner — extends visually over the text section */}
-            <div className="relative" style={{ height: 280 }}>
+            {/* Drag handle */}
+            <div className="flex justify-center pt-3 pb-1">
+              <div className="w-10 h-1 bg-gray-300 rounded-full" />
+            </div>
+
+            {/* Tall banner */}
+            <div className="relative" style={{ height: 260 }}>
               {modal.image_url ? (
                 <img
                   src={modal.image_url}
@@ -199,21 +290,18 @@ export default function AdCarousel({ ads }: { ads: Advertisement[] }) {
                   style={{ background: 'linear-gradient(135deg, #E05A4E 0%, #c0392b 100%)' }}
                 />
               )}
-              {/* Close button */}
               <button
                 onClick={closeModal}
                 className="absolute top-4 right-4 w-9 h-9 bg-black/30 rounded-full flex items-center justify-center text-white text-xl z-10 active:scale-90 transition-transform"
               >×</button>
             </div>
 
-            {/* Content card — overlaps the banner by 24px */}
+            {/* Content */}
             <div
-              className="relative bg-white rounded-t-3xl px-6 pt-5 pb-6 space-y-3"
+              className="relative bg-white rounded-t-3xl px-6 pt-5 pb-8 space-y-3"
               style={{ marginTop: -24 }}
             >
-              {/* Drag handle */}
               <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4" />
-
               <div>
                 <p className="text-gray-900 font-bold text-xl">{modal.advertiser_name}</p>
                 <p className="text-gray-500 text-sm mt-0.5">{modal.headline}</p>
