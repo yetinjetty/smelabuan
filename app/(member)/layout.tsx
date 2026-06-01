@@ -67,6 +67,10 @@ export default async function MemberLayout({ children }: { children: React.React
   // Active (or expired — allow access but pages can show renewal notice)
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
+      <style>{`
+        button:active, a:active { transform: scale(0.95); transition: transform 0.1s ease; }
+        button, a { transition: transform 0.15s ease, opacity 0.15s ease; }
+      `}</style>
       <SessionGuard />
       <main className="flex-1 pb-20">{children}</main>
       <MemberNav />

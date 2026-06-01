@@ -111,7 +111,7 @@ export default function AdCarousel({ ads }: { ads: Advertisement[] }) {
             <p className="text-white/85 text-sm mb-4 drop-shadow line-clamp-2">{ad.headline}</p>
             <button
               onClick={() => openModal(ad)}
-              className="bg-white/95 text-gray-900 font-bold text-sm px-8 py-2.5 rounded-xl shadow-lg active:scale-95 transition-transform"
+              className="bg-white/95 text-gray-900 font-bold text-sm px-8 py-2.5 rounded-xl shadow-lg active:scale-90 transition-all duration-150"
             >
               Book now
             </button>
@@ -184,22 +184,35 @@ export default function AdCarousel({ ads }: { ads: Advertisement[] }) {
             }}
             onClick={e => e.stopPropagation()}
           >
-            {/* Banner — clean image, no overlay */}
-            <div className="relative overflow-hidden">
+            {/* Tall banner — extends visually over the text section */}
+            <div className="relative" style={{ height: 280 }}>
               {modal.image_url ? (
-                <img src={modal.image_url} alt={modal.advertiser_name} className="w-full object-cover" style={{ maxHeight: 220 }} />
+                <img
+                  src={modal.image_url}
+                  alt={modal.advertiser_name}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
               ) : (
-                <div className="h-32" style={{ background: 'linear-gradient(135deg, #E05A4E 0%, #c0392b 100%)' }} />
+                <div
+                  className="absolute inset-0"
+                  style={{ background: 'linear-gradient(135deg, #E05A4E 0%, #c0392b 100%)' }}
+                />
               )}
+              {/* Close button */}
               <button
                 onClick={closeModal}
-                className="absolute top-4 right-4 w-8 h-8 bg-black/30 rounded-full flex items-center justify-center text-white text-lg z-10"
+                className="absolute top-4 right-4 w-9 h-9 bg-black/30 rounded-full flex items-center justify-center text-white text-xl z-10 active:scale-90 transition-transform"
               >×</button>
             </div>
 
-            {/* Details */}
-            <div className="p-6 space-y-4">
-              {/* Title below image, not on top of it */}
+            {/* Content card — overlaps the banner by 24px */}
+            <div
+              className="relative bg-white rounded-t-3xl px-6 pt-5 pb-6 space-y-3"
+              style={{ marginTop: -24 }}
+            >
+              {/* Drag handle */}
+              <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4" />
+
               <div>
                 <p className="text-gray-900 font-bold text-xl">{modal.advertiser_name}</p>
                 <p className="text-gray-500 text-sm mt-0.5">{modal.headline}</p>
@@ -218,7 +231,7 @@ export default function AdCarousel({ ads }: { ads: Advertisement[] }) {
                   href={modal.link_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block w-full py-3.5 rounded-2xl text-white font-bold text-center active:scale-95 transition-transform"
+                  className="block w-full py-3.5 rounded-2xl text-white font-bold text-center active:scale-95 transition-transform mt-2"
                   style={{ background: 'linear-gradient(135deg, #E05A4E 0%, #c0392b 100%)' }}
                 >
                   Book now
@@ -226,7 +239,7 @@ export default function AdCarousel({ ads }: { ads: Advertisement[] }) {
               ) : (
                 <button
                   onClick={closeModal}
-                  className="w-full py-3.5 rounded-2xl text-white font-bold active:scale-95 transition-transform"
+                  className="w-full py-3.5 rounded-2xl text-white font-bold active:scale-95 transition-transform mt-2"
                   style={{ background: 'linear-gradient(135deg, #E05A4E 0%, #c0392b 100%)' }}
                 >
                   Got it
