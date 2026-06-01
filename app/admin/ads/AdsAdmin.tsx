@@ -4,7 +4,6 @@ import { useState, useRef } from 'react'
 import { format } from 'date-fns'
 import type { Advertisement } from '@/lib/types'
 import { PaginationBar } from '@/components/TablePagination'
-import { createClient } from '@/lib/supabase/client'
 
 type AdForm = {
   advertiser_name: string
@@ -77,18 +76,20 @@ export default function AdsAdmin({ ads }: { ads: Advertisement[] }) {
     try {
       let image_url = editing?.image_url ?? null
 
-      // Upload image if a new file was selected
+      // Upload image via server-side API (uses service role)
       if (imageFile) {
-        const supabase = createClient()
-        const ext = imageFile.name.split('.').pop()
-        const path = `ads/${Date.now()}.${ext}`
-        const { error: uploadError } = await supabase.storage
-          .from('ad-images')
-          .upload(path, imageFile, { upsert: true })
-        if (!uploadError) {
-          const { data } = supabase.storage.from('ad-images').getPublicUrl(path)
-          image_url = data.publicUrl
+        const fd = new FormData()
+        fd.append('file', imageFile)
+        const uploadRes = await fetch('/api/admin/upload-ad-image', { method: 'POST', body: fd })
+        const uploadJson = await uploadRes.json()
+        if (uploadRes.ok && uploadJson.url) {
+          image_url = uploadJson.url
         }
+      }
+
+      // Clear image if user removed it
+      if (!imageFile && !imagePreview) {
+        image_url = null
       }
 
       const payload = {
