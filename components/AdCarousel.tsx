@@ -18,9 +18,22 @@ export default function AdCarousel({ ads }: { ads: Advertisement[] }) {
   const sheetDragStartY = useRef(0)
   const sheetDragOffset = useRef(0)
 
-  // Carousel vertical swipe refs
+  // Carousel horizontal swipe refs
   const carouselTouchStartX = useRef(0)
   const carouselTouchStartY = useRef(0)
+
+  // Prevent iOS pull-to-refresh while the sheet is being dragged down
+  useEffect(() => {
+    if (!modal) return
+    const el = sheetEl.current
+    if (!el) return
+    function block(e: TouchEvent) {
+      const dy = e.touches[0].clientY - sheetDragStartY.current
+      if (dy > 0 && e.cancelable) e.preventDefault()
+    }
+    el.addEventListener('touchmove', block, { passive: false })
+    return () => el.removeEventListener('touchmove', block)
+  }, [modal])
 
   const goTo = useCallback((next: number, dir: 'right' | 'left') => {
     if (animating || next === current) return
@@ -56,7 +69,7 @@ export default function AdCarousel({ ads }: { ads: Advertisement[] }) {
     setTimeout(() => setModal(null), 300)
   }
 
-  // ── Carousel vertical swipe ────────────────────────────────────────────────
+  // ── Carousel horizontal swipe ─────────────────────────────────────────────
   function onCarouselTouchStart(e: React.TouchEvent) {
     carouselTouchStartX.current = e.touches[0].clientX
     carouselTouchStartY.current = e.touches[0].clientY
@@ -65,9 +78,9 @@ export default function AdCarousel({ ads }: { ads: Advertisement[] }) {
   function onCarouselTouchEnd(e: React.TouchEvent) {
     const dx = e.changedTouches[0].clientX - carouselTouchStartX.current
     const dy = e.changedTouches[0].clientY - carouselTouchStartY.current
-    // Only treat as a vertical swipe when it clearly dominates horizontal movement
-    if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 40) {
-      dy < 0 ? goNext() : goPrev()  // swipe up → next, swipe down → prev
+    // Only treat as horizontal swipe when it clearly dominates vertical movement
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
+      dx < 0 ? goNext() : goPrev()  // swipe left → next, swipe right → prev
       resetTimer()
     }
   }
@@ -146,7 +159,7 @@ export default function AdCarousel({ ads }: { ads: Advertisement[] }) {
         {/* Card — touch-action:none so vertical swipe is captured, not the page scroll */}
         <div
           className="relative rounded-2xl overflow-hidden"
-          style={{ height: 160, touchAction: 'none' }}
+          style={{ height: 160, touchAction: 'pan-y' }}
           onTouchStart={onCarouselTouchStart}
           onTouchEnd={onCarouselTouchEnd}
         >
