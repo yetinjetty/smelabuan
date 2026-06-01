@@ -45,6 +45,7 @@ export default function AdminSidebar({
   async function signOut() {
     localStorage.removeItem('sme_remember_until')
     sessionStorage.removeItem('sme_session')
+    sessionStorage.removeItem('sme_splashed')
     const supabase = createClient()
     await supabase.auth.signOut()
     router.push('/login')
