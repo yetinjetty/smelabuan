@@ -31,7 +31,7 @@ export default async function HomePage() {
       .select('*')
       .gte('event_date', new Date().toISOString().split('T')[0])
       .order('event_date', { ascending: true })
-      .limit(3)
+      .limit(5)
       .returns<Event[]>(),
   ])
 
