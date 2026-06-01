@@ -287,7 +287,7 @@ export default function ApplyPage() {
       {/* ── STEP 1 ── */}
       {step === 1 && (
         <>
-          <StepHeader title="Apply for membership" subtitle="Choose membership type" step={1} />
+          <StepHeader title="Apply for membership" subtitle="Choose membership type" step={1} onBack={() => window.location.href = '/login'} />
           <div className="flex-1 flex flex-col px-4 py-6 gap-4">
             <RadioCard checked={membershipType === 'Life'} onClick={() => setMembershipType('Life')}>
               <p className="font-semibold text-sm text-gray-900">Life Member</p>
@@ -354,7 +354,7 @@ export default function ApplyPage() {
             </div>
 
             <div className="space-y-3">
-              {(membershipType === 'Life' ? [
+              {(membershipType === 'Life' && sectorCategory === 'Manufacturing' ? [
                 {
                   value: 'Medium' as BusinessSize,
                   short: 'Medium',
