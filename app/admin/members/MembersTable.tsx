@@ -97,6 +97,15 @@ export default function MembersTable({
     if (result.ok) { setSelected(null); window.location.reload() }
   }
 
+  async function upgradeMember(member: Member) {
+    if (!confirm(`Upgrade ${member.full_name} from Ordinary to Life Member? This will assign a new Life member ID and remove the expiry date.`)) return
+    const result = await callApi('upgrade-member', { memberId: member.id })
+    if (result.ok) {
+      setActionInfo(`${member.full_name} has been upgraded to Life Member (${result.json.newMemberId}).`)
+      setTimeout(() => window.location.reload(), 1500)
+    }
+  }
+
   const totalPages = Math.ceil(total / pageSize)
 
   return (
@@ -195,19 +204,20 @@ export default function MembersTable({
 
       {/* Member detail drawer */}
       {selected && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex justify-end" onClick={() => setSelected(null)}>
+        <div className="fixed inset-0 bg-black/60 z-50 flex justify-end" onClick={() => setSelected(null)}>
           <div
-            className="w-full max-w-md bg-white h-full overflow-y-auto p-6 shadow-xl"
+            className="w-full max-w-md h-full overflow-y-auto p-6 shadow-2xl border-l border-gray-700"
+            style={{ backgroundColor: '#111827' }}
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-bold text-gray-900">Member Details</h2>
-              <button onClick={() => setSelected(null)} className="text-gray-400 hover:text-gray-600">✕</button>
+              <h2 className="text-lg font-bold text-white">Member Details</h2>
+              <button onClick={() => setSelected(null)} className="text-gray-500 hover:text-white text-xl leading-none">✕</button>
             </div>
 
             <dl className="space-y-4 text-sm">
               {/* Membership */}
-              <div className="text-xs font-semibold uppercase tracking-widest text-gray-400 pb-1 border-b border-gray-100">Membership</div>
+              <div className="text-xs font-semibold uppercase tracking-widest text-gray-500 pb-1 border-b border-gray-700">Membership</div>
               {[
                 ['Member ID', selected.member_id || '—'],
                 ['Membership type', selected.membership_type ?? '—'],
@@ -218,12 +228,12 @@ export default function MembersTable({
               ].map(([k, v]) => (
                 <div key={k} className="flex justify-between gap-4">
                   <dt className="text-gray-500 shrink-0">{k}</dt>
-                  <dd className="text-gray-900 text-right">{v}</dd>
+                  <dd className="text-white text-right">{v}</dd>
                 </div>
               ))}
 
               {/* Personal */}
-              <div className="text-xs font-semibold uppercase tracking-widest text-gray-400 pb-1 border-b border-gray-100 pt-2">Personal</div>
+              <div className="text-xs font-semibold uppercase tracking-widest text-gray-500 pb-1 border-b border-gray-700 pt-2">Personal</div>
               {[
                 ['Full name', selected.full_name],
                 ['IC number', selected.ic_number ?? '—'],
@@ -232,12 +242,12 @@ export default function MembersTable({
               ].map(([k, v]) => (
                 <div key={k} className="flex justify-between gap-4">
                   <dt className="text-gray-500 shrink-0">{k}</dt>
-                  <dd className="text-gray-900 text-right break-all">{v}</dd>
+                  <dd className="text-white text-right break-all">{v}</dd>
                 </div>
               ))}
 
               {/* Business */}
-              <div className="text-xs font-semibold uppercase tracking-widest text-gray-400 pb-1 border-b border-gray-100 pt-2">Business</div>
+              <div className="text-xs font-semibold uppercase tracking-widest text-gray-500 pb-1 border-b border-gray-700 pt-2">Business</div>
               {[
                 ['Business name', selected.business_name ?? '—'],
                 ['SSM reg. no.', selected.ssm_reg_no ?? '—'],
@@ -248,14 +258,14 @@ export default function MembersTable({
               ].map(([k, v]) => (
                 <div key={k} className="flex justify-between gap-4">
                   <dt className="text-gray-500 shrink-0">{k}</dt>
-                  <dd className="text-gray-900 text-right">{v}</dd>
+                  <dd className="text-white text-right">{v}</dd>
                 </div>
               ))}
 
               {/* Representative */}
               {selected.rep_name && (
                 <>
-                  <div className="text-xs font-semibold uppercase tracking-widest text-gray-400 pb-1 border-b border-gray-100 pt-2">Representative</div>
+                  <div className="text-xs font-semibold uppercase tracking-widest text-gray-500 pb-1 border-b border-gray-700 pt-2">Representative</div>
                   {[
                     ['Name', selected.rep_name],
                     ['IC number', selected.rep_ic ?? '—'],
@@ -263,15 +273,15 @@ export default function MembersTable({
                   ].map(([k, v]) => (
                     <div key={k} className="flex justify-between gap-4">
                       <dt className="text-gray-500 shrink-0">{k}</dt>
-                      <dd className="text-gray-900 text-right">{v}</dd>
+                      <dd className="text-white text-right">{v}</dd>
                     </div>
                   ))}
                 </>
               )}
             </dl>
 
-            {actionError && <p className="text-red-500 text-sm mt-4">{actionError}</p>}
-            {actionInfo && <p className="text-amber-600 text-sm mt-4">{actionInfo}</p>}
+            {actionError && <p className="text-red-400 text-sm mt-4">{actionError}</p>}
+            {actionInfo && <p className="text-amber-400 text-sm mt-4">{actionInfo}</p>}
 
             <div className="mt-8 space-y-3">
               {/* Pending: approve / reject */}
@@ -294,12 +304,24 @@ export default function MembersTable({
                 </div>
               )}
 
+              {/* Ordinary active: upgrade to Life */}
+              {selected.status === 'active' && selected.membership_type === 'Ordinary' && (
+                <button
+                  disabled={!!loadingAction}
+                  onClick={() => upgradeMember(selected)}
+                  className="w-full py-2.5 rounded-xl font-medium text-sm text-white disabled:opacity-60 transition-colors"
+                  style={{ backgroundColor: '#7c3aed' }}
+                >
+                  {loadingAction === 'upgrade-member' ? 'Upgrading…' : '⬆ Upgrade to Life Member'}
+                </button>
+              )}
+
               {/* Active: deactivate */}
               {selected.status === 'active' && (
                 <button
                   disabled={!!loadingAction}
                   onClick={() => setStatus(selected, 'inactive')}
-                  className="w-full py-2.5 rounded-xl font-medium text-sm border border-orange-300 text-orange-600 hover:bg-orange-50 disabled:opacity-60"
+                  className="w-full py-2.5 rounded-xl font-medium text-sm border border-orange-600 text-orange-400 hover:bg-orange-900/20 disabled:opacity-60"
                 >
                   {loadingAction === 'set-status' ? 'Deactivating…' : 'Deactivate membership'}
                 </button>
@@ -320,7 +342,7 @@ export default function MembersTable({
               <button
                 disabled={!!loadingAction}
                 onClick={() => deleteMember(selected)}
-                className="w-full py-2.5 rounded-xl font-medium text-sm border border-red-200 text-red-500 hover:bg-red-50 disabled:opacity-60"
+                className="w-full py-2.5 rounded-xl font-medium text-sm border border-red-800 text-red-400 hover:bg-red-900/20 disabled:opacity-60"
               >
                 {loadingAction === 'delete-member' ? 'Deleting…' : 'Delete member record'}
               </button>
