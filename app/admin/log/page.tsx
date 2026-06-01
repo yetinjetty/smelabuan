@@ -2,7 +2,7 @@
 import { format } from 'date-fns'
 import type { ActivityLog } from '@/lib/types'
 import LogExport from './LogExport'
-import { PaginationBar } from '@/components/TablePagination'
+import LogPaginationBar from './LogPaginationBar'
 
 export default async function AdminLogPage({
   searchParams,
@@ -99,13 +99,12 @@ export default async function AdminLogPage({
           </tbody>
         </table>
 
-        <PaginationBar
+        <LogPaginationBar
           page={pageNum}
           totalPages={totalPages}
           total={count ?? 0}
           pageSize={pageSize}
-          onPageChange={p => { window.location.href = `/admin/log?${action ? `action=${action}&` : ''}page=${p}&perPage=${pageSize}` }}
-          onPageSizeChange={ps => { window.location.href = `/admin/log?${action ? `action=${action}&` : ''}page=1&perPage=${ps}` }}
+          action={action}
         />
       </div>
     </div>
