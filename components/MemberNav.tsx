@@ -22,9 +22,10 @@ export default function MemberNav() {
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 safe-area-inset-bottom"
-      style={{ height: 64 }}
+      style={{ height: 64, overflow: 'visible' }}
     >
-      <div className="flex h-full">
+      {/* Tab row — centre slot is a plain spacer so tabs don't crowd the button */}
+      <div className="flex h-full overflow-visible">
 
         {/* Left tabs */}
         {leftLinks.map(({ href, label, icon: Icon }) => {
@@ -61,44 +62,8 @@ export default function MemberNav() {
           )
         })}
 
-        {/* Centre — floating SMELA card button */}
-        <div className="flex-1 relative flex items-center justify-center" style={{ overflow: 'visible' }}>
-          <Link
-            href="/card"
-            className="absolute flex flex-col items-center gap-1"
-            style={{
-              bottom: 8,
-              transition: 'transform 0.15s ease',
-            }}
-          >
-            <div
-              style={{
-                width: 60,
-                height: 60,
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: '#ffffff',
-                boxShadow: isCard
-                  ? '0 0 0 3px rgba(224,90,78,0.25), 0 -4px 18px rgba(0,0,0,0.07), 0 6px 18px rgba(0,0,0,0.09)'
-                  : '0 -4px 18px rgba(0,0,0,0.08), 0 6px 18px rgba(0,0,0,0.10)',
-                border: isCard ? '3px solid #E05A4E' : '2.5px solid #efefef',
-                transition: 'border-color 0.25s ease, box-shadow 0.25s ease, transform 0.15s ease',
-              }}
-              className="active:scale-90"
-            >
-              <Image
-                src="/SMEA Labuan Logo v1.png"
-                alt="SMELA Labuan"
-                width={42}
-                height={32}
-                className="object-contain"
-                style={{ mixBlendMode: 'multiply' }}
-              />
-            </div>
-          </Link>
-        </div>
+        {/* Centre spacer — keeps side tabs evenly spread */}
+        <div className="flex-1" />
 
         {/* Right tabs */}
         {rightLinks.map(({ href, label, icon: Icon }) => {
@@ -135,6 +100,43 @@ export default function MemberNav() {
         })}
 
       </div>
+
+      {/* Centre — anchored to nav directly so shadow overflows freely */}
+      <Link
+        href="/card"
+        className="absolute left-1/2 -translate-x-1/2 active:scale-90 transition-transform duration-150"
+        style={{
+          bottom: 18,
+          WebkitTapHighlightColor: 'transparent',
+        }}
+      >
+        <div
+          style={{
+            width: 64,
+            height: 64,
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: '#ffffff',
+            boxShadow: isCard
+              ? '0 0 0 4px rgba(224,90,78,0.20), 0 -8px 32px rgba(224,90,78,0.18), 0 8px 24px rgba(0,0,0,0.10)'
+              : '0 -8px 32px rgba(0,0,0,0.10), 0 8px 24px rgba(0,0,0,0.10)',
+            border: isCard ? '3px solid #E05A4E' : '2.5px solid #e8e8e8',
+            transition: 'border-color 0.25s ease, box-shadow 0.25s ease',
+          }}
+        >
+          <Image
+            src="/SMEA Labuan Logo v1.png"
+            alt="SMELA Labuan"
+            width={44}
+            height={34}
+            className="object-contain"
+            style={{ mixBlendMode: 'multiply' }}
+          />
+        </div>
+      </Link>
+
     </nav>
   )
 }
