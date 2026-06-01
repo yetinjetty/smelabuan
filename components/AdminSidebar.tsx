@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
@@ -62,8 +63,15 @@ export default function AdminSidebar({
     >
       {/* Header */}
       <div className="px-5 py-5 border-b border-white/10">
-        <p className="text-white font-bold text-base leading-tight">SME Association<br />Labuan</p>
-        <p className="text-white/50 text-xs mt-1">Admin panel</p>
+        <Image
+          src="/SMEA Labuan Logo v1.png"
+          alt="SMELA Labuan"
+          width={110}
+          height={42}
+          className="object-contain"
+          style={{ filter: 'brightness(0) invert(1)' }}
+        />
+        <p className="text-white/50 text-xs mt-2">Admin panel</p>
       </div>
 
       {/* Nav */}
