@@ -187,11 +187,6 @@ export default function AdCarousel({ ads }: { ads: Advertisement[] }) {
             }}
           />
 
-          {/* Ad badge */}
-          <div className="absolute top-3 right-3 z-10">
-            <span className="bg-black/30 backdrop-blur-sm text-white text-[10px] font-semibold px-2 py-0.5 rounded-md">Ad</span>
-          </div>
-
           {/* Slide content */}
           <div
             className="absolute inset-0 z-10 flex flex-col items-center justify-center px-12 text-center"
@@ -207,23 +202,10 @@ export default function AdCarousel({ ads }: { ads: Advertisement[] }) {
             </button>
           </div>
 
-          {/* Arrows */}
-          {ads.length > 1 && (
-            <>
-              <button
-                onClick={() => { goPrev(); resetTimer() }}
-                className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 bg-black/25 rounded-xl flex items-center justify-center text-white text-lg font-bold transition-all active:scale-90"
-              >‹</button>
-              <button
-                onClick={() => { goNext(); resetTimer() }}
-                className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 bg-black/25 rounded-xl flex items-center justify-center text-white text-lg font-bold transition-all active:scale-90"
-              >›</button>
-            </>
-          )}
         </div>
 
-        {/* Dot indicators */}
-        {ads.length > 1 && (
+        {/* Dot indicators — always shown, clickable to jump to an ad */}
+        {ads.length > 0 && (
           <div className="flex justify-center items-center gap-2 mt-2.5">
             {ads.map((_, i) => (
               <button
