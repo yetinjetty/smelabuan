@@ -4,8 +4,25 @@ import { sendEmail } from '@/lib/email'
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { full_name, email, phone, business_name, business_sector, business_size, membership_type } = body
+    const contentType = request.headers.get('content-type') ?? ''
+    let fields: Record<string, string> = {}
+
+    if (contentType.includes('multipart/form-data')) {
+      const formData = await request.formData()
+      for (const [key, value] of formData.entries()) {
+        if (typeof value === 'string') fields[key] = value
+      }
+      // File uploads: ignored for now (stored externally or collected in-person)
+    } else {
+      fields = await request.json()
+    }
+
+    const {
+      full_name, email, phone,
+      business_name, business_sector, business_size, membership_type,
+      ic_number, ssm_reg_no, business_address, sector_category,
+      rep_name, rep_ic, rep_phone,
+    } = fields
 
     if (!full_name || !email || !membership_type) {
       return Response.json({ error: 'Missing required fields' }, { status: 400 })
@@ -13,17 +30,27 @@ export async function POST(request: NextRequest) {
 
     const service = createServiceClient()
 
+    // Build extra details as a note in payment_ref until new columns are added
+    const extraDetails = [
+      ic_number && `IC: ${ic_number}`,
+      ssm_reg_no && `SSM: ${ssm_reg_no}`,
+      business_address && `Address: ${business_address}`,
+      sector_category && `Sector category: ${sector_category}`,
+      rep_name && `Rep: ${rep_name} (${rep_ic}, ${rep_phone})`,
+    ].filter(Boolean).join(' | ')
+
     const { data: inserted, error } = await service
       .from('members')
       .insert({
         full_name,
         email,
-        phone,
-        business_name,
-        business_sector,
-        business_size,
+        phone: phone ?? null,
+        business_name: business_name ?? null,
+        business_sector: business_sector ?? null,
+        business_size: business_size ?? null,
         membership_type,
         status: 'pending',
+        payment_ref: extraDetails || null,
       })
       .select()
       .single()
@@ -37,7 +64,7 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: 'Record was not saved. Please try again.' }, { status: 500 })
     }
 
-    // Confirmation to applicant (non-fatal if it fails)
+    // Confirmation email to applicant
     await sendEmail({
       to: email,
       subject: 'Application Received — SME Association Labuan',
@@ -48,8 +75,9 @@ export async function POST(request: NextRequest) {
           <p>Thank you for applying to the SME Association Labuan. We have received your application and will review it shortly.</p>
           <table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:14px">
             <tr><td style="padding:6px 0;color:#666">Name</td><td style="padding:6px 0;font-weight:600">${full_name}</td></tr>
-            <tr><td style="padding:6px 0;color:#666">Membership</td><td style="padding:6px 0;font-weight:600">${membership_type}</td></tr>
+            <tr><td style="padding:6px 0;color:#666">Membership</td><td style="padding:6px 0;font-weight:600">${membership_type} Member</td></tr>
             <tr><td style="padding:6px 0;color:#666">Business</td><td style="padding:6px 0;font-weight:600">${business_name ?? '—'}</td></tr>
+            <tr><td style="padding:6px 0;color:#666">Size</td><td style="padding:6px 0;font-weight:600">${business_size ?? '—'}</td></tr>
           </table>
           <p>You will be notified by email once your application has been reviewed.</p>
           <p style="color:#666;font-size:13px">SME Association Labuan</p>
@@ -57,7 +85,7 @@ export async function POST(request: NextRequest) {
       `,
     })
 
-    // Notification to admin (non-fatal)
+    // Notification to admin
     if (process.env.ADMIN_EMAIL) {
       await sendEmail({
         to: process.env.ADMIN_EMAIL,
@@ -67,14 +95,17 @@ export async function POST(request: NextRequest) {
             <h2 style="color:#E05A4E">New Application</h2>
             <table style="width:100%;border-collapse:collapse;font-size:14px">
               <tr><td style="padding:6px 0;color:#666">Name</td><td style="padding:6px 0">${full_name}</td></tr>
+              <tr><td style="padding:6px 0;color:#666">IC</td><td style="padding:6px 0">${ic_number ?? '—'}</td></tr>
               <tr><td style="padding:6px 0;color:#666">Email</td><td style="padding:6px 0">${email}</td></tr>
               <tr><td style="padding:6px 0;color:#666">Phone</td><td style="padding:6px 0">${phone ?? '—'}</td></tr>
-              <tr><td style="padding:6px 0;color:#666">Business</td><td style="padding:6px 0">${business_name ?? '—'}</td></tr>
-              <tr><td style="padding:6px 0;color:#666">Sector</td><td style="padding:6px 0">${business_sector ?? '—'}</td></tr>
+              <tr><td style="padding:6px 0;color:#666">Business</td><td style="padding:6px 0">${business_name ?? '—'} (SSM: ${ssm_reg_no ?? '—'})</td></tr>
+              <tr><td style="padding:6px 0;color:#666">Sector</td><td style="padding:6px 0">${sector_category ?? ''} — ${business_sector ?? '—'}</td></tr>
               <tr><td style="padding:6px 0;color:#666">Size</td><td style="padding:6px 0">${business_size ?? '—'}</td></tr>
-              <tr><td style="padding:6px 0;color:#666">Membership</td><td style="padding:6px 0">${membership_type}</td></tr>
+              <tr><td style="padding:6px 0;color:#666">Address</td><td style="padding:6px 0">${business_address ?? '—'}</td></tr>
+              <tr><td style="padding:6px 0;color:#666">Membership</td><td style="padding:6px 0">${membership_type} Member</td></tr>
+              ${rep_name ? `<tr><td style="padding:6px 0;color:#666">Representative</td><td style="padding:6px 0">${rep_name} (IC: ${rep_ic ?? '—'}, Tel: ${rep_phone ?? '—'})</td></tr>` : ''}
             </table>
-            <p><a href="https://tanjw06.workers.dev/admin/members" style="color:#E05A4E">Review in admin panel →</a></p>
+            <p><a href="https://smelabuan.justintanjw06.workers.dev/admin/members" style="color:#E05A4E">Review in admin panel →</a></p>
           </div>
         `,
       })
