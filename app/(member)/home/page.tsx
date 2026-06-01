@@ -50,8 +50,6 @@ export default async function HomePage() {
           fullName={member.full_name}
           memberId={member.member_id}
           membershipType={member.membership_type ?? 'Ordinary'}
-          businessName={member.business_name}
-          expiryDate={member.expiry_date}
           status={member.status}
         />
       )}

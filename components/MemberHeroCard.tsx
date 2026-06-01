@@ -1,26 +1,22 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { format } from 'date-fns'
 
 type Props = {
   fullName: string
   memberId: string | null
   membershipType: string | null
-  businessName: string | null
-  expiryDate: string | null
   status: string
 }
 
 function greeting() {
   const h = new Date().getHours()
-  if (h >= 5 && h < 12) return 'Good morning'
-  if (h >= 12 && h < 17) return 'Good afternoon'
-  if (h >= 17 && h < 21) return 'Good evening'
-  return 'Good night'
+  if (h >= 5 && h < 12) return 'Good Morning'
+  if (h >= 12 && h < 17) return 'Good Afternoon'
+  return 'Good Evening'
 }
 
-export default function MemberHeroCard({ fullName, memberId, membershipType, businessName, expiryDate, status }: Props) {
+export default function MemberHeroCard({ fullName, memberId, membershipType, status }: Props) {
   const greet = useMemo(() => greeting(), [])
   const [collapsed, setCollapsed] = useState(false)
 
@@ -139,29 +135,6 @@ export default function MemberHeroCard({ fullName, memberId, membershipType, bus
           </div>
         </div>
 
-        {/* Collapsible bottom section */}
-        <div
-          style={{
-            maxHeight: collapsed ? 0 : 140,
-            opacity: collapsed ? 0 : 1,
-            overflow: 'hidden',
-            transition: 'max-height 0.35s ease, opacity 0.25s ease',
-          }}
-        >
-          <div
-            className="mx-5 border-t border-white/20"
-            style={{ paddingTop: 14, paddingBottom: 20 }}
-          >
-            <p className="text-xs text-white/60 uppercase tracking-wide mb-1">Membership</p>
-            <p className="font-semibold text-lg text-white">{membershipType} Member</p>
-            {businessName && <p className="text-sm text-white/80 mt-0.5">{businessName}</p>}
-            <p className="text-xs text-white/50 mt-2">
-              {expiryDate
-                ? `Expires ${format(new Date(expiryDate), 'd MMM yyyy')}`
-                : 'Lifetime membership'}
-            </p>
-          </div>
-        </div>
       </a>
     </div>
   )
