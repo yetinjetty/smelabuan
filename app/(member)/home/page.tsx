@@ -56,11 +56,8 @@ export default async function HomePage() {
         />
       )}
 
-      {/* Remaining content — restore horizontal padding */}
-      <div className="px-4 space-y-6">
-      {/* Ads carousel */}
-      {ads && ads.length > 0 && <AdCarousel ads={ads} />}
-
+      {/* Remaining content — lower stacking context so sticky card always wins */}
+      <div className="px-4 space-y-6 relative" style={{ zIndex: 0 }}>
       {/* Upcoming events */}
       {events && events.length > 0 && (
         <div>
@@ -98,6 +95,9 @@ export default async function HomePage() {
           </div>
         </div>
       )}
+
+      {/* Ads carousel — below events so the hero card is never visually blocked */}
+      {ads && ads.length > 0 && <AdCarousel ads={ads} />}
       </div>
     </div>
   )

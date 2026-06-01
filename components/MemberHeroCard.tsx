@@ -38,8 +38,8 @@ export default function MemberHeroCard({ fullName, memberId, membershipType, bus
   return (
     /* Sticky wrapper — sits at top of viewport when scrolled */
     <div
-      className="sticky z-20 px-4"
-      style={{ top: 0 }}
+      className="sticky px-4"
+      style={{ top: 0, zIndex: 50 }}
     >
       {/* Hairline bg strip so content scrolling beneath doesn't bleed through gaps */}
       <div

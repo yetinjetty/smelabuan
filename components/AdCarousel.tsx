@@ -98,7 +98,7 @@ export default function AdCarousel({ ads }: { ads: Advertisement[] }) {
 
 
           {/* Ad badge */}
-          <div className="absolute top-3 right-3 z-20">
+          <div className="absolute top-3 right-3 z-10">
             <span className="bg-black/30 backdrop-blur-sm text-white text-[10px] font-semibold px-2 py-0.5 rounded-md">Ad</span>
           </div>
 
