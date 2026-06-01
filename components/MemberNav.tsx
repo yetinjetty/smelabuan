@@ -33,12 +33,15 @@ export default function MemberNav() {
             <Link
               key={href}
               href={href}
-              className="flex-1 flex flex-col items-center justify-center gap-0.5 active:opacity-50 transition-opacity duration-100"
+              className="group flex-1 flex flex-col items-center justify-center gap-0.5"
+              style={{ WebkitTapHighlightColor: 'transparent' }}
             >
-              <Icon
-                className="w-[22px] h-[22px] transition-colors duration-200"
-                style={{ color: active ? '#E05A4E' : '#9CA3AF' }}
-              />
+              <div className="w-10 h-10 rounded-full flex items-center justify-center transition-colors group-active:bg-[rgba(224,90,78,0.10)]">
+                <Icon
+                  className="w-[22px] h-[22px] transition-colors duration-200"
+                  style={{ color: active ? '#E05A4E' : '#9CA3AF' }}
+                />
+              </div>
               <span
                 className="text-[10px] font-medium transition-colors duration-200"
                 style={{ color: active ? '#E05A4E' : '#9CA3AF' }}
@@ -76,14 +79,12 @@ export default function MemberNav() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: isCard
-                  ? 'linear-gradient(145deg, #E05A4E 0%, #c0392b 100%)'
-                  : '#ffffff',
+                background: '#ffffff',
                 boxShadow: isCard
-                  ? '0 4px 22px rgba(224,90,78,0.50), 0 -2px 10px rgba(224,90,78,0.20)'
+                  ? '0 0 0 3px rgba(224,90,78,0.25), 0 -4px 18px rgba(0,0,0,0.07), 0 6px 18px rgba(0,0,0,0.09)'
                   : '0 -4px 18px rgba(0,0,0,0.08), 0 6px 18px rgba(0,0,0,0.10)',
-                border: isCard ? '2.5px solid rgba(255,255,255,0.25)' : '2.5px solid #efefef',
-                transition: 'background 0.25s ease, box-shadow 0.25s ease, transform 0.15s ease',
+                border: isCard ? '3px solid #E05A4E' : '2.5px solid #efefef',
+                transition: 'border-color 0.25s ease, box-shadow 0.25s ease, transform 0.15s ease',
               }}
               className="active:scale-90"
             >
@@ -93,18 +94,9 @@ export default function MemberNav() {
                 width={42}
                 height={32}
                 className="object-contain"
-                style={{
-                  filter: isCard ? 'brightness(0) invert(1)' : 'none',
-                  transition: 'filter 0.25s ease',
-                }}
+                style={{ mixBlendMode: 'multiply' }}
               />
             </div>
-            <span
-              className="text-[10px] font-medium transition-colors duration-200"
-              style={{ color: isCard ? '#E05A4E' : '#9CA3AF' }}
-            >
-              Card
-            </span>
           </Link>
         </div>
 
@@ -115,12 +107,15 @@ export default function MemberNav() {
             <Link
               key={href}
               href={href}
-              className="flex-1 flex flex-col items-center justify-center gap-0.5 active:opacity-50 transition-opacity duration-100"
+              className="group flex-1 flex flex-col items-center justify-center gap-0.5"
+              style={{ WebkitTapHighlightColor: 'transparent' }}
             >
-              <Icon
-                className="w-[22px] h-[22px] transition-colors duration-200"
-                style={{ color: active ? '#E05A4E' : '#9CA3AF' }}
-              />
+              <div className="w-10 h-10 rounded-full flex items-center justify-center transition-colors group-active:bg-[rgba(224,90,78,0.10)]">
+                <Icon
+                  className="w-[22px] h-[22px] transition-colors duration-200"
+                  style={{ color: active ? '#E05A4E' : '#9CA3AF' }}
+                />
+              </div>
               <span
                 className="text-[10px] font-medium transition-colors duration-200"
                 style={{ color: active ? '#E05A4E' : '#9CA3AF' }}
