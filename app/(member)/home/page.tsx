@@ -39,11 +39,15 @@ export default async function HomePage() {
     service
       .from('announcements')
       .select('*')
-      .or(`status.eq.published,and(status.eq.scheduled,scheduled_for.lte.${now})`)
+      .in('status', ['published', 'scheduled'])
       .order('created_at', { ascending: false })
-      .limit(5)
       .returns<Announcement[]>(),
   ])
+
+  const liveAnnouncements = (announcements ?? []).filter(a =>
+    a.status === 'published' ||
+    (a.status === 'scheduled' && a.scheduled_for != null && new Date(a.scheduled_for) <= new Date())
+  ).slice(0, 5)
 
   const statusColor =
     member?.status === 'active'
@@ -68,9 +72,9 @@ export default async function HomePage() {
       <div className="px-4 space-y-6 relative" style={{ zIndex: 0 }}>
 
       {/* Announcements */}
-      {announcements && announcements.length > 0 && (
+      {liveAnnouncements.length > 0 && (
         <div className="space-y-2">
-          {announcements.map(a => (
+          {liveAnnouncements.map(a => (
             <div key={a.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex">
               {/* Accent bar */}
               <div className="w-1 shrink-0" style={{ backgroundColor: '#E05A4E' }} />

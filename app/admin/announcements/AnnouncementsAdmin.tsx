@@ -76,13 +76,16 @@ export default function AnnouncementsAdmin({ announcements }: { announcements: A
 
     const payload = { title: form.title.trim(), body: form.body.trim(), status, published_at, scheduled_for }
 
-    if (editing) {
-      await supabase.from('announcements').update(payload).eq('id', editing.id)
-    } else {
-      await supabase.from('announcements').insert(payload)
-    }
+    const { error: dbError } = editing
+      ? await supabase.from('announcements').update(payload).eq('id', editing.id)
+      : await supabase.from('announcements').insert(payload)
 
-    setSaving(false); setShowForm(false)
+    setSaving(false)
+    if (dbError) {
+      setError(dbError.message)
+      return
+    }
+    setShowForm(false)
     startTransition(() => router.refresh())
   }
 
@@ -93,18 +96,20 @@ export default function AnnouncementsAdmin({ announcements }: { announcements: A
   }
 
   async function publishNow(a: Announcement) {
-    await createClient()
+    const { error } = await createClient()
       .from('announcements')
       .update({ status: 'published', published_at: new Date().toISOString(), scheduled_for: null })
       .eq('id', a.id)
+    if (error) { setError(error.message); return }
     startTransition(() => router.refresh())
   }
 
   async function unpublish(a: Announcement) {
-    await createClient()
+    const { error } = await createClient()
       .from('announcements')
       .update({ status: 'draft', published_at: null })
       .eq('id', a.id)
+    if (error) { setError(error.message); return }
     startTransition(() => router.refresh())
   }
 
