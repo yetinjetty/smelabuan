@@ -63,13 +63,14 @@ export default function AdminSidebar({
     >
       {/* Header */}
       <div className="px-5 py-5 border-b border-white/10">
-        <div className="inline-flex items-center justify-center bg-white rounded-lg px-3 py-1.5">
+        <div className="inline-flex items-center justify-center rounded-lg border border-white/70 px-3 py-1.5 overflow-hidden">
           <Image
             src="/SMEA Labuan Logo v1.png"
             alt="SMELA Labuan"
             width={100}
             height={38}
             className="object-contain"
+            style={{ mixBlendMode: 'multiply' }}
           />
         </div>
         <p className="text-white/50 text-xs mt-2">Admin panel</p>
