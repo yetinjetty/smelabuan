@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { format } from 'date-fns'
 import type { Member, Advertisement, Event } from '@/lib/types'
+import AdCarousel from '@/components/AdCarousel'
 
 export default async function HomePage() {
   const supabase = await createClient()
@@ -77,31 +78,7 @@ export default async function HomePage() {
       )}
 
       {/* Ads carousel */}
-      {ads && ads.length > 0 && (
-        <div>
-          <h2 className="text-sm font-semibold text-gray-700 mb-3">Featured</h2>
-          <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 snap-x snap-mandatory">
-            {ads.map(ad => (
-              <div
-                key={ad.id}
-                className="flex-none w-72 rounded-2xl bg-white border border-gray-200 overflow-hidden snap-start"
-              >
-                {ad.image_url ? (
-                  <img src={ad.image_url} alt={ad.headline} className="w-full h-36 object-cover" />
-                ) : (
-                  <div className="w-full h-36 bg-gray-100 flex items-center justify-center">
-                    <span className="text-gray-400 text-sm">{ad.advertiser_name}</span>
-                  </div>
-                )}
-                <div className="p-3">
-                  <p className="font-medium text-sm text-gray-900">{ad.headline}</p>
-                  <p className="text-xs text-gray-500">{ad.advertiser_name}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {ads && ads.length > 0 && <AdCarousel ads={ads} />}
 
       {/* Upcoming events */}
       {events && events.length > 0 && (

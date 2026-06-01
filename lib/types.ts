@@ -80,6 +80,9 @@ export interface Advertisement {
   period_end: string | null
   click_count: number
   status: AdStatus
+  description: string | null
+  link_url: string | null
+  bg_color: string | null
   created_at: string
 }
 
