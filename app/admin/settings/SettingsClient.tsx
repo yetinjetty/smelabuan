@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import type { AdminUser } from '@/lib/types'
 
-export default function SettingsClient({ admins, currentAdminId }: { admins: AdminUser[], currentAdminId: string }) {
+export default function SettingsClient({ admins, currentAdminId, currentAdminRole }: { admins: AdminUser[], currentAdminId: string, currentAdminRole: string }) {
   const [newEmail, setNewEmail] = useState('')
   const [newName, setNewName] = useState('')
   const [newRole, setNewRole] = useState<'president' | 'editor'>('editor')
@@ -124,7 +124,7 @@ export default function SettingsClient({ admins, currentAdminId }: { admins: Adm
                   </div>
                   <p className="text-xs text-gray-400 truncate">{a.email}</p>
                 </div>
-                {!isSelf && (
+                {!isSelf && !(currentAdminRole === 'editor' && a.role === 'president') && (
                   <button
                     onClick={() => demoteAdmin(a.id, a.full_name)}
                     disabled={!!loadingId}
