@@ -15,17 +15,18 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   if (!adminUser) redirect('/home')
 
-  // Count renewals due this month for sidebar badge
+  // Count overdue + due this month for sidebar badge
   const service = createServiceClient()
   const today = new Date()
-  const thisMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`
+  const todayStr = today.toISOString().split('T')[0]
   const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1).toISOString().split('T')[0]
-  const { count: renewalsDue } = await service
-    .from('members')
-    .select('*', { count: 'exact', head: true })
-    .eq('status', 'active')
-    .gte('expiry_date', thisMonth)
-    .lt('expiry_date', nextMonth)
+  const [{ count: overdueCount }, { count: dueThisMonthCount }] = await Promise.all([
+    service.from('members').select('*', { count: 'exact', head: true })
+      .eq('membership_type', 'Ordinary').lt('expiry_date', todayStr).in('status', ['active', 'expired']),
+    service.from('members').select('*', { count: 'exact', head: true })
+      .eq('membership_type', 'Ordinary').eq('status', 'active').gte('expiry_date', todayStr).lt('expiry_date', nextMonth),
+  ])
+  const renewalsDue = (overdueCount ?? 0) + (dueThisMonthCount ?? 0)
 
   return (
     <div className="flex h-screen" style={{ backgroundColor: '#111827' }}>
