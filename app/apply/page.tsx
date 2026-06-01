@@ -354,7 +354,29 @@ export default function ApplyPage() {
             </div>
 
             <div className="space-y-3">
-              {([
+              {(membershipType === 'Life' ? [
+                {
+                  value: 'Medium' as BusinessSize,
+                  short: 'Medium',
+                  badge: 'Medium enterprise',
+                  turnover: 'Sales turnover RM 15M to ≤ RM 50M',
+                  employees: 'Full-time employees 75 to ≤ 200 workers',
+                },
+                {
+                  value: 'Small' as BusinessSize,
+                  short: 'Small',
+                  badge: 'Small enterprise',
+                  turnover: 'Sales turnover RM 300K to < RM 15M',
+                  employees: 'Full-time employees 5 to < 75 workers',
+                },
+                {
+                  value: 'Micro' as BusinessSize,
+                  short: 'Micro',
+                  badge: 'Microenterprise',
+                  turnover: 'Sales turnover less than RM 300K',
+                  employees: 'Full-time employees fewer than 5 workers',
+                },
+              ] : [
                 {
                   value: 'Medium' as BusinessSize,
                   short: 'Medium',
