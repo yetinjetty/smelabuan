@@ -110,36 +110,39 @@ export default function MembersTable({
 
   return (
     <>
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3 mb-4">
-        <input
-          type="search"
-          placeholder="Search name, email, ID…"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && applyFilters(search, filter)}
-          className="border border-gray-600 rounded-lg px-3 py-2 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-[#E05A4E] text-white placeholder-gray-500"
-          style={{ backgroundColor: '#1f2937' }}
-        />
-        <select
-          value={filter}
-          onChange={e => { setFilter(e.target.value); applyFilters(search, e.target.value) }}
-          className="border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#E05A4E] text-white"
-          style={{ backgroundColor: '#1f2937' }}
-        >
-          <option value="">All statuses</option>
-          <option value="pending">Pending</option>
-          <option value="active">Active</option>
-          <option value="expired">Expired</option>
-        </select>
-        <button
-          onClick={() => applyFilters(search, filter)}
-          className="px-4 py-2 text-sm rounded-lg text-white font-medium"
-          style={{ backgroundColor: '#E05A4E' }}
-        >
-          Search
-        </button>
-        <span className="text-sm text-gray-500 self-center">{total} result{total !== 1 ? 's' : ''}</span>
+      {/* Title + search/filter on same row */}
+      <div className="flex items-center gap-3 mb-4 flex-wrap">
+        <h1 className="text-2xl font-bold text-white shrink-0">Members</h1>
+        <div className="flex items-center gap-2 flex-1 flex-wrap justify-end">
+          <input
+            type="search"
+            placeholder="Search name, email, ID…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && applyFilters(search, filter)}
+            className="border border-gray-600 rounded-lg px-3 py-2 text-sm w-56 focus:outline-none focus:ring-2 focus:ring-[#E05A4E] text-white placeholder-gray-500"
+            style={{ backgroundColor: '#1f2937' }}
+          />
+          <select
+            value={filter}
+            onChange={e => { setFilter(e.target.value); applyFilters(search, e.target.value) }}
+            className="border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#E05A4E] text-white"
+            style={{ backgroundColor: '#1f2937' }}
+          >
+            <option value="">All statuses</option>
+            <option value="pending">Pending</option>
+            <option value="active">Active</option>
+            <option value="expired">Expired</option>
+          </select>
+          <button
+            onClick={() => applyFilters(search, filter)}
+            className="px-4 py-2 text-sm rounded-lg text-white font-medium"
+            style={{ backgroundColor: '#E05A4E' }}
+          >
+            Search
+          </button>
+          <span className="text-sm text-gray-500 whitespace-nowrap">{total} result{total !== 1 ? 's' : ''}</span>
+        </div>
       </div>
 
       {/* Table */}

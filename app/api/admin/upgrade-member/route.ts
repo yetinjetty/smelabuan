@@ -30,18 +30,10 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: 'Member is already a Life member.' }, { status: 400 })
     }
 
-    // Generate new Life member ID (SMEL-L-XXX)
-    const { data: existing } = await service
-      .from('members')
-      .select('member_id')
-      .like('member_id', 'SMEL-L-%')
-      .order('member_id', { ascending: false })
-      .limit(1)
-
-    const lastNum = existing?.[0]?.member_id
-      ? parseInt(existing[0].member_id.split('-')[2], 10)
-      : 0
-    const newMemberId = `SMEL-L-${String(lastNum + 1).padStart(3, '0')}`
+    // Reuse the same sequence number, just change O → L
+    const currentId = member.member_id ?? ''
+    const seqPart = currentId.split('-')[2] ?? '000'
+    const newMemberId = `SMEL-L-${seqPart}`
 
     const { error } = await service
       .from('members')
