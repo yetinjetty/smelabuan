@@ -43,8 +43,8 @@ export default async function HomePage() {
       : 'bg-yellow-100 text-yellow-700'
 
   return (
-    <div className="px-4 py-6 space-y-6">
-      {/* Hero card — greeting + membership merged */}
+    <div className="pb-6 space-y-6">
+      {/* Hero card — sticky collapsing, manages its own px */}
       {member && (
         <MemberHeroCard
           fullName={member.full_name}
@@ -56,6 +56,8 @@ export default async function HomePage() {
         />
       )}
 
+      {/* Remaining content — restore horizontal padding */}
+      <div className="px-4 space-y-6">
       {/* Ads carousel */}
       {ads && ads.length > 0 && <AdCarousel ads={ads} />}
 
@@ -96,6 +98,7 @@ export default async function HomePage() {
           </div>
         </div>
       )}
+      </div>
     </div>
   )
 }
