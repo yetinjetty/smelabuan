@@ -102,10 +102,13 @@ export default function AdCarousel({ ads }: { ads: Advertisement[] }) {
             <span className="bg-black/30 backdrop-blur-sm text-white text-[10px] font-semibold px-2 py-0.5 rounded-md">Ad</span>
           </div>
 
-          {/* Slide content */}
-          <div className="relative z-10 px-12 py-7 text-center" style={slideStyle}>
+          {/* Slide content — absolutely positioned so height is always fixed */}
+          <div
+            className="absolute inset-0 z-10 flex flex-col items-center justify-center px-12 text-center"
+            style={slideStyle}
+          >
             <p className="text-white font-bold text-lg leading-tight mb-1 drop-shadow">{ad.advertiser_name}</p>
-            <p className="text-white/85 text-sm mb-5 drop-shadow">{ad.headline}</p>
+            <p className="text-white/85 text-sm mb-4 drop-shadow line-clamp-2">{ad.headline}</p>
             <button
               onClick={() => openModal(ad)}
               className="bg-white/95 text-gray-900 font-bold text-sm px-8 py-2.5 rounded-xl shadow-lg active:scale-95 transition-transform"
