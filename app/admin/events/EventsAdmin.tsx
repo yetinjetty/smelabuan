@@ -54,7 +54,8 @@ export default function EventsAdmin({ events }: { events: Event[] }) {
 
   return (
     <>
-      <div className="flex justify-end mb-4">
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-bold text-white">Events</h1>
         <button onClick={openNew} className="px-4 py-2 rounded-lg text-white text-sm font-medium" style={{ backgroundColor: '#E05A4E' }}>
           + Add event
         </button>

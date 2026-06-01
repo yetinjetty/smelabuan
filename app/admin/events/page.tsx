@@ -12,7 +12,6 @@ export default async function AdminEventsPage() {
 
   return (
     <div className="p-8 min-h-screen" style={{ backgroundColor: '#111827' }}>
-      <h1 className="text-2xl font-bold mb-6" style={{ color: '#ffffff' }}>Events</h1>
       <EventsAdmin events={events ?? []} />
     </div>
   )
