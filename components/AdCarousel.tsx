@@ -31,7 +31,7 @@ export default function AdCarousel({ ads }: { ads: Advertisement[] }) {
 
   useEffect(() => {
     if (ads.length <= 1) return
-    timerRef.current = setInterval(goNext, 7000)
+    timerRef.current = setInterval(goNext, 5000)
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [goNext, ads.length])
 
@@ -129,23 +129,41 @@ export default function AdCarousel({ ads }: { ads: Advertisement[] }) {
           )}
         </div>
 
-        {/* Dot indicators */}
+        {/* Dot indicators with countdown progress */}
         {ads.length > 1 && (
-          <div className="flex justify-center gap-2 mt-2.5">
+          <div className="flex justify-center items-center gap-2 mt-2.5">
             {ads.map((_, i) => (
               <button
                 key={i}
                 onClick={() => { goTo(i, i > current ? 'right' : 'left'); resetTimer() }}
-                className="rounded-full transition-all duration-300"
+                className="rounded-full overflow-hidden transition-all duration-300 relative"
                 style={{
-                  width: i === current ? 20 : 8,
+                  width: i === current ? 40 : 8,
                   height: 8,
-                  backgroundColor: i === current ? '#E05A4E' : '#d1d5db',
+                  backgroundColor: i === current ? '#f0b0aa' : '#d1d5db',
+                  flexShrink: 0,
                 }}
-              />
+              >
+                {i === current && (
+                  <span
+                    key={current}
+                    className="absolute inset-y-0 left-0 rounded-full"
+                    style={{
+                      backgroundColor: '#E05A4E',
+                      animation: 'countdown-fill 5s linear forwards',
+                    }}
+                  />
+                )}
+              </button>
             ))}
           </div>
         )}
+        <style>{`
+          @keyframes countdown-fill {
+            from { width: 0%; }
+            to   { width: 100%; }
+          }
+        `}</style>
       </div>
 
       {/* Modal */}
