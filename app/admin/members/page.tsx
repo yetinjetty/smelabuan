@@ -26,7 +26,7 @@ export default async function AdminMembersPage({
   const { data: members, count } = await query.returns<Member[]>()
 
   return (
-    <div className="p-6 min-h-screen" style={{ backgroundColor: '#111827' }}>
+    <div className="p-8 min-h-screen" style={{ backgroundColor: '#111827' }}>
       <MembersTable
         members={members ?? []}
         total={count ?? 0}
