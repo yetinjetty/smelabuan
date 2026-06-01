@@ -22,6 +22,13 @@ export interface Member {
   member_since: string | null
   expiry_date: string | null
   payment_ref: string | null
+  ic_number: string | null
+  ssm_reg_no: string | null
+  business_address: string | null
+  sector_category: string | null
+  rep_name: string | null
+  rep_ic: string | null
+  rep_phone: string | null
   updated_at: string
   created_at: string
 }

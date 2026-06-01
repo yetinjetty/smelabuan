@@ -1,12 +1,19 @@
 'use client'
 
 import { useState } from 'react'
-import type { AdminUser } from '@/lib/types'
+import type { AdminUser, Member } from '@/lib/types'
 
-export default function SettingsClient({ admins, currentAdminId, currentAdminRole }: { admins: AdminUser[], currentAdminId: string, currentAdminRole: string }) {
-  const [newEmail, setNewEmail] = useState('')
-  const [newName, setNewName] = useState('')
+type EligibleMember = Pick<Member, 'id' | 'full_name' | 'email' | 'business_name' | 'membership_type' | 'status'>
+
+export default function SettingsClient({ admins, currentAdminId, currentAdminRole, eligibleMembers }: {
+  admins: AdminUser[]
+  currentAdminId: string
+  currentAdminRole: string
+  eligibleMembers: EligibleMember[]
+}) {
+  const [selectedMember, setSelectedMember] = useState<EligibleMember | null>(null)
   const [newRole, setNewRole] = useState<'president' | 'editor'>('editor')
+  const [memberSearch, setMemberSearch] = useState('')
   const [adding, setAdding] = useState(false)
   const [loadingId, setLoadingId] = useState<string | null>(null)
   const [error, setError] = useState('')
@@ -24,15 +31,19 @@ export default function SettingsClient({ admins, currentAdminId, currentAdminRol
   }
 
   async function addAdmin() {
-    if (!newEmail || !newName) { setError('Name and email are required'); return }
+    if (!selectedMember) { setError('Please select a member'); return }
     setAdding(true)
     setError('')
     setInfo('')
-    const { ok, json } = await callApi('/api/admin/add-admin', { full_name: newName, email: newEmail, role: newRole })
+    const { ok, json } = await callApi('/api/admin/add-admin', {
+      full_name: selectedMember.full_name,
+      email: selectedMember.email,
+      role: newRole,
+    })
     setAdding(false)
     if (!ok) { setError((json.error as string) ?? 'Failed to add admin'); return }
-    setNewEmail('')
-    setNewName('')
+    setSelectedMember(null)
+    setMemberSearch('')
     setInfo('Admin added. They must log in once via OTP to activate their account.')
     window.location.reload()
   }
@@ -53,6 +64,11 @@ export default function SettingsClient({ admins, currentAdminId, currentAdminRol
     )
     setTimeout(() => window.location.reload(), 1500)
   }
+
+  const filteredMembers = eligibleMembers.filter(m =>
+    m.full_name.toLowerCase().includes(memberSearch.toLowerCase()) ||
+    m.email.toLowerCase().includes(memberSearch.toLowerCase())
+  )
 
   return (
     <div className="space-y-10">
@@ -139,36 +155,66 @@ export default function SettingsClient({ admins, currentAdminId, currentAdminRol
           {!admins.length && <p className="px-4 py-6 text-sm text-gray-400 text-center">No admins</p>}
         </div>
 
-        {/* Add admin */}
+        {/* Add admin — member picker */}
         <div className="rounded-xl border border-gray-700 p-4 space-y-3" style={{ backgroundColor: '#1f2937' }}>
-          <p className="text-sm font-medium text-gray-300">Add admin user</p>
-          <div className="grid grid-cols-2 gap-3">
-            <input
-              placeholder="Full name"
-              value={newName}
-              onChange={e => setNewName(e.target.value)}
-              className={inp}
-            />
-            <input
-              type="email"
-              placeholder="Email"
-              value={newEmail}
-              onChange={e => setNewEmail(e.target.value)}
-              className={inp}
-            />
+          <p className="text-sm font-medium text-gray-300">Promote member to admin</p>
+
+          {/* Search */}
+          <input
+            placeholder="Search member by name or email…"
+            value={memberSearch}
+            onChange={e => { setMemberSearch(e.target.value); setSelectedMember(null) }}
+            className={inp}
+          />
+
+          {/* Selected member chip */}
+          {selectedMember && (
+            <div className="flex items-center justify-between rounded-lg px-3 py-2 border border-[#E05A4E] bg-[#E05A4E]/10">
+              <div>
+                <p className="text-sm font-medium text-white">{selectedMember.full_name}</p>
+                <p className="text-xs text-gray-400">{selectedMember.email}</p>
+              </div>
+              <button onClick={() => { setSelectedMember(null); setMemberSearch('') }} className="text-gray-400 hover:text-white text-lg leading-none">×</button>
+            </div>
+          )}
+
+          {/* Scrollable member list */}
+          {!selectedMember && (
+            <div className="max-h-48 overflow-y-auto rounded-lg border border-gray-600 divide-y divide-gray-700">
+              {filteredMembers.length === 0 && (
+                <p className="px-3 py-4 text-sm text-gray-500 text-center">No eligible members found</p>
+              )}
+              {filteredMembers.map(m => (
+                <button
+                  key={m.id}
+                  onClick={() => { setSelectedMember(m); setMemberSearch('') }}
+                  className="w-full text-left px-3 py-2.5 hover:bg-white/5 transition-colors flex items-center justify-between gap-3"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm text-white font-medium truncate">{m.full_name}</p>
+                    <p className="text-xs text-gray-400 truncate">{m.email}</p>
+                  </div>
+                  <span className="text-xs text-gray-500 shrink-0">{m.membership_type}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Role + confirm */}
+          <div className="flex gap-2">
+            <select value={newRole} onChange={e => setNewRole(e.target.value as 'president' | 'editor')} className={`${inp} flex-1`}>
+              <option value="editor">Editor</option>
+              <option value="president">President</option>
+            </select>
+            <button
+              onClick={addAdmin}
+              disabled={adding || !selectedMember}
+              className="px-4 py-2 rounded-lg text-white text-sm font-medium disabled:opacity-40 shrink-0"
+              style={{ backgroundColor: '#E05A4E' }}
+            >
+              {adding ? 'Adding…' : 'Make admin'}
+            </button>
           </div>
-          <select value={newRole} onChange={e => setNewRole(e.target.value as 'president' | 'editor')} className={inp}>
-            <option value="editor">Editor</option>
-            <option value="president">President</option>
-          </select>
-          <button
-            onClick={addAdmin}
-            disabled={adding}
-            className="px-4 py-2 rounded-lg text-white text-sm font-medium disabled:opacity-60"
-            style={{ backgroundColor: '#E05A4E' }}
-          >
-            {adding ? 'Adding…' : 'Add admin'}
-          </button>
           <p className="text-xs text-gray-400">The new admin must log in once via OTP to activate their account.</p>
         </div>
       </section>

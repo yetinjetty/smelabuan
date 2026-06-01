@@ -209,16 +209,12 @@ export default function MembersTable({
             </div>
 
             <dl className="space-y-4 text-sm">
+              {/* Membership */}
+              <div className="text-xs font-semibold uppercase tracking-widest text-gray-400 pb-1 border-b border-gray-100">Membership</div>
               {[
-                ['Full name', selected.full_name],
-                ['Email', selected.email],
-                ['Phone', selected.phone ?? '—'],
                 ['Member ID', selected.member_id || '—'],
                 ['Membership type', selected.membership_type ?? '—'],
                 ['Status', selected.status],
-                ['Business name', selected.business_name ?? '—'],
-                ['Business sector', selected.business_sector ?? '—'],
-                ['Business size', selected.business_size ?? '—'],
                 ['Member since', selected.member_since ? format(new Date(selected.member_since), 'd MMM yyyy') : '—'],
                 ['Expiry date', selected.expiry_date ? format(new Date(selected.expiry_date), 'd MMM yyyy') : '—'],
                 ['Payment ref', selected.payment_ref ?? '—'],
@@ -228,6 +224,53 @@ export default function MembersTable({
                   <dd className="text-gray-900 text-right">{v}</dd>
                 </div>
               ))}
+
+              {/* Personal */}
+              <div className="text-xs font-semibold uppercase tracking-widest text-gray-400 pb-1 border-b border-gray-100 pt-2">Personal</div>
+              {[
+                ['Full name', selected.full_name],
+                ['IC number', selected.ic_number ?? '—'],
+                ['Email', selected.email],
+                ['Phone', selected.phone ?? '—'],
+              ].map(([k, v]) => (
+                <div key={k} className="flex justify-between gap-4">
+                  <dt className="text-gray-500 shrink-0">{k}</dt>
+                  <dd className="text-gray-900 text-right break-all">{v}</dd>
+                </div>
+              ))}
+
+              {/* Business */}
+              <div className="text-xs font-semibold uppercase tracking-widest text-gray-400 pb-1 border-b border-gray-100 pt-2">Business</div>
+              {[
+                ['Business name', selected.business_name ?? '—'],
+                ['SSM reg. no.', selected.ssm_reg_no ?? '—'],
+                ['Sector category', selected.sector_category ?? '—'],
+                ['Business sector', selected.business_sector ?? '—'],
+                ['Business size', selected.business_size ?? '—'],
+                ['Business address', selected.business_address ?? '—'],
+              ].map(([k, v]) => (
+                <div key={k} className="flex justify-between gap-4">
+                  <dt className="text-gray-500 shrink-0">{k}</dt>
+                  <dd className="text-gray-900 text-right">{v}</dd>
+                </div>
+              ))}
+
+              {/* Representative */}
+              {selected.rep_name && (
+                <>
+                  <div className="text-xs font-semibold uppercase tracking-widest text-gray-400 pb-1 border-b border-gray-100 pt-2">Representative</div>
+                  {[
+                    ['Name', selected.rep_name],
+                    ['IC number', selected.rep_ic ?? '—'],
+                    ['Phone', selected.rep_phone ?? '—'],
+                  ].map(([k, v]) => (
+                    <div key={k} className="flex justify-between gap-4">
+                      <dt className="text-gray-500 shrink-0">{k}</dt>
+                      <dd className="text-gray-900 text-right">{v}</dd>
+                    </div>
+                  ))}
+                </>
+              )}
             </dl>
 
             {actionError && <p className="text-red-500 text-sm mt-4">{actionError}</p>}
