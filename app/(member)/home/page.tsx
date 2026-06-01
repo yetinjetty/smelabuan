@@ -58,6 +58,9 @@ export default async function HomePage() {
 
       {/* Remaining content — lower stacking context so sticky card always wins */}
       <div className="px-4 space-y-6 relative" style={{ zIndex: 0 }}>
+      {/* Ads carousel */}
+      {ads && ads.length > 0 && <AdCarousel ads={ads} />}
+
       {/* Upcoming events */}
       {events && events.length > 0 && (
         <div>
@@ -96,8 +99,6 @@ export default async function HomePage() {
         </div>
       )}
 
-      {/* Ads carousel — below events so the hero card is never visually blocked */}
-      {ads && ads.length > 0 && <AdCarousel ads={ads} />}
       </div>
     </div>
   )
