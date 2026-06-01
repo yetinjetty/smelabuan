@@ -3,6 +3,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { format } from 'date-fns'
 import type { Member, Advertisement, Event } from '@/lib/types'
 import AdCarousel from '@/components/AdCarousel'
+import MemberHeroCard from '@/components/MemberHeroCard'
 
 export default async function HomePage() {
   const supabase = await createClient()
@@ -43,38 +44,16 @@ export default async function HomePage() {
 
   return (
     <div className="px-4 py-6 space-y-6">
-      {/* Header */}
-      <div>
-        <p className="text-gray-500 text-sm">Welcome back,</p>
-        <h1 className="text-2xl font-bold text-gray-900">{member?.full_name ?? 'Member'}</h1>
-        <div className="flex items-center gap-2 mt-1">
-          <span className="text-sm text-gray-500">{member?.member_id}</span>
-          {member?.status && (
-            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColor}`}>
-              {member.status.charAt(0).toUpperCase() + member.status.slice(1)}
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Membership card summary */}
+      {/* Hero card — greeting + membership merged */}
       {member && (
-        <div
-          className="rounded-2xl p-5 text-white"
-          style={{ background: 'linear-gradient(135deg, #E05A4E 0%, #c0392b 100%)' }}
-        >
-          <p className="text-xs text-white/70 uppercase tracking-wide mb-1">Membership</p>
-          <p className="font-semibold text-lg">{member.membership_type} Member</p>
-          <p className="text-sm text-white/80 mt-1">{member.business_name}</p>
-          {member.expiry_date && (
-            <p className="text-xs text-white/60 mt-3">
-              Expires {format(new Date(member.expiry_date), 'd MMM yyyy')}
-            </p>
-          )}
-          {!member.expiry_date && (
-            <p className="text-xs text-white/60 mt-3">Lifetime membership</p>
-          )}
-        </div>
+        <MemberHeroCard
+          fullName={member.full_name}
+          memberId={member.member_id}
+          membershipType={member.membership_type ?? 'Ordinary'}
+          businessName={member.business_name}
+          expiryDate={member.expiry_date}
+          status={member.status}
+        />
       )}
 
       {/* Ads carousel */}
