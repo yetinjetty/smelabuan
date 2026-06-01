@@ -29,8 +29,9 @@ export default function MemberHeroCard({ fullName, memberId, membershipType, bus
     'bg-yellow-400/20 text-yellow-100'
 
   return (
-    <div
-      className="rounded-2xl p-5 text-white relative overflow-hidden"
+    <a
+      href="/card"
+      className="block rounded-2xl p-5 text-white relative overflow-hidden active:opacity-90 transition-opacity"
       style={{ background: 'linear-gradient(135deg, #E05A4E 0%, #c0392b 100%)' }}
     >
       {/* Decorative circles */}
@@ -62,6 +63,6 @@ export default function MemberHeroCard({ fullName, memberId, membershipType, bus
           </p>
         </div>
       </div>
-    </div>
+    </a>
   )
 }

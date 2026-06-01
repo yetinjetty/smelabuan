@@ -96,9 +96,6 @@ export default function AdCarousel({ ads }: { ads: Advertisement[] }) {
             }}
           />
 
-          {/* Decorative circles */}
-          <div className="absolute -top-6 -right-6 w-28 h-28 rounded-full bg-white/10" />
-          <div className="absolute -bottom-8 -left-8 w-36 h-36 rounded-full bg-white/10" />
 
           {/* Ad badge */}
           <div className="absolute top-3 right-3 z-20">
