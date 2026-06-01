@@ -357,44 +357,53 @@ export default function ApplyPage() {
               {([
                 {
                   value: 'Medium' as BusinessSize,
-                  label: 'Medium enterprise',
+                  short: 'Medium',
+                  badge: 'Medium enterprise',
                   turnover: 'Sales turnover RM 3M to ≤ RM 20M',
                   employees: 'Full-time employees 30 to ≤ 75 workers',
                 },
                 {
                   value: 'Small' as BusinessSize,
-                  label: 'Small enterprise',
+                  short: 'Small',
+                  badge: 'Small enterprise',
                   turnover: 'Sales turnover RM 300K to < RM 3M',
                   employees: 'Full-time employees 5 to < 30 workers',
                 },
                 {
                   value: 'Micro' as BusinessSize,
-                  label: 'Micro enterprise',
+                  short: 'Micro',
+                  badge: 'Microenterprise',
                   turnover: 'Sales turnover less than RM 300K',
                   employees: 'Full-time employees fewer than 5 workers',
                 },
-              ]).map(opt => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => setBusinessSize(opt.value)}
-                  className="w-full text-left rounded-2xl p-4 flex items-start gap-3 transition-all bg-white"
-                  style={{ border: `2px solid ${businessSize === opt.value ? '#E05A4E' : '#e5e7eb'}` }}
-                >
-                  <div className="mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0"
-                    style={{ borderColor: businessSize === opt.value ? '#E05A4E' : '#d1d5db' }}>
-                    {businessSize === opt.value && <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#E05A4E' }} />}
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-semibold text-sm" style={{ color: businessSize === opt.value ? '#E05A4E' : '#111827' }}>
-                      {opt.label}
-                    </p>
-                    <p className="text-xs mt-1 font-medium text-gray-700">{opt.turnover}</p>
-                    <p className="text-xs my-0.5 text-gray-400">OR</p>
-                    <p className="text-xs font-medium text-gray-700">{opt.employees}</p>
-                  </div>
-                </button>
-              ))}
+              ]).map(opt => {
+                const selected = businessSize === opt.value
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setBusinessSize(opt.value)}
+                    className="w-full text-left rounded-2xl p-4 flex items-start gap-3 transition-all bg-white"
+                    style={{ border: `2px solid ${selected ? '#E05A4E' : '#e5e7eb'}` }}
+                  >
+                    <div className="mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0"
+                      style={{ borderColor: selected ? '#E05A4E' : '#d1d5db' }}>
+                      {selected && <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#E05A4E' }} />}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-bold text-sm text-gray-900">{opt.short}</span>
+                        <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-600">
+                          {opt.badge}
+                        </span>
+                      </div>
+                      <p className="text-xs font-semibold text-gray-700">{opt.turnover}</p>
+                      <p className="text-xs my-0.5 text-gray-400 text-center">OR</p>
+                      <p className="text-xs font-semibold text-gray-700">{opt.employees}</p>
+                    </div>
+                  </button>
+                )
+              })}
             </div>
 
             {/* Fee summary */}
