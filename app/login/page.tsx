@@ -100,7 +100,7 @@ export default function LoginPage() {
         .eq('auth_user_id', data.user.id)
         .single()
 
-      router.push(adminUser ? '/admin' : '/home')
+      router.push('/home')
     }
   }
 
