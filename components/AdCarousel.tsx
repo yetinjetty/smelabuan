@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import type { Advertisement } from '@/lib/types'
 
 export default function AdCarousel({ ads }: { ads: Advertisement[] }) {
@@ -169,11 +170,11 @@ export default function AdCarousel({ ads }: { ads: Advertisement[] }) {
         `}</style>
       </div>
 
-      {/* Modal */}
-      {modal && (
+      {/* Modal — portalled to body so it renders above the nav and hero card */}
+      {modal && createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center transition-all duration-300"
-          style={{ backgroundColor: modalVisible ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0)' }}
+          className="fixed inset-0 flex items-end justify-center transition-all duration-300"
+          style={{ zIndex: 9999, backgroundColor: modalVisible ? 'rgba(0,0,0,0.65)' : 'rgba(0,0,0,0)' }}
           onClick={closeModal}
         >
           <div
@@ -248,7 +249,7 @@ export default function AdCarousel({ ads }: { ads: Advertisement[] }) {
             </div>
           </div>
         </div>
-      )}
+      , document.body)}
     </>
   )
 }
