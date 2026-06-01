@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { format } from 'date-fns'
-import type { Member, Advertisement, Event } from '@/lib/types'
+import type { Member, Advertisement, Event, Announcement } from '@/lib/types'
 import AdCarousel from '@/components/AdCarousel'
 import MemberHeroCard from '@/components/MemberHeroCard'
 
@@ -12,7 +12,10 @@ export default async function HomePage() {
 
   const service = createServiceClient()
 
-  const [{ data: member }, { data: ads }, { data: events }] = await Promise.all([
+  const now = new Date().toISOString()
+  const today = now.split('T')[0]
+
+  const [{ data: member }, { data: ads }, { data: events }, { data: announcements }] = await Promise.all([
     service
       .from('members')
       .select('*')
@@ -22,17 +25,24 @@ export default async function HomePage() {
       .from('advertisements')
       .select('*')
       .eq('status', 'active')
-      .or(`period_start.is.null,period_start.lte.${new Date().toISOString().split('T')[0]}`)
-      .or(`period_end.is.null,period_end.gte.${new Date().toISOString().split('T')[0]}`)
+      .or(`period_start.is.null,period_start.lte.${today}`)
+      .or(`period_end.is.null,period_end.gte.${today}`)
       .order('created_at', { ascending: false })
       .returns<Advertisement[]>(),
     service
       .from('events')
       .select('*')
-      .gte('event_date', new Date().toISOString().split('T')[0])
+      .gte('event_date', today)
       .order('event_date', { ascending: true })
       .limit(5)
       .returns<Event[]>(),
+    service
+      .from('announcements')
+      .select('*')
+      .or(`status.eq.published,and(status.eq.scheduled,scheduled_for.lte.${now})`)
+      .order('created_at', { ascending: false })
+      .limit(5)
+      .returns<Announcement[]>(),
   ])
 
   const statusColor =
@@ -56,6 +66,26 @@ export default async function HomePage() {
 
       {/* Remaining content — lower stacking context so sticky card always wins */}
       <div className="px-4 space-y-6 relative" style={{ zIndex: 0 }}>
+
+      {/* Announcements */}
+      {announcements && announcements.length > 0 && (
+        <div className="space-y-2">
+          {announcements.map(a => (
+            <div key={a.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex">
+              {/* Accent bar */}
+              <div className="w-1 shrink-0" style={{ backgroundColor: '#E05A4E' }} />
+              <div className="px-4 py-3 flex gap-3 items-start">
+                <span className="text-lg leading-none mt-0.5">📢</span>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-gray-900">{a.title}</p>
+                  <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{a.body}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Ads carousel */}
       {ads && ads.length > 0 && <AdCarousel ads={ads} />}
 

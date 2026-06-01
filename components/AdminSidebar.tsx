@@ -20,6 +20,7 @@ const sections = [
       { href: '/admin/events', label: 'Events', icon: '📅' },
       { href: '/admin/deals', label: 'Deals', icon: '🎁' },
       { href: '/admin/ads', label: 'Advertisements', icon: '📣' },
+      { href: '/admin/announcements', label: 'Announcements', icon: '📢' },
     ],
   },
   {

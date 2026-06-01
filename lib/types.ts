@@ -86,6 +86,20 @@ export interface Advertisement {
   created_at: string
 }
 
+export type AnnouncementStatus = 'draft' | 'published' | 'scheduled'
+
+export interface Announcement {
+  id: string
+  title: string
+  body: string
+  status: AnnouncementStatus
+  published_at: string | null
+  scheduled_for: string | null
+  created_by: string | null
+  created_at: string
+  updated_at: string
+}
+
 export interface ActivityLog {
   id: string
   member_id: string | null
