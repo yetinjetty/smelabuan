@@ -354,7 +354,7 @@ export default function ApplyPage() {
             </div>
 
             <div className="space-y-3">
-              {(membershipType === 'Life' && sectorCategory === 'Manufacturing' ? [
+              {(sectorCategory === 'Manufacturing' ? [
                 {
                   value: 'Medium' as BusinessSize,
                   short: 'Medium',
