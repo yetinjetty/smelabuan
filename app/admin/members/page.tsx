@@ -5,12 +5,12 @@ import type { Member } from '@/lib/types'
 export default async function AdminMembersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; q?: string; page?: string }>
+  searchParams: Promise<{ status?: string; q?: string; page?: string; perPage?: string }>
 }) {
-  const { status, q, page } = await searchParams
+  const { status, q, page, perPage } = await searchParams
   const supabase = await createClient()
   const pageNum = parseInt(page ?? '1', 10)
-  const pageSize = 25
+  const pageSize = [10, 20, 50].includes(parseInt(perPage ?? '', 10)) ? parseInt(perPage!, 10) : 10
   const from = (pageNum - 1) * pageSize
   const to = from + pageSize - 1
 
@@ -35,6 +35,7 @@ export default async function AdminMembersPage({
         pageSize={pageSize}
         status={status}
         q={q}
+        perPage={pageSize}
       />
     </div>
   )

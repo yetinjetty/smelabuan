@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { format } from 'date-fns'
 import type { Advertisement } from '@/lib/types'
+import { PaginationBar } from '@/components/TablePagination'
 
 type AdForm = {
   advertiser_name: string; headline: string
@@ -15,6 +16,8 @@ export default function AdsAdmin({ ads }: { ads: Advertisement[] }) {
   const [editing, setEditing] = useState<Advertisement | null>(null)
   const [form, setForm] = useState<AdForm>(empty)
   const [saving, setSaving] = useState(false)
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
 
   function openNew() { setForm(empty); setEditing(null); setShowForm(true) }
   function openEdit(ad: Advertisement) {
@@ -52,6 +55,8 @@ export default function AdsAdmin({ ads }: { ads: Advertisement[] }) {
   }
 
   const activeCount = ads.filter(a => a.status === 'active').length
+  const totalPages = Math.ceil(ads.length / pageSize)
+  const paged = ads.slice((page - 1) * pageSize, page * pageSize)
 
   return (
     <>
@@ -70,7 +75,7 @@ export default function AdsAdmin({ ads }: { ads: Advertisement[] }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-700/50" style={{ color: '#ffffff' }}>
-            {ads.map(ad => (
+            {paged.map(ad => (
               <tr key={ad.id} className="hover:bg-white/5 transition-colors">
                 <td className="px-4 py-3 font-medium text-white">{ad.advertiser_name}</td>
                 <td className="px-4 py-3 text-white max-w-[200px] truncate">{ad.headline}</td>
@@ -94,6 +99,11 @@ export default function AdsAdmin({ ads }: { ads: Advertisement[] }) {
             {!ads.length && <tr><td colSpan={6} className="px-4 py-10 text-center text-gray-500">No ads yet</td></tr>}
           </tbody>
         </table>
+        <PaginationBar
+          page={page} totalPages={totalPages} total={ads.length} pageSize={pageSize}
+          onPageChange={p => setPage(p)}
+          onPageSizeChange={ps => { setPageSize(ps); setPage(1) }}
+        />
       </div>
 
       {showForm && (

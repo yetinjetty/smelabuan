@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { format } from 'date-fns'
 import { createClient } from '@/lib/supabase/client'
 import type { Event } from '@/lib/types'
+import { PaginationBar } from '@/components/TablePagination'
 
 type EventForm = {
   title: string; venue: string; event_date: string
@@ -20,6 +21,8 @@ export default function EventsAdmin({ events }: { events: Event[] }) {
   const [form, setForm] = useState<EventForm>(empty)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
 
   function openNew() { setForm(empty); setEditing(null); setShowForm(true) }
   function openEdit(e: Event) {
@@ -46,6 +49,9 @@ export default function EventsAdmin({ events }: { events: Event[] }) {
     startTransition(() => router.refresh())
   }
 
+  const totalPages = Math.ceil(events.length / pageSize)
+  const paged = events.slice((page - 1) * pageSize, page * pageSize)
+
   return (
     <>
       <div className="flex justify-end mb-4">
@@ -64,7 +70,7 @@ export default function EventsAdmin({ events }: { events: Event[] }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-700/50" style={{ color: '#ffffff' }}>
-            {events.map(e => (
+            {paged.map(e => (
               <tr key={e.id} className="hover:bg-white/5 transition-colors">
                 <td className="px-4 py-3 font-medium text-white">{e.title}</td>
                 <td className="px-4 py-3 text-white">{format(new Date(e.event_date), 'd MMM yyyy')}</td>
@@ -90,6 +96,11 @@ export default function EventsAdmin({ events }: { events: Event[] }) {
             )}
           </tbody>
         </table>
+        <PaginationBar
+          page={page} totalPages={totalPages} total={events.length} pageSize={pageSize}
+          onPageChange={p => setPage(p)}
+          onPageSizeChange={ps => { setPageSize(ps); setPage(1) }}
+        />
       </div>
 
       {showForm && (

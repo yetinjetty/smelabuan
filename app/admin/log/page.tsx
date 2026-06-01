@@ -2,16 +2,17 @@
 import { format } from 'date-fns'
 import type { ActivityLog } from '@/lib/types'
 import LogExport from './LogExport'
+import { PaginationBar } from '@/components/TablePagination'
 
 export default async function AdminLogPage({
   searchParams,
 }: {
-  searchParams: Promise<{ action?: string; page?: string }>
+  searchParams: Promise<{ action?: string; page?: string; perPage?: string }>
 }) {
-  const { action, page } = await searchParams
+  const { action, page, perPage } = await searchParams
   const service = createServiceClient()
   const pageNum = parseInt(page ?? '1', 10)
-  const pageSize = 50
+  const pageSize = [10, 20, 50].includes(parseInt(perPage ?? '', 10)) ? parseInt(perPage!, 10) : 10
   const from = (pageNum - 1) * pageSize
   const to = from + pageSize - 1
 
@@ -98,29 +99,14 @@ export default async function AdminLogPage({
           </tbody>
         </table>
 
-        {totalPages > 1 && (
-          <div className="px-4 py-3 border-t border-gray-700 flex items-center justify-between text-sm">
-            <span className="text-gray-500">Page {pageNum} of {totalPages}</span>
-            <div className="flex gap-2">
-              {pageNum > 1 && (
-                <a
-                  href={`/admin/log?${action ? `action=${action}&` : ''}page=${pageNum - 1}`}
-                  className="px-3 py-1 border border-gray-600 rounded-lg text-gray-400 hover:bg-gray-700"
-                >
-                  Previous
-                </a>
-              )}
-              {pageNum < totalPages && (
-                <a
-                  href={`/admin/log?${action ? `action=${action}&` : ''}page=${pageNum + 1}`}
-                  className="px-3 py-1 border border-gray-600 rounded-lg text-gray-400 hover:bg-gray-700"
-                >
-                  Next
-                </a>
-              )}
-            </div>
-          </div>
-        )}
+        <PaginationBar
+          page={pageNum}
+          totalPages={totalPages}
+          total={count ?? 0}
+          pageSize={pageSize}
+          onPageChange={p => { window.location.href = `/admin/log?${action ? `action=${action}&` : ''}page=${p}&perPage=${pageSize}` }}
+          onPageSizeChange={ps => { window.location.href = `/admin/log?${action ? `action=${action}&` : ''}page=1&perPage=${ps}` }}
+        />
       </div>
     </div>
   )

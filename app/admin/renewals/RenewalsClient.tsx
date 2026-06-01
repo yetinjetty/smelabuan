@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { format, differenceInDays } from 'date-fns'
 import type { Member } from '@/lib/types'
+import { PaginationBar } from '@/components/TablePagination'
 
 export default function RenewalsClient({
   overdue, dueThisMonth, dueNextMonthCount, nextMonthName, todayStr,
@@ -125,6 +126,11 @@ function RenewalTable({ title, members, todayStr, isOverdue, onSendAllReminders,
   onSendAllReminders: () => void
   sendingAll: boolean
 }) {
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const totalPages = Math.ceil(members.length / pageSize)
+  const paged = members.slice((page - 1) * pageSize, page * pageSize)
+
   return (
     <div className="rounded-xl border border-gray-700 overflow-hidden" style={{ backgroundColor: '#1f2937' }}>
       <div className="px-5 py-4 border-b border-gray-700 flex items-center justify-between">
@@ -150,22 +156,29 @@ function RenewalTable({ title, members, todayStr, isOverdue, onSendAllReminders,
       {members.length === 0 ? (
         <p className="px-5 py-8 text-sm text-gray-500 text-center">None</p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="border-b border-gray-700">
-              <tr>
-                {['Member ID', 'Member', 'Type', 'Size', isOverdue ? 'Expired on' : 'Due on', 'Days', 'Actions'].map(h => (
-                  <th key={h} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">{h}</th>
+        <>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="border-b border-gray-700">
+                <tr>
+                  {['Member ID', 'Member', 'Type', 'Size', isOverdue ? 'Expired on' : 'Due on', 'Days', 'Actions'].map(h => (
+                    <th key={h} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-700/50">
+                {paged.map(m => (
+                  <RenewalRow key={m.id} member={m} todayStr={todayStr} isOverdue={isOverdue} />
                 ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-700/50">
-              {members.map(m => (
-                <RenewalRow key={m.id} member={m} todayStr={todayStr} isOverdue={isOverdue} />
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </tbody>
+            </table>
+          </div>
+          <PaginationBar
+            page={page} totalPages={totalPages} total={members.length} pageSize={pageSize}
+            onPageChange={p => setPage(p)}
+            onPageSizeChange={ps => { setPageSize(ps); setPage(1) }}
+          />
+        </>
       )}
     </div>
   )

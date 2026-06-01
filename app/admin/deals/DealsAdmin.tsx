@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { format } from 'date-fns'
 import { createClient } from '@/lib/supabase/client'
 import type { Deal } from '@/lib/types'
+import { PaginationBar } from '@/components/TablePagination'
 
 type DealForm = {
   merchant_name: string; offer_description: string; category: string
@@ -20,6 +21,8 @@ export default function DealsAdmin({ deals }: { deals: Deal[] }) {
   const [editing, setEditing] = useState<Deal | null>(null)
   const [form, setForm] = useState<DealForm>(empty)
   const [saving, setSaving] = useState(false)
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
 
   function openNew() { setForm(empty); setEditing(null); setShowForm(true) }
   function openEdit(d: Deal) {
@@ -43,6 +46,9 @@ export default function DealsAdmin({ deals }: { deals: Deal[] }) {
     startTransition(() => router.refresh())
   }
 
+  const totalPages = Math.ceil(deals.length / pageSize)
+  const paged = deals.slice((page - 1) * pageSize, page * pageSize)
+
   return (
     <>
       <div className="flex justify-end mb-4">
@@ -59,7 +65,7 @@ export default function DealsAdmin({ deals }: { deals: Deal[] }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-700/50" style={{ color: '#ffffff' }}>
-            {deals.map(d => (
+            {paged.map(d => (
               <tr key={d.id} className="hover:bg-white/5 transition-colors">
                 <td className="px-4 py-3">
                   <p className="font-medium text-white">{d.merchant_name}</p>
@@ -82,6 +88,11 @@ export default function DealsAdmin({ deals }: { deals: Deal[] }) {
             {!deals.length && <tr><td colSpan={6} className="px-4 py-10 text-center text-gray-500">No deals yet</td></tr>}
           </tbody>
         </table>
+        <PaginationBar
+          page={page} totalPages={totalPages} total={deals.length} pageSize={pageSize}
+          onPageChange={p => setPage(p)}
+          onPageSizeChange={ps => { setPageSize(ps); setPage(1) }}
+        />
       </div>
 
       {showForm && (

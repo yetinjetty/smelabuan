@@ -4,9 +4,10 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { format } from 'date-fns'
 import type { Member } from '@/lib/types'
+import { PaginationBar } from '@/components/TablePagination'
 
 export default function MembersTable({
-  members, total, page, pageSize, status, q,
+  members, total, page, pageSize, status, q, perPage,
 }: {
   members: Member[]
   total: number
@@ -14,6 +15,7 @@ export default function MembersTable({
   pageSize: number
   status?: string
   q?: string
+  perPage?: number
 }) {
   const router = useRouter()
   const [search, setSearch] = useState(q ?? '')
@@ -23,11 +25,22 @@ export default function MembersTable({
   const [actionInfo, setActionInfo] = useState('')
   const [loadingAction, setLoadingAction] = useState<string | null>(null)
 
+  function buildParams(overrides: Record<string, string>) {
+    const params = new URLSearchParams()
+    if (q) params.set('q', q)
+    if (status) params.set('status', status)
+    params.set('page', String(page))
+    if (perPage) params.set('perPage', String(perPage))
+    Object.entries(overrides).forEach(([k, v]) => v ? params.set(k, v) : params.delete(k))
+    return params.toString()
+  }
+
   function applyFilters(newSearch: string, newFilter: string) {
     const params = new URLSearchParams()
     if (newSearch) params.set('q', newSearch)
     if (newFilter) params.set('status', newFilter)
     params.set('page', '1')
+    if (perPage) params.set('perPage', String(perPage))
     router.push(`/admin/members?${params}`)
   }
 
@@ -170,30 +183,14 @@ export default function MembersTable({
           </table>
         </div>
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="px-4 py-3 border-t border-gray-700 flex items-center justify-between text-sm">
-            <span className="text-gray-500">Page {page} of {totalPages}</span>
-            <div className="flex gap-2">
-              {page > 1 && (
-                <button
-                  onClick={() => { const p = new URLSearchParams(); if (q) p.set('q', q); if (status) p.set('status', status); p.set('page', String(page - 1)); router.push(`/admin/members?${p}`) }}
-                  className="px-3 py-1 border border-gray-600 rounded-lg text-gray-400 hover:bg-gray-700"
-                >
-                  Previous
-                </button>
-              )}
-              {page < totalPages && (
-                <button
-                  onClick={() => { const p = new URLSearchParams(); if (q) p.set('q', q); if (status) p.set('status', status); p.set('page', String(page + 1)); router.push(`/admin/members?${p}`) }}
-                  className="px-3 py-1 border border-gray-600 rounded-lg text-gray-400 hover:bg-gray-700"
-                >
-                  Next
-                </button>
-              )}
-            </div>
-          </div>
-        )}
+        <PaginationBar
+          page={page}
+          totalPages={totalPages}
+          total={total}
+          pageSize={pageSize}
+          onPageChange={p => router.push(`/admin/members?${buildParams({ page: String(p) })}`)}
+          onPageSizeChange={ps => router.push(`/admin/members?${buildParams({ page: '1', perPage: String(ps) })}`)}
+        />
       </div>
 
       {/* Member detail drawer */}
