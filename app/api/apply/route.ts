@@ -12,7 +12,6 @@ export async function POST(request: NextRequest) {
       for (const [key, value] of formData.entries()) {
         if (typeof value === 'string') fields[key] = value
       }
-      // File uploads: ignored for now (stored externally or collected in-person)
     } else {
       fields = await request.json()
     }
@@ -30,15 +29,6 @@ export async function POST(request: NextRequest) {
 
     const service = createServiceClient()
 
-    // Build extra details as a note in payment_ref until new columns are added
-    const extraDetails = [
-      ic_number && `IC: ${ic_number}`,
-      ssm_reg_no && `SSM: ${ssm_reg_no}`,
-      business_address && `Address: ${business_address}`,
-      sector_category && `Sector category: ${sector_category}`,
-      rep_name && `Rep: ${rep_name} (${rep_ic}, ${rep_phone})`,
-    ].filter(Boolean).join(' | ')
-
     const { data: inserted, error } = await service
       .from('members')
       .insert({
@@ -50,7 +40,13 @@ export async function POST(request: NextRequest) {
         business_size: business_size ?? null,
         membership_type,
         status: 'pending',
-        payment_ref: extraDetails || null,
+        ic_number: ic_number ?? null,
+        ssm_reg_no: ssm_reg_no ?? null,
+        business_address: business_address ?? null,
+        sector_category: sector_category ?? null,
+        rep_name: rep_name ?? null,
+        rep_ic: rep_ic ?? null,
+        rep_phone: rep_phone ?? null,
       })
       .select()
       .single()
@@ -64,7 +60,6 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: 'Record was not saved. Please try again.' }, { status: 500 })
     }
 
-    // Confirmation email to applicant
     await sendEmail({
       to: email,
       subject: 'Application Received — SME Association Labuan',
@@ -85,7 +80,6 @@ export async function POST(request: NextRequest) {
       `,
     })
 
-    // Notification to admin
     if (process.env.ADMIN_EMAIL) {
       await sendEmail({
         to: process.env.ADMIN_EMAIL,
