@@ -43,9 +43,11 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
       const el = headerRef.current
       if (!el) return
       const bottom = el.getBoundingClientRect().bottom
-      setSliderTop(Math.max(bottom, 60))
+      // +6px buffer so letters clear the red header on Android
+      setSliderTop(Math.max(bottom + 6, 66))
     }
-    requestAnimationFrame(update)
+    // Double rAF: lets layout settle before measuring on Android
+    requestAnimationFrame(() => requestAnimationFrame(update))
     window.addEventListener('scroll', update, { passive: true })
     window.addEventListener('resize', update)
     return () => {
@@ -184,8 +186,8 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
           boxShadow: '0 2px 16px rgba(0,0,0,0.18)',
         }}
       >
-        <div className="flex items-center gap-3 px-6 py-3">
-          <div className="flex-1 flex items-center gap-2 rounded-full px-4 py-2" style={{ backgroundColor: 'rgba(0,0,0,0.18)' }}>
+        <div className="flex items-center gap-3 pl-6 pr-12 py-3">
+          <div className="flex-1 min-w-0 flex items-center gap-2 rounded-full px-4 py-2" style={{ backgroundColor: 'rgba(0,0,0,0.18)' }}>
             <span className="text-white/60 shrink-0"><SearchIcon size={15} /></span>
             <input
               ref={stickyInputRef}
