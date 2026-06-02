@@ -3,3 +3,7 @@
 :root {
   --brand: #E05A4E;
 }
+
+html, body {
+  overscroll-behavior: none; /* prevent pull-to-refresh on mobile browsers */
+}

@@ -97,7 +97,11 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
   function scrollToLetter(letter: string) {
     const target = Array.from(activeLetters).find(l => l >= letter) ?? Array.from(activeLetters).at(-1)
     if (!target) return
-    document.getElementById(`dir-${target}`)?.scrollIntoView({ behavior: 'instant', block: 'start' })
+    const el = document.getElementById(`dir-${target}`)
+    if (!el) return
+    // Use window.scrollTo instead of scrollIntoView — scrollIntoView triggers
+    // an iOS Safari bug that displaces position:fixed elements (nav bar, sticky bar).
+    window.scrollTo(0, el.getBoundingClientRect().top + window.pageYOffset)
   }
 
   function onSliderTouchStart(e: React.TouchEvent) {
