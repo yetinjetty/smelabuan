@@ -183,14 +183,14 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
       {/* ── Red header ── */}
       <div
         ref={headerRef}
-        className="px-4 pt-6 pb-8 space-y-4"
+        className="px-4 pt-3 pb-4 space-y-3"
         style={{
           background: 'linear-gradient(160deg, #E05A4E 0%, #c0392b 100%)',
           position: 'relative',
           zIndex: searchOpen ? 200 : 'auto',
         }}
       >
-        <h1 className="text-2xl font-bold text-white">Directory</h1>
+        <h1 className="text-xl font-bold text-white">Directory</h1>
 
         {/* Tab toggle */}
         <div className="flex gap-1 p-1 rounded-xl" style={{ backgroundColor: 'rgba(0,0,0,0.15)' }}>
@@ -276,7 +276,7 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
         )}
 
         {/* Count — stays on red background */}
-        <p className="text-xs text-white/70 pt-1">{count}</p>
+        <p className="text-xs text-white/70">{count}</p>
       </div>
 
       {/* ── Content sheet ── */}
