@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import type { Member } from '@/lib/types'
 
 type DirectoryMember = Pick<Member, 'id' | 'member_id' | 'full_name' | 'business_name' | 'business_sector' | 'business_size' | 'membership_type' | 'status'>
@@ -14,21 +14,57 @@ type Company = {
 
 type Tab = 'members' | 'companies'
 
-function SearchIcon() {
+function SearchIcon({ size = 16 }: { size?: number }) {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
     </svg>
   )
 }
 
 export default function DirectoryClient({ members }: { members: DirectoryMember[] }) {
-  const [tab, setTab] = useState<Tab>('members')
-  const [search, setSearch] = useState('')
-  const [sector, setSector] = useState('')
+  const [tab, setTab]               = useState<Tab>('members')
+  const [search, setSearch]         = useState('')
+  const [sector, setSector]         = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
 
-  function closeSearch() { setSearchOpen(false); setSearch('') }
+  const headerInputRef = useRef<HTMLInputElement>(null)
+  const stickyInputRef = useRef<HTMLInputElement>(null)
+  const headerRef      = useRef<HTMLDivElement>(null)
+
+  // Detect when the red header scrolls out of view
+  useEffect(() => {
+    const el = headerRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsScrolled(!entry.isIntersecting),
+      { threshold: 0, rootMargin: '-60px 0px 0px 0px' }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  function openSearch() {
+    setSearchOpen(true)
+    setTimeout(() => {
+      if (isScrolled) stickyInputRef.current?.focus()
+      else headerInputRef.current?.focus()
+    }, 50)
+  }
+
+  function closeSearch() {
+    setSearchOpen(false)
+    setSearch('')
+    headerInputRef.current?.blur()
+    stickyInputRef.current?.blur()
+  }
+
+  // When input blurs (e.g. tapping backdrop), delay so backdrop onClick fires first
+  function onInputBlur() {
+    setTimeout(() => setSearchOpen(false), 200)
+  }
+
   function switchTab(t: Tab) { setTab(t); setSearch(''); setSector(''); setSearchOpen(false) }
 
   const sectors = useMemo(
@@ -51,16 +87,16 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
   const filteredMembers = useMemo(() => {
     const q = search.toLowerCase()
     return members.filter(m => {
-      const matchSearch = !q || m.full_name.toLowerCase().includes(q) || (m.business_name ?? '').toLowerCase().includes(q)
-      return matchSearch && (!sector || m.business_sector === sector)
+      const ok = !q || m.full_name.toLowerCase().includes(q) || (m.business_name ?? '').toLowerCase().includes(q)
+      return ok && (!sector || m.business_sector === sector)
     })
   }, [members, search, sector])
 
   const filteredCompanies = useMemo(() => {
     const q = search.toLowerCase()
     return companies.filter(c => {
-      const matchSearch = !q || c.business_name.toLowerCase().includes(q) || (c.business_sector ?? '').toLowerCase().includes(q)
-      return matchSearch && (!sector || c.business_sector === sector)
+      const ok = !q || c.business_name.toLowerCase().includes(q) || (c.business_sector ?? '').toLowerCase().includes(q)
+      return ok && (!sector || c.business_sector === sector)
     })
   }, [companies, search, sector])
 
@@ -68,12 +104,73 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
     ? `${filteredMembers.length} member${filteredMembers.length !== 1 ? 's' : ''}`
     : `${filteredCompanies.length} compan${filteredCompanies.length !== 1 ? 'ies' : 'y'}`
 
+  const chipActive   = { backgroundColor: '#ffffff', color: '#E05A4E', borderColor: '#ffffff' }
+  const chipInactive = { backgroundColor: 'transparent', color: 'rgba(255,255,255,0.85)', borderColor: 'rgba(255,255,255,0.4)' }
+
   return (
     <div>
+      {/* ── Sticky search bar — slides down when header scrolls away ── */}
+      <div
+        className="fixed top-0 left-0 right-0 z-[200] bg-white border-b border-gray-100"
+        style={{
+          transform: isScrolled ? 'translateY(0)' : 'translateY(-110%)',
+          opacity:   isScrolled ? 1 : 0,
+          transition: 'transform 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.25s ease',
+          pointerEvents: isScrolled ? 'all' : 'none',
+          boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+        }}
+      >
+        <div className="flex items-center gap-3 px-4 py-3">
+          <div
+            className="flex-1 flex items-center gap-2 rounded-full px-4 py-2"
+            style={{ backgroundColor: '#f3f4f6' }}
+          >
+            <span className="text-gray-400 shrink-0"><SearchIcon size={15} /></span>
+            <input
+              ref={stickyInputRef}
+              type="search"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              onFocus={() => setSearchOpen(true)}
+              onBlur={onInputBlur}
+              placeholder={tab === 'members' ? 'Search name or business…' : 'Search company or sector…'}
+              // font-size 16 prevents iOS Safari from zooming on focus
+              style={{ fontSize: 16, background: 'transparent', minWidth: 0 }}
+              className="flex-1 outline-none text-gray-900 placeholder-gray-400"
+            />
+            {search && (
+              <button onMouseDown={e => { e.preventDefault(); setSearch('') }} className="text-gray-400 shrink-0">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+              </button>
+            )}
+          </div>
+          <button
+            onMouseDown={e => { e.preventDefault(); closeSearch() }}
+            className="text-sm font-medium shrink-0 transition-colors"
+            style={{ color: '#E05A4E' }}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+
+      {/* ── Backdrop — tap to dismiss keyboard + search ── */}
+      {searchOpen && (
+        <div
+          className="fixed inset-0 z-[150]"
+          onClick={closeSearch}
+        />
+      )}
+
       {/* ── Red header ── */}
       <div
+        ref={headerRef}
         className="px-4 pt-6 pb-8 space-y-4"
-        style={{ background: 'linear-gradient(160deg, #E05A4E 0%, #c0392b 100%)' }}
+        style={{
+          background: 'linear-gradient(160deg, #E05A4E 0%, #c0392b 100%)',
+          position: 'relative',
+          zIndex: searchOpen ? 200 : 'auto',
+        }}
       >
         <h1 className="text-2xl font-bold text-white">Directory</h1>
 
@@ -95,61 +192,64 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
           ))}
         </div>
 
-        {/* Search button (collapsed) or search input (expanded) + sector chips */}
-        {searchOpen ? (
+        {/* Search input (expanded) or icon button + chips */}
+        {searchOpen && !isScrolled ? (
           <div className="flex items-center gap-2">
-            <input
-              autoFocus
-              type="search"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder={tab === 'members' ? 'Search name or business…' : 'Search company or sector…'}
-              className="flex-1 rounded-full px-4 py-2 text-sm text-white placeholder-white/60 outline-none border border-white/30"
-              style={{ backgroundColor: 'rgba(0,0,0,0.18)' }}
-            />
-            <button
-              onClick={closeSearch}
-              className="w-8 h-8 rounded-full flex items-center justify-center text-white/80 hover:text-white transition-colors"
+            <div
+              className="flex-1 flex items-center gap-2 rounded-full px-4 py-2"
               style={{ backgroundColor: 'rgba(0,0,0,0.18)' }}
             >
-              ✕
+              <span className="text-white/60 shrink-0"><SearchIcon size={15} /></span>
+              <input
+                ref={headerInputRef}
+                autoFocus
+                type="search"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                onBlur={onInputBlur}
+                placeholder={tab === 'members' ? 'Search name or business…' : 'Search company or sector…'}
+                style={{ fontSize: 16, background: 'transparent', minWidth: 0 }}
+                className="flex-1 outline-none text-white placeholder-white/50"
+              />
+              {search && (
+                <button onMouseDown={e => { e.preventDefault(); setSearch('') }} className="text-white/60 shrink-0">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                </button>
+              )}
+            </div>
+            <button
+              onMouseDown={e => { e.preventDefault(); closeSearch() }}
+              className="text-white text-sm font-medium shrink-0"
+            >
+              Cancel
             </button>
           </div>
         ) : (
           <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-0.5">
             {/* Search icon button */}
             <button
-              onClick={() => setSearchOpen(true)}
-              className="flex-none w-9 h-9 rounded-full flex items-center justify-center text-white transition-colors"
+              onClick={openSearch}
+              className="flex-none w-9 h-9 rounded-full flex items-center justify-center text-white/90 transition-opacity active:opacity-70"
               style={{ backgroundColor: 'rgba(0,0,0,0.18)' }}
             >
-              <SearchIcon />
+              <SearchIcon size={16} />
             </button>
 
             {/* All chip */}
             <button
               onClick={() => setSector('')}
               className="flex-none px-4 py-1.5 rounded-full text-sm font-medium border transition-colors"
-              style={{
-                backgroundColor: !sector ? '#ffffff' : 'transparent',
-                color: !sector ? '#E05A4E' : 'rgba(255,255,255,0.85)',
-                borderColor: !sector ? '#ffffff' : 'rgba(255,255,255,0.4)',
-              }}
+              style={!sector ? chipActive : chipInactive}
             >
               All
             </button>
 
-            {/* Sector chips */}
             {sectors.map(s => (
               <button
                 key={s}
                 onClick={() => setSector(s === sector ? '' : s)}
                 className="flex-none px-4 py-1.5 rounded-full text-sm font-medium border transition-colors"
-                style={{
-                  backgroundColor: sector === s ? '#ffffff' : 'transparent',
-                  color: sector === s ? '#E05A4E' : 'rgba(255,255,255,0.85)',
-                  borderColor: sector === s ? '#ffffff' : 'rgba(255,255,255,0.4)',
-                }}
+                style={sector === s ? chipActive : chipInactive}
               >
                 {s}
               </button>
@@ -158,11 +258,10 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
         )}
       </div>
 
-      {/* ── Content sheet — slides up over red header ── */}
+      {/* ── Content sheet ── */}
       <div className="bg-gray-50 rounded-t-3xl -mt-4 px-4 pt-5 pb-6 space-y-3 min-h-screen">
         <p className="text-xs text-gray-400">{count}</p>
 
-        {/* Members list */}
         {tab === 'members' && (
           <div className="space-y-3">
             {filteredMembers.map(m => (
@@ -178,7 +277,7 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
                 </div>
                 <div className="flex flex-wrap gap-1.5 mt-2">
                   {m.business_sector && <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{m.business_sector}</span>}
-                  {m.business_size && <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{m.business_size}</span>}
+                  {m.business_size   && <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{m.business_size}</span>}
                   <span className="text-xs text-gray-400">{m.member_id}</span>
                 </div>
               </div>
@@ -187,7 +286,6 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
           </div>
         )}
 
-        {/* Companies list */}
         {tab === 'companies' && (
           <div className="space-y-3">
             {filteredCompanies.map(c => (
@@ -208,9 +306,7 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
                 )}
                 <div className="mt-3 pt-3 border-t border-gray-100 flex flex-wrap gap-1.5">
                   {c.members.map(m => (
-                    <span key={m.id} className="text-xs bg-gray-50 border border-gray-200 text-gray-600 px-2 py-0.5 rounded-full">
-                      {m.full_name}
-                    </span>
+                    <span key={m.id} className="text-xs bg-gray-50 border border-gray-200 text-gray-600 px-2 py-0.5 rounded-full">{m.full_name}</span>
                   ))}
                 </div>
               </div>
