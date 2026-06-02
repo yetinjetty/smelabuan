@@ -67,10 +67,11 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
 
   function openSearch() {
     setSearchOpen(true)
+    // Delay focus until after the 220ms slide-in transition starts
     setTimeout(() => {
       if (isScrolled) stickyInputRef.current?.focus()
       else headerInputRef.current?.focus()
-    }, 50)
+    }, 100)
   }
 
   function closeSearch() {
@@ -226,42 +227,62 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
           <p className="text-xs text-white/70">{count}</p>
         </div>
 
-        {searchOpen && !isScrolled ? (
-          <div className="flex items-center gap-2">
-            <div className="flex-1 flex items-center gap-2 rounded-full px-4 py-2" style={{ backgroundColor: 'rgba(0,0,0,0.18)' }}>
-              <span className="text-white/60 shrink-0"><SearchIcon size={15} /></span>
-              <input
-                ref={headerInputRef}
-                autoFocus
-                type="search"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                onBlur={onInputBlur}
-                placeholder="Search company or sector…"
-                style={{ fontSize: 16, background: 'transparent', minWidth: 0 }}
-                className="flex-1 outline-none text-white placeholder-white/50"
-              />
-              {search && (
-                <button onMouseDown={e => { e.preventDefault(); setSearch('') }} className="text-white/60 shrink-0">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-                </button>
-              )}
+        {/* Filter / search row — cross-fade with slide on toggle */}
+        {!isScrolled && (
+          <div className="relative" style={{ minHeight: '2.25rem' }}>
+
+            {/* Chips row — slides left + fades out when search opens */}
+            <div
+              className="flex items-center gap-2"
+              style={{
+                opacity: searchOpen ? 0 : 1,
+                transform: searchOpen ? 'translateX(-10px)' : 'translateX(0)',
+                transition: 'opacity 0.22s ease, transform 0.22s ease',
+                pointerEvents: searchOpen ? 'none' : 'all',
+              }}
+            >
+              <button onClick={openSearch} className="flex-none w-9 h-9 rounded-full flex items-center justify-center text-white/90 active:opacity-70" style={{ backgroundColor: 'rgba(0,0,0,0.18)' }}>
+                <SearchIcon size={16} />
+              </button>
+              <div className="flex gap-2 overflow-x-auto pb-0.5" style={{ scrollbarWidth: 'none' }}>
+                <button onClick={() => setSector('')} className="flex-none px-4 py-1.5 rounded-full text-sm font-medium border transition-colors" style={!sector ? chipActive : chipInactive}>All</button>
+                {sectors.map(s => (
+                  <button key={s} onClick={() => setSector(s === sector ? '' : s)} className="flex-none px-4 py-1.5 rounded-full text-sm font-medium border transition-colors" style={sector === s ? chipActive : chipInactive}>{s}</button>
+                ))}
+              </div>
             </div>
-            <button onMouseDown={e => { e.preventDefault(); closeSearch() }} className="text-white text-sm font-medium shrink-0">Cancel</button>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2">
-            {/* Search button — locked, does not scroll */}
-            <button onClick={openSearch} className="flex-none w-9 h-9 rounded-full flex items-center justify-center text-white/90 transition-opacity active:opacity-70" style={{ backgroundColor: 'rgba(0,0,0,0.18)' }}>
-              <SearchIcon size={16} />
-            </button>
-            {/* Chips only — horizontally scrollable */}
-            <div className="flex gap-2 overflow-x-auto pb-0.5" style={{ scrollbarWidth: 'none' }}>
-              <button onClick={() => setSector('')} className="flex-none px-4 py-1.5 rounded-full text-sm font-medium border transition-colors" style={!sector ? chipActive : chipInactive}>All</button>
-              {sectors.map(s => (
-                <button key={s} onClick={() => setSector(s === sector ? '' : s)} className="flex-none px-4 py-1.5 rounded-full text-sm font-medium border transition-colors" style={sector === s ? chipActive : chipInactive}>{s}</button>
-              ))}
+
+            {/* Search input — slides in from right + fades in when search opens */}
+            <div
+              className="absolute inset-0 flex items-center gap-2"
+              style={{
+                opacity: searchOpen ? 1 : 0,
+                transform: searchOpen ? 'translateX(0)' : 'translateX(10px)',
+                transition: 'opacity 0.22s ease, transform 0.22s ease',
+                pointerEvents: searchOpen ? 'all' : 'none',
+              }}
+            >
+              <div className="flex-1 flex items-center gap-2 rounded-full px-4 py-2" style={{ backgroundColor: 'rgba(0,0,0,0.18)' }}>
+                <span className="text-white/60 shrink-0"><SearchIcon size={15} /></span>
+                <input
+                  ref={headerInputRef}
+                  type="search"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  onBlur={onInputBlur}
+                  placeholder="Search company or sector…"
+                  style={{ fontSize: 16, background: 'transparent', minWidth: 0 }}
+                  className="flex-1 outline-none text-white placeholder-white/50"
+                />
+                {search && (
+                  <button onMouseDown={e => { e.preventDefault(); setSearch('') }} className="text-white/60 shrink-0">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                  </button>
+                )}
+              </div>
+              <button onMouseDown={e => { e.preventDefault(); closeSearch() }} className="text-white text-sm font-medium shrink-0">Cancel</button>
             </div>
+
           </div>
         )}
       </div>
