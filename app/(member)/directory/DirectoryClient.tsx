@@ -268,10 +268,7 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
         )}
         {groupedCompanies.map(group => (
           <div key={group.letter} className="mb-4">
-            <div id={`dir-${group.letter}`} className="flex items-center gap-2 mb-2 pt-1">
-              <span className="text-xs font-bold text-[#E05A4E] w-5 shrink-0">{group.letter}</span>
-              <div className="flex-1 h-px bg-gray-200" />
-            </div>
+            <div id={`dir-${group.letter}`} />
             <div className="space-y-3">
               {group.companies.map(c => (
                 <div key={c.business_name} className="bg-white rounded-2xl border border-gray-200 p-4">
