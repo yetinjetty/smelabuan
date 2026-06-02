@@ -99,9 +99,12 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
     if (!target) return
     const el = document.getElementById(`dir-${target}`)
     if (!el) return
-    // Use window.scrollTo instead of scrollIntoView — scrollIntoView triggers
-    // an iOS Safari bug that displaces position:fixed elements (nav bar, sticky bar).
-    window.scrollTo(0, el.getBoundingClientRect().top + window.pageYOffset)
+    // window.scrollTo avoids the iOS Safari scrollIntoView bug that displaces
+    // position:fixed elements. rAF forces a repaint so the nav/sticky bar
+    // re-composites at the correct position after the programmatic scroll.
+    const top = el.getBoundingClientRect().top + window.pageYOffset
+    window.scrollTo(0, top)
+    requestAnimationFrame(() => window.scrollTo(0, top))
   }
 
   function onSliderTouchStart(e: React.TouchEvent) {
@@ -259,7 +262,7 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
       </div>
 
       {/* ── Content sheet — right padding leaves room for the slider ── */}
-      <div className="bg-gray-50 rounded-t-3xl -mt-4 pt-5 pb-4 min-h-screen" style={{ paddingLeft: '1.5rem', paddingRight: '2.25rem' }}>
+      <div className="bg-gray-50 rounded-t-3xl -mt-4 pt-5 pb-28" style={{ paddingLeft: '1.5rem', paddingRight: '2.25rem' }}>
         {groupedCompanies.length === 0 && (
           <p className="text-center text-gray-400 py-12">No companies found</p>
         )}
