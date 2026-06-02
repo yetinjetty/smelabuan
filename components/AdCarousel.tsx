@@ -21,6 +21,7 @@ export default function AdCarousel({ ads }: { ads: Advertisement[] }) {
   // Carousel horizontal swipe refs
   const carouselTouchStartX = useRef(0)
   const carouselTouchStartY = useRef(0)
+  const didSwipe = useRef(false)
 
   // Prevent iOS pull-to-refresh while the sheet is being dragged down
   useEffect(() => {
@@ -84,10 +85,12 @@ export default function AdCarousel({ ads }: { ads: Advertisement[] }) {
   function onCarouselTouchEnd(e: React.TouchEvent) {
     const dx = e.changedTouches[0].clientX - carouselTouchStartX.current
     const dy = e.changedTouches[0].clientY - carouselTouchStartY.current
-    // Only treat as horizontal swipe when it clearly dominates vertical movement
     if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
-      dx < 0 ? goNext() : goPrev()  // swipe left → next, swipe right → prev
+      didSwipe.current = true
+      dx < 0 ? goNext() : goPrev()
       resetTimer()
+    } else {
+      didSwipe.current = false
     }
   }
 
@@ -164,10 +167,11 @@ export default function AdCarousel({ ads }: { ads: Advertisement[] }) {
 
         {/* Card — touch-action:none so vertical swipe is captured, not the page scroll */}
         <div
-          className="relative rounded-2xl overflow-hidden"
+          className="relative rounded-2xl overflow-hidden cursor-pointer"
           style={{ height: 160, touchAction: 'pan-y' }}
           onTouchStart={onCarouselTouchStart}
           onTouchEnd={onCarouselTouchEnd}
+          onClick={() => { if (didSwipe.current) { didSwipe.current = false; return } openModal(ad) }}
         >
           {ad.image_url ? (
             <img
@@ -201,7 +205,6 @@ export default function AdCarousel({ ads }: { ads: Advertisement[] }) {
             <p className="text-white font-bold text-lg leading-tight mb-1 drop-shadow">{ad.advertiser_name}</p>
             <p className="text-white/85 text-sm mb-4 drop-shadow line-clamp-2">{ad.headline}</p>
             <button
-              onClick={() => openModal(ad)}
               className="bg-white/95 text-gray-900 font-bold text-sm px-8 py-2.5 rounded-xl shadow-lg active:scale-90 transition-all duration-150"
             >
               Book now
