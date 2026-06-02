@@ -245,9 +245,9 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
                 <SearchIcon size={16} />
               </button>
               <div className="flex gap-2 overflow-x-auto pb-0.5" style={{ scrollbarWidth: 'none' }}>
-                <button onClick={() => setSector('')} className="flex-none px-4 py-1.5 rounded-full text-sm font-medium border transition-colors" style={!sector ? chipActive : chipInactive}>All</button>
+                <button onClick={() => { setSector(''); setActiveLetter(null); window.scrollTo(0, 0) }} className="flex-none px-4 py-1.5 rounded-full text-sm font-medium border transition-colors" style={!sector ? chipActive : chipInactive}>All</button>
                 {sectors.map(s => (
-                  <button key={s} onClick={() => setSector(s === sector ? '' : s)} className="flex-none px-4 py-1.5 rounded-full text-sm font-medium border transition-colors" style={sector === s ? chipActive : chipInactive}>{s}</button>
+                  <button key={s} onClick={() => { setSector(s === sector ? '' : s); setActiveLetter(null); window.scrollTo(0, 0) }} className="flex-none px-4 py-1.5 rounded-full text-sm font-medium border transition-colors" style={sector === s ? chipActive : chipInactive}>{s}</button>
                 ))}
               </div>
             </div>
