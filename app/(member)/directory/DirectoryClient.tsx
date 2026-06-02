@@ -12,6 +12,8 @@ type Company = {
   members: DirectoryMember[]
 }
 
+const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
+
 function SearchIcon({ size = 16 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
@@ -21,16 +23,18 @@ function SearchIcon({ size = 16 }: { size?: number }) {
 }
 
 export default function DirectoryClient({ members }: { members: DirectoryMember[] }) {
-  const [search, setSearch]         = useState('')
-  const [sector, setSector]         = useState('')
-  const [searchOpen, setSearchOpen] = useState(false)
-  const [isScrolled, setIsScrolled] = useState(false)
+  const [search, setSearch]           = useState('')
+  const [sector, setSector]           = useState('')
+  const [searchOpen, setSearchOpen]   = useState(false)
+  const [isScrolled, setIsScrolled]   = useState(false)
+  const [letterFilter, setLetterFilter] = useState<string | null>(null)
+  const [sliderActive, setSliderActive] = useState(false)
 
   const headerInputRef = useRef<HTMLInputElement>(null)
   const stickyInputRef = useRef<HTMLInputElement>(null)
   const headerRef      = useRef<HTMLDivElement>(null)
+  const sliderRef      = useRef<HTMLDivElement>(null)
 
-  // Detect when the red header scrolls out of view
   useEffect(() => {
     const el = headerRef.current
     if (!el) return
@@ -57,11 +61,37 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
     stickyInputRef.current?.blur()
   }
 
-  // When input blurs (e.g. tapping backdrop), delay so backdrop onClick fires first
   function onInputBlur() {
     setTimeout(() => setSearchOpen(false), 200)
   }
 
+  // ── Alphabet slider ──────────────────────────────────────────
+  function letterFromY(clientY: number): string | null {
+    const el = sliderRef.current
+    if (!el) return null
+    const rect = el.getBoundingClientRect()
+    const idx = Math.floor(((clientY - rect.top) / rect.height) * ALPHABET.length)
+    return ALPHABET[Math.max(0, Math.min(ALPHABET.length - 1, idx))] ?? null
+  }
+
+  function onSliderTouchStart(e: React.TouchEvent) {
+    e.preventDefault()
+    setSliderActive(true)
+    const l = letterFromY(e.touches[0].clientY)
+    if (l) setLetterFilter(l)
+  }
+
+  function onSliderTouchMove(e: React.TouchEvent) {
+    e.preventDefault()
+    const l = letterFromY(e.touches[0].clientY)
+    if (l) setLetterFilter(l)
+  }
+
+  function onSliderTouchEnd() {
+    setSliderActive(false)
+  }
+
+  // ── Data ────────────────────────────────────────────────────
   const sectors = useMemo(
     () => Array.from(new Set(members.map(m => m.business_sector).filter(Boolean))) as string[],
     [members]
@@ -87,14 +117,25 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
     })
   }, [companies, search, sector])
 
-  const count = `${filteredCompanies.length} compan${filteredCompanies.length !== 1 ? 'ies' : 'y'}`
+  // Which letters have at least one company in the current search/sector result
+  const activeLetters = useMemo(
+    () => new Set(filteredCompanies.map(c => c.business_name[0].toUpperCase())),
+    [filteredCompanies]
+  )
+
+  const visibleCompanies = useMemo(() => {
+    if (!letterFilter) return filteredCompanies
+    return filteredCompanies.filter(c => c.business_name.toUpperCase().startsWith(letterFilter))
+  }, [filteredCompanies, letterFilter])
+
+  const count = `${visibleCompanies.length} compan${visibleCompanies.length !== 1 ? 'ies' : 'y'}`
 
   const chipActive   = { backgroundColor: '#ffffff', color: '#E05A4E', borderColor: '#ffffff' }
   const chipInactive = { backgroundColor: 'transparent', color: 'rgba(255,255,255,0.85)', borderColor: 'rgba(255,255,255,0.4)' }
 
   return (
     <div>
-      {/* ── Sticky search bar — slides down when header scrolls away ── */}
+      {/* ── Sticky search bar ── */}
       <div
         className="fixed top-0 left-0 right-0 z-[200]"
         style={{
@@ -106,12 +147,8 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
           boxShadow: '0 2px 16px rgba(0,0,0,0.18)',
         }}
       >
-        {/* Search row */}
-        <div className="flex items-center gap-3 px-4 py-3">
-          <div
-            className="flex-1 flex items-center gap-2 rounded-full px-4 py-2"
-            style={{ backgroundColor: 'rgba(0,0,0,0.18)' }}
-          >
+        <div className="flex items-center gap-3 px-6 py-3">
+          <div className="flex-1 flex items-center gap-2 rounded-full px-4 py-2" style={{ backgroundColor: 'rgba(0,0,0,0.18)' }}>
             <span className="text-white/60 shrink-0"><SearchIcon size={15} /></span>
             <input
               ref={stickyInputRef}
@@ -130,27 +167,19 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
               </button>
             )}
           </div>
-          <button
-            onMouseDown={e => { e.preventDefault(); closeSearch() }}
-            className="text-sm font-medium text-white shrink-0"
-          >
+          <button onMouseDown={e => { e.preventDefault(); closeSearch() }} className="text-sm font-medium text-white shrink-0">
             Cancel
           </button>
         </div>
       </div>
 
-      {/* ── Backdrop — tap to dismiss keyboard + search ── */}
-      {searchOpen && (
-        <div
-          className="fixed inset-0 z-[150]"
-          onClick={closeSearch}
-        />
-      )}
+      {/* ── Backdrop ── */}
+      {searchOpen && <div className="fixed inset-0 z-[150]" onClick={closeSearch} />}
 
       {/* ── Red header ── */}
       <div
         ref={headerRef}
-        className="px-4 pt-3 pb-4 space-y-3"
+        className="px-6 pt-3 pb-4 space-y-3"
         style={{
           background: 'linear-gradient(160deg, #E05A4E 0%, #c0392b 100%)',
           position: 'relative',
@@ -159,13 +188,9 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
       >
         <h1 className="text-xl font-bold text-white">Directory</h1>
 
-        {/* Search input (expanded) or icon button + chips */}
         {searchOpen && !isScrolled ? (
           <div className="flex items-center gap-2">
-            <div
-              className="flex-1 flex items-center gap-2 rounded-full px-4 py-2"
-              style={{ backgroundColor: 'rgba(0,0,0,0.18)' }}
-            >
+            <div className="flex-1 flex items-center gap-2 rounded-full px-4 py-2" style={{ backgroundColor: 'rgba(0,0,0,0.18)' }}>
               <span className="text-white/60 shrink-0"><SearchIcon size={15} /></span>
               <input
                 ref={headerInputRef}
@@ -184,16 +209,12 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
                 </button>
               )}
             </div>
-            <button
-              onMouseDown={e => { e.preventDefault(); closeSearch() }}
-              className="text-white text-sm font-medium shrink-0"
-            >
+            <button onMouseDown={e => { e.preventDefault(); closeSearch() }} className="text-white text-sm font-medium shrink-0">
               Cancel
             </button>
           </div>
         ) : (
-          <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-0.5">
-            {/* Search icon button */}
+          <div className="flex gap-2 overflow-x-auto -mx-6 px-6 pb-0.5">
             <button
               onClick={openSearch}
               className="flex-none w-9 h-9 rounded-full flex items-center justify-center text-white/90 transition-opacity active:opacity-70"
@@ -201,8 +222,6 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
             >
               <SearchIcon size={16} />
             </button>
-
-            {/* All chip */}
             <button
               onClick={() => setSector('')}
               className="flex-none px-4 py-1.5 rounded-full text-sm font-medium border transition-colors"
@@ -210,7 +229,6 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
             >
               All
             </button>
-
             {sectors.map(s => (
               <button
                 key={s}
@@ -224,25 +242,32 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
           </div>
         )}
 
-        {/* Count — stays on red background */}
         <p className="text-xs text-white/70">{count}</p>
       </div>
 
       {/* ── Content sheet ── */}
-      <div className="bg-gray-50 rounded-t-3xl -mt-4 px-4 pt-5 pb-6 space-y-3 min-h-screen">
+      <div className="bg-gray-50 rounded-t-3xl -mt-4 px-6 pt-5 pb-6 min-h-screen" style={{ paddingRight: '3rem' }}>
+
+        {/* Letter filter indicator */}
+        {letterFilter && (
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-sm text-gray-500">
+              Showing: <span className="font-semibold text-gray-800">{letterFilter}</span>
+            </span>
+            <button
+              onClick={() => setLetterFilter(null)}
+              className="text-xs px-2 py-0.5 rounded-full border border-gray-300 text-gray-500 hover:text-gray-800"
+            >
+              Clear
+            </button>
+          </div>
+        )}
 
         <div className="space-y-3">
-          {filteredCompanies.map(c => (
+          {visibleCompanies.map(c => (
             <div key={c.business_name} className="bg-white rounded-2xl border border-gray-200 p-4">
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="font-semibold text-gray-900 truncate">{c.business_name}</p>
-                  {c.business_sector && <p className="text-sm text-gray-500 truncate">{c.business_sector}</p>}
-                </div>
-                <span className="flex-none text-xs px-2 py-1 rounded-full font-medium bg-gray-100 text-gray-600">
-                  {c.members.length} member{c.members.length !== 1 ? 's' : ''}
-                </span>
-              </div>
+              <p className="font-semibold text-gray-900">{c.business_name}</p>
+              {c.business_sector && <p className="text-sm text-gray-500 mt-0.5">{c.business_sector}</p>}
               {c.business_size && (
                 <div className="mt-2">
                   <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{c.business_size}</span>
@@ -250,9 +275,55 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
               )}
             </div>
           ))}
-          {filteredCompanies.length === 0 && <p className="text-center text-gray-400 py-12">No companies found</p>}
+          {visibleCompanies.length === 0 && (
+            <p className="text-center text-gray-400 py-12">No companies found</p>
+          )}
         </div>
       </div>
+
+      {/* ── Alphabet slider ── */}
+      <div
+        ref={sliderRef}
+        className="fixed right-0 top-0 bottom-0 z-[100] flex flex-col justify-center items-center py-8 px-1 select-none"
+        style={{ touchAction: 'none', width: '2rem' }}
+        onTouchStart={onSliderTouchStart}
+        onTouchMove={onSliderTouchMove}
+        onTouchEnd={onSliderTouchEnd}
+      >
+        {ALPHABET.map(l => (
+          <button
+            key={l}
+            onMouseDown={() => { setSliderActive(true); setLetterFilter(l === letterFilter ? null : l) }}
+            onMouseUp={() => setSliderActive(false)}
+            className="flex items-center justify-center leading-none transition-transform"
+            style={{
+              fontSize: 10,
+              fontWeight: letterFilter === l ? 700 : 500,
+              color: letterFilter === l
+                ? '#E05A4E'
+                : activeLetters.has(l)
+                  ? '#6b7280'
+                  : '#d1d5db',
+              width: '1.25rem',
+              height: `${100 / ALPHABET.length}%`,
+              minHeight: '1rem',
+              transform: letterFilter === l ? 'scale(1.4)' : 'scale(1)',
+            }}
+          >
+            {l}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Big letter bubble while sliding ── */}
+      {sliderActive && letterFilter && (
+        <div
+          className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[300] w-20 h-20 rounded-3xl flex items-center justify-center pointer-events-none"
+          style={{ backgroundColor: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(4px)' }}
+        >
+          <span className="text-white text-4xl font-bold">{letterFilter}</span>
+        </div>
+      )}
     </div>
   )
 }
