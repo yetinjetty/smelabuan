@@ -17,14 +17,14 @@ export default async function DealsPage() {
     <div>
       {/* Red header */}
       <div
-        className="px-6 pt-5 pb-6"
+        className="px-6 pt-8 pb-8"
         style={{ background: 'linear-gradient(160deg, #E05A4E 0%, #c0392b 100%)' }}
       >
         <h1 className="text-xl font-bold text-white">Member Benefits</h1>
       </div>
 
       {/* Content sheet */}
-      <div className="bg-gray-50 rounded-t-3xl -mt-4 px-6 pt-5 pb-28">
+      <div className="bg-gray-50 px-6 pt-5 pb-28">
         {categories.length > 0 && (
           <div className="space-y-6">
             {categories.map(cat => {
