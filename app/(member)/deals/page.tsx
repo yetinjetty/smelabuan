@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { format } from 'date-fns'
 import type { Deal } from '@/lib/types'
+import FadeCard from '@/components/FadeCard'
 
 export default async function DealsPage() {
   const supabase = await createClient()
@@ -34,7 +35,8 @@ export default async function DealsPage() {
                   <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">{cat}</h2>
                   <div className="space-y-3">
                     {catDeals.map(deal => (
-                      <div key={deal.id} className="bg-white rounded-2xl border border-gray-200 p-4">
+                      <FadeCard key={deal.id}>
+                      <div className="bg-white rounded-2xl border border-gray-200 p-4">
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
                             <p className="font-semibold text-gray-900">{deal.merchant_name}</p>
@@ -57,6 +59,7 @@ export default async function DealsPage() {
                           )}
                         </div>
                       </div>
+                      </FadeCard>
                     ))}
                   </div>
                 </div>

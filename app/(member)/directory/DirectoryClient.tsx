@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef } from 'react'
 import type { Member } from '@/lib/types'
+import FadeCard from '@/components/FadeCard'
 
 type DirectoryMember = Pick<Member, 'id' | 'member_id' | 'full_name' | 'business_name' | 'business_sector' | 'business_size' | 'membership_type' | 'status'>
 
@@ -297,15 +298,17 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
             <div id={`dir-${group.letter}`} />
             <div className="space-y-3">
               {group.companies.map(c => (
-                <div key={c.business_name} className="bg-white rounded-2xl border border-gray-200 p-4">
-                  <p className="font-semibold text-gray-900">{c.business_name}</p>
-                  {c.business_sector && <p className="text-sm text-gray-500 mt-0.5">{c.business_sector}</p>}
-                  {c.business_size && (
-                    <div className="mt-2">
-                      <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{c.business_size}</span>
-                    </div>
-                  )}
-                </div>
+                <FadeCard key={c.business_name}>
+                  <div className="bg-white rounded-2xl border border-gray-200 p-4">
+                    <p className="font-semibold text-gray-900">{c.business_name}</p>
+                    {c.business_sector && <p className="text-sm text-gray-500 mt-0.5">{c.business_sector}</p>}
+                    {c.business_size && (
+                      <div className="mt-2">
+                        <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{c.business_size}</span>
+                      </div>
+                    )}
+                  </div>
+                </FadeCard>
               ))}
             </div>
           </div>

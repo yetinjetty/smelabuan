@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { format } from 'date-fns'
 import type { Event } from '@/lib/types'
+import FadeCard from '@/components/FadeCard'
 
 export default async function EventsPage() {
   const supabase = await createClient()
@@ -26,7 +27,8 @@ export default async function EventsPage() {
         {events && events.length > 0 ? (
           <div className="space-y-4">
             {events.map(event => (
-              <div key={event.id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+              <FadeCard key={event.id}>
+              <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
                 <div className="flex">
                   <div
                     className="flex-none w-20 flex flex-col items-center justify-center text-white py-4"
@@ -62,6 +64,7 @@ export default async function EventsPage() {
                   </div>
                 </div>
               </div>
+              </FadeCard>
             ))}
           </div>
         ) : (
