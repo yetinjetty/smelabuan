@@ -232,13 +232,17 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
         {!isScrolled && (
           <div className="relative" style={{ height: '2.5rem' }}>
 
-            {/* Chips row — slides left + fades out when search opens */}
+            {/* Chips row — flies left + shrinks out when search opens */}
             <div
               className="absolute inset-x-0 top-0 flex items-center gap-2 h-10"
               style={{
-                opacity: searchOpen ? 0 : 1,
-                transform: searchOpen ? 'translateX(-10px)' : 'translateX(0)',
-                transition: 'opacity 0.22s ease, transform 0.22s ease',
+                opacity:   searchOpen ? 0 : 1,
+                transform: searchOpen
+                  ? 'translateX(-48px) scale(0.82)'
+                  : 'translateX(0) scale(1)',
+                transition: searchOpen
+                  ? 'opacity 0.28s cubic-bezier(0.4,0,1,1), transform 0.28s cubic-bezier(0.4,0,1,1)'
+                  : 'opacity 0.38s cubic-bezier(0.34,1.56,0.64,1), transform 0.38s cubic-bezier(0.34,1.56,0.64,1)',
                 pointerEvents: searchOpen ? 'none' : 'all',
               }}
             >
@@ -253,13 +257,17 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
               </div>
             </div>
 
-            {/* Search input — slides in from right + fades in when search opens */}
+            {/* Search input — flies in from the right with spring overshoot */}
             <div
               className="absolute inset-x-0 top-0 flex items-center gap-2 h-10"
               style={{
-                opacity: searchOpen ? 1 : 0,
-                transform: searchOpen ? 'translateX(0)' : 'translateX(10px)',
-                transition: 'opacity 0.22s ease, transform 0.22s ease',
+                opacity:   searchOpen ? 1 : 0,
+                transform: searchOpen
+                  ? 'translateX(0) scale(1)'
+                  : 'translateX(56px) scale(0.82)',
+                transition: searchOpen
+                  ? 'opacity 0.38s cubic-bezier(0.22,1,0.36,1), transform 0.42s cubic-bezier(0.34,1.56,0.64,1)'
+                  : 'opacity 0.22s cubic-bezier(0.4,0,1,1), transform 0.22s cubic-bezier(0.4,0,1,1)',
                 pointerEvents: searchOpen ? 'all' : 'none',
               }}
             >
@@ -281,7 +289,20 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
                   </button>
                 )}
               </div>
-              <button onMouseDown={e => { e.preventDefault(); closeSearch() }} className="text-white text-sm font-medium shrink-0">Cancel</button>
+              {/* Cancel pops in independently with its own spring */}
+              <button
+                onMouseDown={e => { e.preventDefault(); closeSearch() }}
+                className="text-white text-sm font-medium shrink-0"
+                style={{
+                  opacity:   searchOpen ? 1 : 0,
+                  transform: searchOpen ? 'translateX(0) scale(1)' : 'translateX(20px) scale(0.7)',
+                  transition: searchOpen
+                    ? 'opacity 0.35s 0.1s cubic-bezier(0.22,1,0.36,1), transform 0.4s 0.1s cubic-bezier(0.34,1.56,0.64,1)'
+                    : 'opacity 0.15s cubic-bezier(0.4,0,1,1), transform 0.15s cubic-bezier(0.4,0,1,1)',
+                }}
+              >
+                Cancel
+              </button>
             </div>
 
           </div>
