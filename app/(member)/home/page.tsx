@@ -5,6 +5,7 @@ import type { Member, Advertisement, Event, Announcement } from '@/lib/types'
 import AdCarousel from '@/components/AdCarousel'
 import MemberHeroCard from '@/components/MemberHeroCard'
 import HomeWidgets from '@/components/HomeWidgets'
+import FacebookFeed from '@/components/FacebookFeed'
 
 export default async function HomePage() {
   const supabase = await createClient()
@@ -114,6 +115,25 @@ export default async function HomePage() {
             </div>
           </div>
         )}
+
+        {/* Facebook feed */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-gray-700">Facebook</h2>
+            <a
+              href="https://www.facebook.com/smelabuan"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-medium"
+              style={{ color: '#E05A4E' }}
+            >
+              View page
+            </a>
+          </div>
+          <div className="rounded-2xl overflow-hidden shadow-sm">
+            <FacebookFeed />
+          </div>
+        </div>
 
       </div>
     </div>
