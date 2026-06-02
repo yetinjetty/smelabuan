@@ -262,7 +262,7 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
       </div>
 
       {/* ── Content sheet — right padding leaves room for the slider ── */}
-      <div className="bg-gray-50 rounded-t-3xl -mt-4 pt-5 pb-28" style={{ paddingLeft: '1.5rem', paddingRight: '2.25rem' }}>
+      <div className="bg-gray-50 rounded-t-3xl -mt-4 pt-8 pb-28" style={{ paddingLeft: '1.5rem', paddingRight: '2.25rem' }}>
         {groupedCompanies.length === 0 && (
           <p className="text-center text-gray-400 py-12">No companies found</p>
         )}

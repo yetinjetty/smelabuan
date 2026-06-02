@@ -15,7 +15,7 @@ export default async function EventsPage() {
     <div>
       {/* Red header */}
       <div
-        className="px-6 pt-3 pb-4"
+        className="px-6 pt-5 pb-6"
         style={{ background: 'linear-gradient(160deg, #E05A4E 0%, #c0392b 100%)' }}
       >
         <h1 className="text-xl font-bold text-white">Events</h1>
