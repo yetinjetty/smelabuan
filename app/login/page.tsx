@@ -5,6 +5,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 
 export default function LoginPage() {
@@ -108,11 +109,15 @@ export default function LoginPage() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div
-            className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 text-white text-2xl font-bold"
-            style={{ backgroundColor: '#E05A4E' }}
-          >
-            S
+          <div className="flex justify-center mb-4">
+            <Image
+              src="/SMEA Labuan Logo v1.png"
+              alt="SME Association Labuan"
+              width={120}
+              height={90}
+              className="object-contain"
+              priority
+            />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">SME Association Labuan</h1>
           <p className="text-gray-500 text-sm mt-1">Member Portal</p>

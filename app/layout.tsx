@@ -9,6 +9,11 @@ export const metadata: Metadata = {
   title: 'SME Association Labuan',
   description: 'Member management portal for SME Association of Labuan',
   manifest: '/manifest.json',
+  icons: {
+    icon: '/SMEA Labuan Logo v1.png',
+    apple: '/SMEA Labuan Logo v1.png',
+    shortcut: '/SMEA Labuan Logo v1.png',
+  },
 }
 
 export const viewport: Viewport = {
