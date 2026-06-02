@@ -67,11 +67,9 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
 
   function openSearch() {
     setSearchOpen(true)
-    // Delay focus until after the 220ms slide-in transition starts
-    setTimeout(() => {
-      if (isScrolled) stickyInputRef.current?.focus()
-      else headerInputRef.current?.focus()
-    }, 100)
+    // Focus synchronously within the user-gesture call stack so iOS triggers the keyboard
+    if (isScrolled) stickyInputRef.current?.focus()
+    else headerInputRef.current?.focus()
   }
 
   function closeSearch() {
