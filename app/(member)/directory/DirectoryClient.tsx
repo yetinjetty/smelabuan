@@ -13,6 +13,7 @@ type Company = {
 }
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
+const NAV_HEIGHT = 80 // bottom nav bar height in px
 
 function SearchIcon({ size = 16 }: { size?: number }) {
   return (
@@ -27,13 +28,32 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
   const [sector, setSector]           = useState('')
   const [searchOpen, setSearchOpen]   = useState(false)
   const [isScrolled, setIsScrolled]   = useState(false)
-  const [letterFilter, setLetterFilter] = useState<string | null>(null)
+  const [activeLetter, setActiveLetter] = useState<string | null>(null)
   const [sliderActive, setSliderActive] = useState(false)
+  const [sliderTop, setSliderTop]     = useState(200)
 
   const headerInputRef = useRef<HTMLInputElement>(null)
   const stickyInputRef = useRef<HTMLInputElement>(null)
   const headerRef      = useRef<HTMLDivElement>(null)
   const sliderRef      = useRef<HTMLDivElement>(null)
+
+  // Keep slider top flush with the bottom edge of the red header
+  useEffect(() => {
+    function update() {
+      const el = headerRef.current
+      if (!el) return
+      const bottom = el.getBoundingClientRect().bottom
+      // When header scrolls off screen, sit below the sticky bar (~60px)
+      setSliderTop(Math.max(bottom, 60))
+    }
+    update()
+    window.addEventListener('scroll', update, { passive: true })
+    window.addEventListener('resize', update)
+    return () => {
+      window.removeEventListener('scroll', update)
+      window.removeEventListener('resize', update)
+    }
+  }, [])
 
   useEffect(() => {
     const el = headerRef.current
@@ -74,21 +94,31 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
     return ALPHABET[Math.max(0, Math.min(ALPHABET.length - 1, idx))] ?? null
   }
 
+  function scrollToLetter(letter: string, smooth = false) {
+    // Find nearest available letter at or after the requested one
+    const available = Array.from(activeLetters)
+    const target = available.find(l => l >= letter) ?? available[available.length - 1]
+    if (!target) return
+    const el = document.getElementById(`dir-${target}`)
+    el?.scrollIntoView({ behavior: smooth ? 'smooth' : 'instant', block: 'start' })
+  }
+
   function onSliderTouchStart(e: React.TouchEvent) {
     e.preventDefault()
     setSliderActive(true)
     const l = letterFromY(e.touches[0].clientY)
-    if (l) setLetterFilter(l)
+    if (l) { setActiveLetter(l); scrollToLetter(l) }
   }
 
   function onSliderTouchMove(e: React.TouchEvent) {
     e.preventDefault()
     const l = letterFromY(e.touches[0].clientY)
-    if (l) setLetterFilter(l)
+    if (l && l !== activeLetter) { setActiveLetter(l); scrollToLetter(l) }
   }
 
   function onSliderTouchEnd() {
     setSliderActive(false)
+    setActiveLetter(null)
   }
 
   // ── Data ────────────────────────────────────────────────────
@@ -117,18 +147,24 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
     })
   }, [companies, search, sector])
 
-  // Which letters have at least one company in the current search/sector result
+  // Group by first letter for section rendering
+  const groupedCompanies = useMemo(() => {
+    const groups: { letter: string; companies: Company[] }[] = []
+    for (const c of filteredCompanies) {
+      const letter = c.business_name[0].toUpperCase()
+      const last = groups[groups.length - 1]
+      if (last?.letter === letter) last.companies.push(c)
+      else groups.push({ letter, companies: [c] })
+    }
+    return groups
+  }, [filteredCompanies])
+
   const activeLetters = useMemo(
     () => new Set(filteredCompanies.map(c => c.business_name[0].toUpperCase())),
     [filteredCompanies]
   )
 
-  const visibleCompanies = useMemo(() => {
-    if (!letterFilter) return filteredCompanies
-    return filteredCompanies.filter(c => c.business_name.toUpperCase().startsWith(letterFilter))
-  }, [filteredCompanies, letterFilter])
-
-  const count = `${visibleCompanies.length} compan${visibleCompanies.length !== 1 ? 'ies' : 'y'}`
+  const count = `${filteredCompanies.length} compan${filteredCompanies.length !== 1 ? 'ies' : 'y'}`
 
   const chipActive   = { backgroundColor: '#ffffff', color: '#E05A4E', borderColor: '#ffffff' }
   const chipInactive = { backgroundColor: 'transparent', color: 'rgba(255,255,255,0.85)', borderColor: 'rgba(255,255,255,0.4)' }
@@ -167,13 +203,10 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
               </button>
             )}
           </div>
-          <button onMouseDown={e => { e.preventDefault(); closeSearch() }} className="text-sm font-medium text-white shrink-0">
-            Cancel
-          </button>
+          <button onMouseDown={e => { e.preventDefault(); closeSearch() }} className="text-sm font-medium text-white shrink-0">Cancel</button>
         </div>
       </div>
 
-      {/* ── Backdrop ── */}
       {searchOpen && <div className="fixed inset-0 z-[150]" onClick={closeSearch} />}
 
       {/* ── Red header ── */}
@@ -209,9 +242,7 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
                 </button>
               )}
             </div>
-            <button onMouseDown={e => { e.preventDefault(); closeSearch() }} className="text-white text-sm font-medium shrink-0">
-              Cancel
-            </button>
+            <button onMouseDown={e => { e.preventDefault(); closeSearch() }} className="text-white text-sm font-medium shrink-0">Cancel</button>
           </div>
         ) : (
           <div className="flex gap-2 overflow-x-auto -mx-6 px-6 pb-0.5">
@@ -222,22 +253,9 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
             >
               <SearchIcon size={16} />
             </button>
-            <button
-              onClick={() => setSector('')}
-              className="flex-none px-4 py-1.5 rounded-full text-sm font-medium border transition-colors"
-              style={!sector ? chipActive : chipInactive}
-            >
-              All
-            </button>
+            <button onClick={() => setSector('')} className="flex-none px-4 py-1.5 rounded-full text-sm font-medium border transition-colors" style={!sector ? chipActive : chipInactive}>All</button>
             {sectors.map(s => (
-              <button
-                key={s}
-                onClick={() => setSector(s === sector ? '' : s)}
-                className="flex-none px-4 py-1.5 rounded-full text-sm font-medium border transition-colors"
-                style={sector === s ? chipActive : chipInactive}
-              >
-                {s}
-              </button>
+              <button key={s} onClick={() => setSector(s === sector ? '' : s)} className="flex-none px-4 py-1.5 rounded-full text-sm font-medium border transition-colors" style={sector === s ? chipActive : chipInactive}>{s}</button>
             ))}
           </div>
         )}
@@ -246,46 +264,44 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
       </div>
 
       {/* ── Content sheet ── */}
-      <div className="bg-gray-50 rounded-t-3xl -mt-4 px-6 pt-5 pb-6 min-h-screen" style={{ paddingRight: '3rem' }}>
-
-        {/* Letter filter indicator */}
-        {letterFilter && (
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-sm text-gray-500">
-              Showing: <span className="font-semibold text-gray-800">{letterFilter}</span>
-            </span>
-            <button
-              onClick={() => setLetterFilter(null)}
-              className="text-xs px-2 py-0.5 rounded-full border border-gray-300 text-gray-500 hover:text-gray-800"
-            >
-              Clear
-            </button>
-          </div>
+      <div className="bg-gray-50 rounded-t-3xl -mt-4 px-6 pt-5 pb-6 min-h-screen pr-10">
+        {groupedCompanies.length === 0 && (
+          <p className="text-center text-gray-400 py-12">No companies found</p>
         )}
-
-        <div className="space-y-3">
-          {visibleCompanies.map(c => (
-            <div key={c.business_name} className="bg-white rounded-2xl border border-gray-200 p-4">
-              <p className="font-semibold text-gray-900">{c.business_name}</p>
-              {c.business_sector && <p className="text-sm text-gray-500 mt-0.5">{c.business_sector}</p>}
-              {c.business_size && (
-                <div className="mt-2">
-                  <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{c.business_size}</span>
-                </div>
-              )}
+        {groupedCompanies.map(group => (
+          <div key={group.letter} className="mb-4">
+            {/* Section letter anchor */}
+            <div id={`dir-${group.letter}`} className="flex items-center gap-2 mb-2 pt-1">
+              <span className="text-xs font-bold text-[#E05A4E] w-5">{group.letter}</span>
+              <div className="flex-1 h-px bg-gray-200" />
             </div>
-          ))}
-          {visibleCompanies.length === 0 && (
-            <p className="text-center text-gray-400 py-12">No companies found</p>
-          )}
-        </div>
+            <div className="space-y-3">
+              {group.companies.map(c => (
+                <div key={c.business_name} className="bg-white rounded-2xl border border-gray-200 p-4">
+                  <p className="font-semibold text-gray-900">{c.business_name}</p>
+                  {c.business_sector && <p className="text-sm text-gray-500 mt-0.5">{c.business_sector}</p>}
+                  {c.business_size && (
+                    <div className="mt-2">
+                      <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{c.business_size}</span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* ── Alphabet slider ── */}
+      {/* ── Alphabet slider — bounded between header bottom and nav bar ── */}
       <div
         ref={sliderRef}
-        className="fixed right-0 top-0 bottom-0 z-[100] flex flex-col justify-center items-center py-8 px-1 select-none"
-        style={{ touchAction: 'none', width: '2rem' }}
+        className="fixed right-0 z-[100] flex flex-col justify-between items-center py-1 select-none"
+        style={{
+          top: sliderTop,
+          bottom: NAV_HEIGHT,
+          width: '1.75rem',
+          touchAction: 'none',
+        }}
         onTouchStart={onSliderTouchStart}
         onTouchMove={onSliderTouchMove}
         onTouchEnd={onSliderTouchEnd}
@@ -293,21 +309,19 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
         {ALPHABET.map(l => (
           <button
             key={l}
-            onMouseDown={() => { setSliderActive(true); setLetterFilter(l === letterFilter ? null : l) }}
-            onMouseUp={() => setSliderActive(false)}
-            className="flex items-center justify-center leading-none transition-transform"
+            onMouseDown={() => { setSliderActive(true); setActiveLetter(l); scrollToLetter(l, true) }}
+            onMouseUp={() => { setSliderActive(false); setActiveLetter(null) }}
+            className="flex items-center justify-center w-full transition-transform"
             style={{
               fontSize: 10,
-              fontWeight: letterFilter === l ? 700 : 500,
-              color: letterFilter === l
+              fontWeight: activeLetter === l ? 700 : 500,
+              color: activeLetter === l
                 ? '#E05A4E'
                 : activeLetters.has(l)
-                  ? '#6b7280'
-                  : '#d1d5db',
-              width: '1.25rem',
-              height: `${100 / ALPHABET.length}%`,
-              minHeight: '1rem',
-              transform: letterFilter === l ? 'scale(1.4)' : 'scale(1)',
+                  ? '#9ca3af'
+                  : '#e5e7eb',
+              transform: activeLetter === l ? 'scale(1.5)' : 'scale(1)',
+              flex: 1,
             }}
           >
             {l}
@@ -316,12 +330,12 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
       </div>
 
       {/* ── Big letter bubble while sliding ── */}
-      {sliderActive && letterFilter && (
+      {sliderActive && activeLetter && (
         <div
           className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[300] w-20 h-20 rounded-3xl flex items-center justify-center pointer-events-none"
           style={{ backgroundColor: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(4px)' }}
         >
-          <span className="text-white text-4xl font-bold">{letterFilter}</span>
+          <span className="text-white text-4xl font-bold">{activeLetter}</span>
         </div>
       )}
     </div>
