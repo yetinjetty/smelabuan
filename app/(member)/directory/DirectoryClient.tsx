@@ -111,21 +111,22 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
     <div>
       {/* ── Sticky search bar — slides down when header scrolls away ── */}
       <div
-        className="fixed top-0 left-0 right-0 z-[200] bg-white border-b border-gray-100"
+        className="fixed top-0 left-0 right-0 z-[200]"
         style={{
+          background: 'linear-gradient(160deg, #E05A4E 0%, #c0392b 100%)',
           transform: isScrolled ? 'translateY(0)' : 'translateY(-110%)',
           opacity:   isScrolled ? 1 : 0,
           transition: 'transform 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.25s ease',
           pointerEvents: isScrolled ? 'all' : 'none',
-          boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+          boxShadow: '0 2px 16px rgba(0,0,0,0.18)',
         }}
       >
         <div className="flex items-center gap-3 px-4 py-3">
           <div
             className="flex-1 flex items-center gap-2 rounded-full px-4 py-2"
-            style={{ backgroundColor: '#f3f4f6' }}
+            style={{ backgroundColor: 'rgba(0,0,0,0.18)' }}
           >
-            <span className="text-gray-400 shrink-0"><SearchIcon size={15} /></span>
+            <span className="text-white/60 shrink-0"><SearchIcon size={15} /></span>
             <input
               ref={stickyInputRef}
               type="search"
@@ -134,20 +135,18 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
               onFocus={() => setSearchOpen(true)}
               onBlur={onInputBlur}
               placeholder={tab === 'members' ? 'Search name or business…' : 'Search company or sector…'}
-              // font-size 16 prevents iOS Safari from zooming on focus
               style={{ fontSize: 16, background: 'transparent', minWidth: 0 }}
-              className="flex-1 outline-none text-gray-900 placeholder-gray-400"
+              className="flex-1 outline-none text-white placeholder-white/50"
             />
             {search && (
-              <button onMouseDown={e => { e.preventDefault(); setSearch('') }} className="text-gray-400 shrink-0">
+              <button onMouseDown={e => { e.preventDefault(); setSearch('') }} className="text-white/70 shrink-0">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
               </button>
             )}
           </div>
           <button
             onMouseDown={e => { e.preventDefault(); closeSearch() }}
-            className="text-sm font-medium shrink-0 transition-colors"
-            style={{ color: '#E05A4E' }}
+            className="text-sm font-medium text-white shrink-0"
           >
             Cancel
           </button>
