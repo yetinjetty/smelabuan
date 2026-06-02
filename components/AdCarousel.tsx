@@ -62,6 +62,12 @@ export default function AdCarousel({ ads }: { ads: Advertisement[] }) {
   function openModal(ad: Advertisement) {
     setModal(ad)
     setTimeout(() => setModalVisible(true), 10)
+    // Fire-and-forget click tracking — updates click_count in admin dashboard
+    fetch('/api/ads/click', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ adId: ad.id }),
+    }).catch(() => {})
   }
 
   function closeModal() {
