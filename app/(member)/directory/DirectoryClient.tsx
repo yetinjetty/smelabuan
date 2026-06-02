@@ -221,7 +221,10 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
           zIndex: searchOpen ? 200 : 'auto',
         }}
       >
-        <h1 className="text-xl font-bold text-white">Directory</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-bold text-white">Directory</h1>
+          <p className="text-xs text-white/70">{count}</p>
+        </div>
 
         {searchOpen && !isScrolled ? (
           <div className="flex items-center gap-2">
@@ -257,8 +260,6 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
             ))}
           </div>
         )}
-
-        <p className="text-xs text-white/70">{count}</p>
       </div>
 
       {/* ── Content sheet — right padding leaves room for the slider ── */}
