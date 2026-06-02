@@ -64,6 +64,20 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
     }
   }, [])
 
+  // Non-passive touchmove so preventDefault() works — prevents the browser's
+  // native scroll from swallowing the drag-to-dismiss gesture on the sheet.
+  useEffect(() => {
+    if (!selected) return
+    const el = sheetEl.current
+    if (!el) return
+    function block(e: TouchEvent) {
+      const dy = e.touches[0].clientY - dragStartY.current
+      if (dy > 0 && e.cancelable) e.preventDefault()
+    }
+    el.addEventListener('touchmove', block, { passive: false })
+    return () => el.removeEventListener('touchmove', block)
+  }, [selected])
+
   useEffect(() => {
     const el = headerRef.current
     if (!el) return
