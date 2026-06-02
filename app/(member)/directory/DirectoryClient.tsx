@@ -227,11 +227,11 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
 
         {/* Filter / search row — cross-fade with slide on toggle */}
         {!isScrolled && (
-          <div className="relative" style={{ minHeight: '2.25rem' }}>
+          <div className="relative" style={{ height: '2.5rem' }}>
 
             {/* Chips row — slides left + fades out when search opens */}
             <div
-              className="flex items-center gap-2"
+              className="absolute inset-x-0 top-0 flex items-center gap-2 h-10"
               style={{
                 opacity: searchOpen ? 0 : 1,
                 transform: searchOpen ? 'translateX(-10px)' : 'translateX(0)',
@@ -252,7 +252,7 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
 
             {/* Search input — slides in from right + fades in when search opens */}
             <div
-              className="absolute inset-0 flex items-center gap-2"
+              className="absolute inset-x-0 top-0 flex items-center gap-2 h-10"
               style={{
                 opacity: searchOpen ? 1 : 0,
                 transform: searchOpen ? 'translateX(0)' : 'translateX(10px)',
@@ -260,7 +260,7 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
                 pointerEvents: searchOpen ? 'all' : 'none',
               }}
             >
-              <div className="flex-1 flex items-center gap-2 rounded-full px-4 py-2" style={{ backgroundColor: 'rgba(0,0,0,0.18)' }}>
+              <div className="flex-1 min-w-0 flex items-center gap-2 rounded-full px-4 py-2" style={{ backgroundColor: 'rgba(0,0,0,0.18)' }}>
                 <span className="text-white/60 shrink-0"><SearchIcon size={15} /></span>
                 <input
                   ref={headerInputRef}

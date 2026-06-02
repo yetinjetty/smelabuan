@@ -22,7 +22,7 @@ export default function MemberNav() {
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 safe-area-inset-bottom"
-      style={{ height: 64, overflow: 'visible' }}
+      style={{ height: 64, overflow: 'visible', zIndex: 50 }}
     >
       {/* Tab row — centre slot is a plain spacer so tabs don't crowd the button */}
       <div className="flex h-full overflow-visible">
