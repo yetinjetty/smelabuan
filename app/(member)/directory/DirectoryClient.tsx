@@ -121,6 +121,25 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
           boxShadow: '0 2px 16px rgba(0,0,0,0.18)',
         }}
       >
+        {/* Tab toggle in sticky bar */}
+        <div className="flex gap-1 p-1 mx-4 mt-3 rounded-xl" style={{ backgroundColor: 'rgba(0,0,0,0.15)' }}>
+          {(['members', 'companies'] as Tab[]).map(t => (
+            <button
+              key={t}
+              onMouseDown={e => { e.preventDefault(); switchTab(t) }}
+              className="flex-1 py-1.5 rounded-lg text-sm font-medium transition-all duration-200"
+              style={{
+                backgroundColor: tab === t ? '#ffffff' : 'transparent',
+                color: tab === t ? '#E05A4E' : 'rgba(255,255,255,0.75)',
+                boxShadow: tab === t ? '0 1px 3px rgba(0,0,0,0.15)' : 'none',
+              }}
+            >
+              {t === 'members' ? 'Members' : 'Companies'}
+            </button>
+          ))}
+        </div>
+
+        {/* Search row */}
         <div className="flex items-center gap-3 px-4 py-3">
           <div
             className="flex-1 flex items-center gap-2 rounded-full px-4 py-2"
@@ -255,11 +274,13 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
             ))}
           </div>
         )}
+
+        {/* Count — stays on red background */}
+        <p className="text-xs text-white/70 pt-1">{count}</p>
       </div>
 
       {/* ── Content sheet ── */}
       <div className="bg-gray-50 rounded-t-3xl -mt-4 px-4 pt-5 pb-6 space-y-3 min-h-screen">
-        <p className="text-xs text-gray-400">{count}</p>
 
         {tab === 'members' && (
           <div className="space-y-3">
