@@ -13,7 +13,7 @@ type Company = {
 }
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
-const NAV_HEIGHT = 80 // bottom nav bar height in px
+const NAV_H = 64 // MemberNav height in px
 
 function SearchIcon({ size = 16 }: { size?: number }) {
   return (
@@ -24,29 +24,28 @@ function SearchIcon({ size = 16 }: { size?: number }) {
 }
 
 export default function DirectoryClient({ members }: { members: DirectoryMember[] }) {
-  const [search, setSearch]           = useState('')
-  const [sector, setSector]           = useState('')
-  const [searchOpen, setSearchOpen]   = useState(false)
-  const [isScrolled, setIsScrolled]   = useState(false)
+  const [search, setSearch]             = useState('')
+  const [sector, setSector]             = useState('')
+  const [searchOpen, setSearchOpen]     = useState(false)
+  const [isScrolled, setIsScrolled]     = useState(false)
   const [activeLetter, setActiveLetter] = useState<string | null>(null)
   const [sliderActive, setSliderActive] = useState(false)
-  const [sliderTop, setSliderTop]     = useState(200)
+  const [sliderTop, setSliderTop]       = useState(160) // will be updated after mount
 
   const headerInputRef = useRef<HTMLInputElement>(null)
   const stickyInputRef = useRef<HTMLInputElement>(null)
   const headerRef      = useRef<HTMLDivElement>(null)
-  const sliderRef      = useRef<HTMLDivElement>(null)
+  const lettersRef     = useRef<HTMLDivElement>(null) // only the bounded letter area
 
-  // Keep slider top flush with the bottom edge of the red header
+  // Update slider top = bottom of red header (or sticky bar height when scrolled past)
   useEffect(() => {
     function update() {
       const el = headerRef.current
       if (!el) return
       const bottom = el.getBoundingClientRect().bottom
-      // When header scrolls off screen, sit below the sticky bar (~60px)
       setSliderTop(Math.max(bottom, 60))
     }
-    update()
+    requestAnimationFrame(update)
     window.addEventListener('scroll', update, { passive: true })
     window.addEventListener('resize', update)
     return () => {
@@ -86,21 +85,19 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
   }
 
   // ── Alphabet slider ──────────────────────────────────────────
+  // letterFromY calculates based on the visible letters container, not the full fixed div
   function letterFromY(clientY: number): string | null {
-    const el = sliderRef.current
+    const el = lettersRef.current
     if (!el) return null
     const rect = el.getBoundingClientRect()
     const idx = Math.floor(((clientY - rect.top) / rect.height) * ALPHABET.length)
     return ALPHABET[Math.max(0, Math.min(ALPHABET.length - 1, idx))] ?? null
   }
 
-  function scrollToLetter(letter: string, smooth = false) {
-    // Find nearest available letter at or after the requested one
-    const available = Array.from(activeLetters)
-    const target = available.find(l => l >= letter) ?? available[available.length - 1]
+  function scrollToLetter(letter: string) {
+    const target = Array.from(activeLetters).find(l => l >= letter) ?? Array.from(activeLetters).at(-1)
     if (!target) return
-    const el = document.getElementById(`dir-${target}`)
-    el?.scrollIntoView({ behavior: smooth ? 'smooth' : 'instant', block: 'start' })
+    document.getElementById(`dir-${target}`)?.scrollIntoView({ behavior: 'instant', block: 'start' })
   }
 
   function onSliderTouchStart(e: React.TouchEvent) {
@@ -147,7 +144,6 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
     })
   }, [companies, search, sector])
 
-  // Group by first letter for section rendering
   const groupedCompanies = useMemo(() => {
     const groups: { letter: string; companies: Company[] }[] = []
     for (const c of filteredCompanies) {
@@ -165,7 +161,6 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
   )
 
   const count = `${filteredCompanies.length} compan${filteredCompanies.length !== 1 ? 'ies' : 'y'}`
-
   const chipActive   = { backgroundColor: '#ffffff', color: '#E05A4E', borderColor: '#ffffff' }
   const chipInactive = { backgroundColor: 'transparent', color: 'rgba(255,255,255,0.85)', borderColor: 'rgba(255,255,255,0.4)' }
 
@@ -246,11 +241,7 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
           </div>
         ) : (
           <div className="flex gap-2 overflow-x-auto -mx-6 px-6 pb-0.5">
-            <button
-              onClick={openSearch}
-              className="flex-none w-9 h-9 rounded-full flex items-center justify-center text-white/90 transition-opacity active:opacity-70"
-              style={{ backgroundColor: 'rgba(0,0,0,0.18)' }}
-            >
+            <button onClick={openSearch} className="flex-none w-9 h-9 rounded-full flex items-center justify-center text-white/90 transition-opacity active:opacity-70" style={{ backgroundColor: 'rgba(0,0,0,0.18)' }}>
               <SearchIcon size={16} />
             </button>
             <button onClick={() => setSector('')} className="flex-none px-4 py-1.5 rounded-full text-sm font-medium border transition-colors" style={!sector ? chipActive : chipInactive}>All</button>
@@ -263,16 +254,15 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
         <p className="text-xs text-white/70">{count}</p>
       </div>
 
-      {/* ── Content sheet ── */}
-      <div className="bg-gray-50 rounded-t-3xl -mt-4 px-6 pt-5 pb-6 min-h-screen pr-10">
+      {/* ── Content sheet — right padding leaves room for the slider ── */}
+      <div className="bg-gray-50 rounded-t-3xl -mt-4 pt-5 pb-4 min-h-screen" style={{ paddingLeft: '1.5rem', paddingRight: '2.25rem' }}>
         {groupedCompanies.length === 0 && (
           <p className="text-center text-gray-400 py-12">No companies found</p>
         )}
         {groupedCompanies.map(group => (
           <div key={group.letter} className="mb-4">
-            {/* Section letter anchor */}
             <div id={`dir-${group.letter}`} className="flex items-center gap-2 mb-2 pt-1">
-              <span className="text-xs font-bold text-[#E05A4E] w-5">{group.letter}</span>
+              <span className="text-xs font-bold text-[#E05A4E] w-5 shrink-0">{group.letter}</span>
               <div className="flex-1 h-px bg-gray-200" />
             </div>
             <div className="space-y-3">
@@ -292,41 +282,44 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
         ))}
       </div>
 
-      {/* ── Alphabet slider — bounded between header bottom and nav bar ── */}
+      {/* ── Alphabet slider ──────────────────────────────────────
+           Outer div: full-height fixed, catches all touch events.
+           Inner div (lettersRef): sits only in the white content zone
+           between the header bottom and the nav bar top.
+      ─────────────────────────────────────────────────────────── */}
       <div
-        ref={sliderRef}
-        className="fixed right-0 z-[100] flex flex-col justify-between items-center py-1 select-none"
-        style={{
-          top: sliderTop,
-          bottom: NAV_HEIGHT,
-          width: '1.75rem',
-          touchAction: 'none',
-        }}
+        className="fixed right-0 top-0 bottom-0 z-[100]"
+        style={{ width: '1.75rem', touchAction: 'none' }}
         onTouchStart={onSliderTouchStart}
         onTouchMove={onSliderTouchMove}
         onTouchEnd={onSliderTouchEnd}
       >
-        {ALPHABET.map(l => (
-          <button
-            key={l}
-            onMouseDown={() => { setSliderActive(true); setActiveLetter(l); scrollToLetter(l, true) }}
-            onMouseUp={() => { setSliderActive(false); setActiveLetter(null) }}
-            className="flex items-center justify-center w-full transition-transform"
-            style={{
-              fontSize: 10,
-              fontWeight: activeLetter === l ? 700 : 500,
-              color: activeLetter === l
-                ? '#E05A4E'
-                : activeLetters.has(l)
-                  ? '#9ca3af'
-                  : '#e5e7eb',
-              transform: activeLetter === l ? 'scale(1.5)' : 'scale(1)',
-              flex: 1,
-            }}
-          >
-            {l}
-          </button>
-        ))}
+        <div
+          ref={lettersRef}
+          className="absolute left-0 right-0 flex flex-col justify-between"
+          style={{ top: sliderTop, bottom: NAV_H }}
+        >
+          {ALPHABET.map(l => (
+            <button
+              key={l}
+              onMouseDown={() => { setSliderActive(true); setActiveLetter(l); scrollToLetter(l) }}
+              onMouseUp={() => { setSliderActive(false); setActiveLetter(null) }}
+              className="flex items-center justify-center transition-transform"
+              style={{
+                fontSize: 10,
+                fontWeight: activeLetter === l ? 700 : 500,
+                color: activeLetter === l
+                  ? '#E05A4E'
+                  : activeLetters.has(l) ? '#9ca3af' : '#d1d5db',
+                transform: activeLetter === l ? 'scale(1.5)' : 'scale(1)',
+                flex: 1,
+                lineHeight: 1,
+              }}
+            >
+              {l}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* ── Big letter bubble while sliding ── */}
