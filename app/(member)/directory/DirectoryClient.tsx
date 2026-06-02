@@ -214,7 +214,7 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
       {/* ── Red header ── */}
       <div
         ref={headerRef}
-        className="px-6 pt-8 pb-8 space-y-3"
+        className="px-6 pt-8 pb-8 space-y-5"
         style={{
           background: 'linear-gradient(160deg, #E05A4E 0%, #c0392b 100%)',
           position: 'relative',
@@ -250,14 +250,18 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
             <button onMouseDown={e => { e.preventDefault(); closeSearch() }} className="text-white text-sm font-medium shrink-0">Cancel</button>
           </div>
         ) : (
-          <div className="flex gap-2 overflow-x-auto -mx-6 px-6 pb-0.5">
+          <div className="flex items-center gap-2">
+            {/* Search button — locked, does not scroll */}
             <button onClick={openSearch} className="flex-none w-9 h-9 rounded-full flex items-center justify-center text-white/90 transition-opacity active:opacity-70" style={{ backgroundColor: 'rgba(0,0,0,0.18)' }}>
               <SearchIcon size={16} />
             </button>
-            <button onClick={() => setSector('')} className="flex-none px-4 py-1.5 rounded-full text-sm font-medium border transition-colors" style={!sector ? chipActive : chipInactive}>All</button>
-            {sectors.map(s => (
-              <button key={s} onClick={() => setSector(s === sector ? '' : s)} className="flex-none px-4 py-1.5 rounded-full text-sm font-medium border transition-colors" style={sector === s ? chipActive : chipInactive}>{s}</button>
-            ))}
+            {/* Chips only — horizontally scrollable */}
+            <div className="flex gap-2 overflow-x-auto pb-0.5" style={{ scrollbarWidth: 'none' }}>
+              <button onClick={() => setSector('')} className="flex-none px-4 py-1.5 rounded-full text-sm font-medium border transition-colors" style={!sector ? chipActive : chipInactive}>All</button>
+              {sectors.map(s => (
+                <button key={s} onClick={() => setSector(s === sector ? '' : s)} className="flex-none px-4 py-1.5 rounded-full text-sm font-medium border transition-colors" style={sector === s ? chipActive : chipInactive}>{s}</button>
+              ))}
+            </div>
           </div>
         )}
       </div>
