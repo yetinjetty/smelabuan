@@ -11,10 +11,5 @@ export default async function DirectoryPage() {
     .order('full_name')
     .returns<Pick<Member, 'id' | 'member_id' | 'full_name' | 'business_name' | 'business_sector' | 'business_size' | 'membership_type' | 'status'>[]>()
 
-  return (
-    <div className="px-4 py-6">
-      <h1 className="text-2xl font-bold text-gray-900 mb-4">Directory</h1>
-      <DirectoryClient members={members ?? []} />
-    </div>
-  )
+  return <DirectoryClient members={members ?? []} />
 }
