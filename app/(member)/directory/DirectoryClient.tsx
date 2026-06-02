@@ -214,7 +214,7 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
       {/* ── Red header ── */}
       <div
         ref={headerRef}
-        className="px-6 pt-3 pb-4 space-y-3"
+        className="px-6 pt-8 pb-8 space-y-3"
         style={{
           background: 'linear-gradient(160deg, #E05A4E 0%, #c0392b 100%)',
           position: 'relative',
