@@ -32,6 +32,7 @@ export default function SplashScreen() {
     const t3 = setTimeout(() => {
       setPhase('hidden')
       sessionStorage.setItem('sme_splashed', '1')
+      window.dispatchEvent(new Event('smesplashdone'))
     }, 2050)                                               // animation complete
 
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
