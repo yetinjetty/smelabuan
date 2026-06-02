@@ -13,7 +13,7 @@ export default async function DirectoryPage() {
 
   return (
     <div className="px-4 py-6">
-      <h1 className="text-2xl font-bold text-gray-900 mb-4">Member Directory</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-4">Directory</h1>
       <DirectoryClient members={members ?? []} />
     </div>
   )
