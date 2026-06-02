@@ -8,17 +8,17 @@ import type { Announcement } from '@/lib/types'
 // ── Count-up — only starts when `ready` flips to true ───────────────────────
 function useCountUp(target: number, ready: boolean, duration = 1200) {
   const [count, setCount] = useState(0)
-  const done = useRef(false)
   useEffect(() => {
-    if (!ready || done.current) return
-    done.current = true
+    if (!ready) return
+    let raf: number
     const start = performance.now()
     function tick(now: number) {
       const p = Math.min((now - start) / duration, 1)
       setCount(Math.round(target * (1 - Math.pow(1 - p, 3)))) // ease-out cubic
-      if (p < 1) requestAnimationFrame(tick)
+      if (p < 1) raf = requestAnimationFrame(tick)
     }
-    requestAnimationFrame(tick)
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
   }, [ready, target, duration])
   return count
 }
