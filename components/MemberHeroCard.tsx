@@ -48,7 +48,7 @@ export default function MemberHeroCard({ fullName, memberId, membershipType, sta
         className="block relative overflow-hidden text-white"
         style={{
           background: 'linear-gradient(135deg, #E05A4E 0%, #c0392b 100%)',
-          borderRadius: collapsed ? '0 0 20px 20px' : '0 0 24px 24px',
+          borderRadius: 0,
           transition: 'border-radius 0.35s ease',
         }}
       >
