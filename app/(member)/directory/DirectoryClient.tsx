@@ -101,10 +101,10 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
     if (!target) return
     const el = document.getElementById(`dir-${target}`)
     if (!el) return
-    // window.scrollTo avoids the iOS Safari scrollIntoView bug that displaces
-    // position:fixed elements. rAF forces a repaint so the nav/sticky bar
-    // re-composites at the correct position after the programmatic scroll.
-    const top = el.getBoundingClientRect().top + window.pageYOffset
+    // Offset by the sticky search bar height so the target card isn't
+    // hidden behind it. py-3 (24px) + input row (~40px) = ~64px + 8px buffer.
+    const STICKY_OFFSET = 72
+    const top = el.getBoundingClientRect().top + window.pageYOffset - STICKY_OFFSET
     window.scrollTo(0, top)
     requestAnimationFrame(() => window.scrollTo(0, top))
   }
