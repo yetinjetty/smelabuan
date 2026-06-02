@@ -6,8 +6,20 @@ import { format } from 'date-fns'
 import type { Member } from '@/lib/types'
 import { PaginationBar } from '@/components/TablePagination'
 
+const COLUMNS = [
+  { key: 'full_name',       label: 'Name' },
+  { key: 'member_id',       label: 'Member ID' },
+  { key: 'membership_type', label: 'Type' },
+  { key: 'business_name',   label: 'Business' },
+  { key: 'status',          label: 'Status' },
+  { key: 'expiry_date',     label: 'Expiry' },
+  { key: 'created_at',      label: 'Joined' },
+] as const
+
+type SortKey = typeof COLUMNS[number]['key']
+
 export default function MembersTable({
-  members, total, page, pageSize, status, q, perPage,
+  members, total, page, pageSize, status, q, perPage, sortBy, sortDir,
 }: {
   members: Member[]
   total: number
@@ -16,14 +28,36 @@ export default function MembersTable({
   status?: string
   q?: string
   perPage?: number
+  sortBy?: string
+  sortDir?: string
 }) {
   const router = useRouter()
   const [search, setSearch] = useState(q ?? '')
   const [filter, setFilter] = useState(status ?? '')
   const [selected, setSelected] = useState<Member | null>(null)
+  const [editing, setEditing] = useState(false)
+  const [editForm, setEditForm] = useState<Partial<Member>>({})
   const [actionError, setActionError] = useState('')
   const [actionInfo, setActionInfo] = useState('')
   const [loadingAction, setLoadingAction] = useState<string | null>(null)
+
+  function openMember(m: Member) {
+    setSelected(m)
+    setEditing(false)
+    setActionError('')
+    setActionInfo('')
+  }
+
+  function startEditing() {
+    setEditForm({ ...selected! })
+    setEditing(true)
+    setActionError('')
+    setActionInfo('')
+  }
+
+  function set<K extends keyof Member>(key: K) {
+    return (val: string) => setEditForm(f => ({ ...f, [key]: val === '' ? null : val as Member[K] }))
+  }
 
   function buildParams(overrides: Record<string, string>) {
     const params = new URLSearchParams()
@@ -31,6 +65,8 @@ export default function MembersTable({
     if (status) params.set('status', status)
     params.set('page', String(page))
     if (perPage) params.set('perPage', String(perPage))
+    if (sortBy) params.set('sortBy', sortBy)
+    if (sortDir) params.set('sortDir', sortDir)
     Object.entries(overrides).forEach(([k, v]) => v ? params.set(k, v) : params.delete(k))
     return params.toString()
   }
@@ -41,7 +77,14 @@ export default function MembersTable({
     if (newFilter) params.set('status', newFilter)
     params.set('page', '1')
     if (perPage) params.set('perPage', String(perPage))
+    if (sortBy) params.set('sortBy', sortBy)
+    if (sortDir) params.set('sortDir', sortDir)
     router.push(`/admin/members?${params}`)
+  }
+
+  function handleSort(col: SortKey) {
+    const newDir = sortBy === col && sortDir === 'asc' ? 'desc' : 'asc'
+    router.push(`/admin/members?${buildParams({ sortBy: col, sortDir: newDir, page: '1' })}`)
   }
 
   async function callApi(action: string, body: object) {
@@ -106,11 +149,17 @@ export default function MembersTable({
     }
   }
 
+  async function saveEdits() {
+    if (!selected) return
+    const result = await callApi('edit-member', { memberId: selected.id, ...editForm })
+    if (result.ok) { setEditing(false); window.location.reload() }
+  }
+
   const totalPages = Math.ceil(total / pageSize)
 
   return (
     <>
-      {/* Title + search/filter on same row */}
+      {/* Title + search/filter */}
       <div className="flex items-center gap-3 mb-4 flex-wrap">
         <h1 className="text-2xl font-bold text-white shrink-0">Members</h1>
         <div className="flex items-center gap-2 flex-1 flex-wrap justify-end">
@@ -149,22 +198,26 @@ export default function MembersTable({
       <div className="rounded-xl border border-gray-700 overflow-hidden" style={{ backgroundColor: '#1f2937' }}>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b border-gray-700 text-gray-300 text-xs uppercase tracking-wide">
+            <thead className="border-b border-gray-700 text-gray-400 text-xs uppercase tracking-wide">
               <tr>
-                <th className="px-4 py-3 text-left">Name</th>
-                <th className="px-4 py-3 text-left">Member ID</th>
-                <th className="px-4 py-3 text-left">Type</th>
-                <th className="px-4 py-3 text-left">Business</th>
-                <th className="px-4 py-3 text-left">Status</th>
-                <th className="px-4 py-3 text-left">Expiry</th>
-                <th className="px-4 py-3 text-left">Joined</th>
+                {COLUMNS.map(col => (
+                  <th key={col.key} className="px-4 py-3 text-left">
+                    <button
+                      onClick={() => handleSort(col.key)}
+                      className="flex items-center gap-1 hover:text-white transition-colors group"
+                    >
+                      {col.label}
+                      <SortIcon col={col.key} sortBy={sortBy} sortDir={sortDir} />
+                    </button>
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-700/50" style={{ color: '#ffffff' }}>
               {members.map(m => (
                 <tr
                   key={m.id}
-                  onClick={() => setSelected(m)}
+                  onClick={() => openMember(m)}
                   className="hover:bg-white/5 cursor-pointer transition-colors"
                 >
                   <td className="px-4 py-3">
@@ -205,7 +258,7 @@ export default function MembersTable({
         />
       </div>
 
-      {/* Member detail drawer */}
+      {/* Member drawer */}
       {selected && (
         <div className="fixed inset-0 bg-black/60 z-50 flex justify-end" onClick={() => setSelected(null)}>
           <div
@@ -214,141 +267,206 @@ export default function MembersTable({
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-bold text-white">Member Details</h2>
-              <button onClick={() => setSelected(null)} className="text-gray-500 hover:text-white text-xl leading-none">✕</button>
+              <h2 className="text-lg font-bold text-white">{editing ? 'Edit Member' : 'Member Details'}</h2>
+              <div className="flex items-center gap-2">
+                {!editing && (
+                  <button
+                    onClick={startEditing}
+                    className="text-sm px-3 py-1.5 rounded-lg border border-gray-600 text-gray-300 hover:text-white hover:border-gray-400 transition-colors"
+                  >
+                    Edit
+                  </button>
+                )}
+                <button onClick={() => setSelected(null)} className="text-gray-500 hover:text-white text-xl leading-none ml-1">✕</button>
+              </div>
             </div>
 
-            <dl className="space-y-4 text-sm">
-              {/* Membership */}
-              <div className="text-xs font-semibold uppercase tracking-widest text-gray-500 pb-1 border-b border-gray-700">Membership</div>
-              {[
-                ['Member ID', selected.member_id || '—'],
-                ['Membership type', selected.membership_type ?? '—'],
-                ['Status', selected.status],
-                ['Member since', selected.member_since ? format(new Date(selected.member_since), 'd MMM yyyy') : '—'],
-                ['Expiry date', selected.expiry_date ? format(new Date(selected.expiry_date), 'd MMM yyyy') : '—'],
-                ['Payment ref', selected.payment_ref ?? '—'],
-              ].map(([k, v]) => (
-                <div key={k} className="flex justify-between gap-4">
-                  <dt className="text-gray-500 shrink-0">{k}</dt>
-                  <dd className="text-white text-right">{v}</dd>
-                </div>
-              ))}
+            {editing ? (
+              <div className="space-y-4 text-sm">
+                <Section label="Membership" />
+                <EF label="Member ID"       value={editForm.member_id ?? ''}       onChange={set('member_id')} />
+                <ESelect label="Membership type" value={editForm.membership_type ?? ''} onChange={set('membership_type')}
+                  options={[{ value: '', label: '— none —' }, { value: 'Life', label: 'Life' }, { value: 'Ordinary', label: 'Ordinary' }]} />
+                <ESelect label="Status" value={editForm.status ?? 'pending'} onChange={set('status')}
+                  options={[
+                    { value: 'pending', label: 'Pending' },
+                    { value: 'active', label: 'Active' },
+                    { value: 'expired', label: 'Expired' },
+                    { value: 'inactive', label: 'Inactive' },
+                  ]} />
+                <EF label="Member since"   value={editForm.member_since ?? ''}    onChange={set('member_since')} type="date" />
+                <EF label="Expiry date"    value={editForm.expiry_date ?? ''}     onChange={set('expiry_date')}  type="date" />
+                <EF label="Payment ref"    value={editForm.payment_ref ?? ''}     onChange={set('payment_ref')} />
 
-              {/* Personal */}
-              <div className="text-xs font-semibold uppercase tracking-widest text-gray-500 pb-1 border-b border-gray-700 pt-2">Personal</div>
-              {[
-                ['Full name', selected.full_name],
-                ['IC number', selected.ic_number ?? '—'],
-                ['Email', selected.email],
-                ['Phone', selected.phone ?? '—'],
-              ].map(([k, v]) => (
-                <div key={k} className="flex justify-between gap-4">
-                  <dt className="text-gray-500 shrink-0">{k}</dt>
-                  <dd className="text-white text-right break-all">{v}</dd>
-                </div>
-              ))}
+                <Section label="Personal" />
+                <EF label="Full name"  value={editForm.full_name ?? ''} onChange={set('full_name')} />
+                <EF label="IC number"  value={editForm.ic_number ?? ''} onChange={set('ic_number')} />
+                <EF label="Email"      value={editForm.email ?? ''}     onChange={set('email')} type="email" />
+                <EF label="Phone"      value={editForm.phone ?? ''}     onChange={set('phone')} type="tel" />
 
-              {/* Business */}
-              <div className="text-xs font-semibold uppercase tracking-widest text-gray-500 pb-1 border-b border-gray-700 pt-2">Business</div>
-              {[
-                ['Business name', selected.business_name ?? '—'],
-                ['SSM reg. no.', selected.ssm_reg_no ?? '—'],
-                ['Sector category', selected.sector_category ?? '—'],
-                ['Business sector', selected.business_sector ?? '—'],
-                ['Business size', selected.business_size ?? '—'],
-                ['Business address', selected.business_address ?? '—'],
-              ].map(([k, v]) => (
-                <div key={k} className="flex justify-between gap-4">
-                  <dt className="text-gray-500 shrink-0">{k}</dt>
-                  <dd className="text-white text-right">{v}</dd>
-                </div>
-              ))}
+                <Section label="Business" />
+                <EF label="Business name"    value={editForm.business_name ?? ''}    onChange={set('business_name')} />
+                <EF label="SSM reg. no."     value={editForm.ssm_reg_no ?? ''}       onChange={set('ssm_reg_no')} />
+                <EF label="Sector category"  value={editForm.sector_category ?? ''}  onChange={set('sector_category')} />
+                <EF label="Business sector"  value={editForm.business_sector ?? ''}  onChange={set('business_sector')} />
+                <ESelect label="Business size" value={editForm.business_size ?? ''} onChange={set('business_size')}
+                  options={[
+                    { value: '', label: '— none —' },
+                    { value: 'Micro', label: 'Micro' },
+                    { value: 'Small', label: 'Small' },
+                    { value: 'Medium', label: 'Medium' },
+                  ]} />
+                <EArea label="Business address" value={editForm.business_address ?? ''} onChange={set('business_address')} />
 
-              {/* Representative */}
-              {selected.rep_name && (
-                <>
-                  <div className="text-xs font-semibold uppercase tracking-widest text-gray-500 pb-1 border-b border-gray-700 pt-2">Representative</div>
-                  {[
-                    ['Name', selected.rep_name],
-                    ['IC number', selected.rep_ic ?? '—'],
-                    ['Phone', selected.rep_phone ?? '—'],
-                  ].map(([k, v]) => (
-                    <div key={k} className="flex justify-between gap-4">
-                      <dt className="text-gray-500 shrink-0">{k}</dt>
-                      <dd className="text-white text-right">{v}</dd>
-                    </div>
-                  ))}
-                </>
-              )}
-            </dl>
+                <Section label="Representative" />
+                <EF label="Rep. name"  value={editForm.rep_name ?? ''}  onChange={set('rep_name')} />
+                <EF label="Rep. IC"    value={editForm.rep_ic ?? ''}    onChange={set('rep_ic')} />
+                <EF label="Rep. phone" value={editForm.rep_phone ?? ''} onChange={set('rep_phone')} type="tel" />
+              </div>
+            ) : (
+              <dl className="space-y-4 text-sm">
+                <Section label="Membership" />
+                {([
+                  ['Member ID',      selected.member_id || '—'],
+                  ['Membership type', selected.membership_type ?? '—'],
+                  ['Status',         selected.status],
+                  ['Member since',   selected.member_since ? format(new Date(selected.member_since), 'd MMM yyyy') : '—'],
+                  ['Expiry date',    selected.expiry_date ? format(new Date(selected.expiry_date), 'd MMM yyyy') : '—'],
+                  ['Payment ref',    selected.payment_ref ?? '—'],
+                ] as [string, string][]).map(([k, v]) => (
+                  <div key={k} className="flex justify-between gap-4">
+                    <dt className="text-gray-500 shrink-0">{k}</dt>
+                    <dd className="text-white text-right">{v}</dd>
+                  </div>
+                ))}
+
+                <Section label="Personal" />
+                {([
+                  ['Full name', selected.full_name],
+                  ['IC number', selected.ic_number ?? '—'],
+                  ['Email',     selected.email],
+                  ['Phone',     selected.phone ?? '—'],
+                ] as [string, string][]).map(([k, v]) => (
+                  <div key={k} className="flex justify-between gap-4">
+                    <dt className="text-gray-500 shrink-0">{k}</dt>
+                    <dd className="text-white text-right break-all">{v}</dd>
+                  </div>
+                ))}
+
+                <Section label="Business" />
+                {([
+                  ['Business name',   selected.business_name ?? '—'],
+                  ['SSM reg. no.',    selected.ssm_reg_no ?? '—'],
+                  ['Sector category', selected.sector_category ?? '—'],
+                  ['Business sector', selected.business_sector ?? '—'],
+                  ['Business size',   selected.business_size ?? '—'],
+                  ['Business address', selected.business_address ?? '—'],
+                ] as [string, string][]).map(([k, v]) => (
+                  <div key={k} className="flex justify-between gap-4">
+                    <dt className="text-gray-500 shrink-0">{k}</dt>
+                    <dd className="text-white text-right">{v}</dd>
+                  </div>
+                ))}
+
+                {selected.rep_name && (
+                  <>
+                    <Section label="Representative" />
+                    {([
+                      ['Name',      selected.rep_name],
+                      ['IC number', selected.rep_ic ?? '—'],
+                      ['Phone',     selected.rep_phone ?? '—'],
+                    ] as [string, string][]).map(([k, v]) => (
+                      <div key={k} className="flex justify-between gap-4">
+                        <dt className="text-gray-500 shrink-0">{k}</dt>
+                        <dd className="text-white text-right">{v}</dd>
+                      </div>
+                    ))}
+                  </>
+                )}
+              </dl>
+            )}
 
             {actionError && <p className="text-red-400 text-sm mt-4">{actionError}</p>}
-            {actionInfo && <p className="text-amber-400 text-sm mt-4">{actionInfo}</p>}
+            {actionInfo  && <p className="text-amber-400 text-sm mt-4">{actionInfo}</p>}
 
             <div className="mt-8 space-y-3">
-              {/* Pending: approve / reject */}
-              {selected.status === 'pending' && (
-                <div className="flex gap-3">
+              {editing ? (
+                <>
                   <button
                     disabled={!!loadingAction}
-                    onClick={() => approveMember(selected)}
-                    className="flex-1 py-2.5 rounded-xl text-white font-medium text-sm bg-green-600 hover:bg-green-700 disabled:opacity-60"
+                    onClick={saveEdits}
+                    className="w-full py-2.5 rounded-xl text-white font-medium text-sm bg-blue-600 hover:bg-blue-700 disabled:opacity-60 transition-colors"
                   >
-                    {loadingAction === 'approve' ? 'Approving…' : 'Approve'}
+                    {loadingAction === 'edit-member' ? 'Saving…' : 'Save changes'}
                   </button>
                   <button
-                    disabled={!!loadingAction}
-                    onClick={() => rejectMember(selected)}
-                    className="flex-1 py-2.5 rounded-xl text-white font-medium text-sm bg-red-500 hover:bg-red-600 disabled:opacity-60"
+                    onClick={() => setEditing(false)}
+                    className="w-full py-2.5 rounded-xl font-medium text-sm border border-gray-600 text-gray-400 hover:text-white transition-colors"
                   >
-                    {loadingAction === 'reject' ? 'Rejecting…' : 'Reject'}
+                    Cancel
                   </button>
-                </div>
-              )}
+                </>
+              ) : (
+                <>
+                  {selected.status === 'pending' && (
+                    <div className="flex gap-3">
+                      <button
+                        disabled={!!loadingAction}
+                        onClick={() => approveMember(selected)}
+                        className="flex-1 py-2.5 rounded-xl text-white font-medium text-sm bg-green-600 hover:bg-green-700 disabled:opacity-60"
+                      >
+                        {loadingAction === 'approve' ? 'Approving…' : 'Approve'}
+                      </button>
+                      <button
+                        disabled={!!loadingAction}
+                        onClick={() => rejectMember(selected)}
+                        className="flex-1 py-2.5 rounded-xl text-white font-medium text-sm bg-red-500 hover:bg-red-600 disabled:opacity-60"
+                      >
+                        {loadingAction === 'reject' ? 'Rejecting…' : 'Reject'}
+                      </button>
+                    </div>
+                  )}
 
-              {/* Ordinary active: upgrade to Life */}
-              {selected.status === 'active' && selected.membership_type === 'Ordinary' && (
-                <button
-                  disabled={!!loadingAction}
-                  onClick={() => upgradeMember(selected)}
-                  className="w-full py-2.5 rounded-xl font-medium text-sm text-white disabled:opacity-60 transition-colors"
-                  style={{ backgroundColor: '#7c3aed' }}
-                >
-                  {loadingAction === 'upgrade-member' ? 'Upgrading…' : '⬆ Upgrade to Life Member'}
-                </button>
-              )}
+                  {selected.status === 'active' && selected.membership_type === 'Ordinary' && (
+                    <button
+                      disabled={!!loadingAction}
+                      onClick={() => upgradeMember(selected)}
+                      className="w-full py-2.5 rounded-xl font-medium text-sm text-white disabled:opacity-60 transition-colors"
+                      style={{ backgroundColor: '#7c3aed' }}
+                    >
+                      {loadingAction === 'upgrade-member' ? 'Upgrading…' : '⬆ Upgrade to Life Member'}
+                    </button>
+                  )}
 
-              {/* Active: deactivate */}
-              {selected.status === 'active' && (
-                <button
-                  disabled={!!loadingAction}
-                  onClick={() => setStatus(selected, 'inactive')}
-                  className="w-full py-2.5 rounded-xl font-medium text-sm border border-orange-600 text-orange-400 hover:bg-orange-900/20 disabled:opacity-60"
-                >
-                  {loadingAction === 'set-status' ? 'Deactivating…' : 'Deactivate membership'}
-                </button>
-              )}
+                  {selected.status === 'active' && (
+                    <button
+                      disabled={!!loadingAction}
+                      onClick={() => setStatus(selected, 'inactive')}
+                      className="w-full py-2.5 rounded-xl font-medium text-sm border border-orange-600 text-orange-400 hover:bg-orange-900/20 disabled:opacity-60"
+                    >
+                      {loadingAction === 'set-status' ? 'Deactivating…' : 'Deactivate membership'}
+                    </button>
+                  )}
 
-              {/* Inactive: reactivate */}
-              {selected.status === 'inactive' && (
-                <button
-                  disabled={!!loadingAction}
-                  onClick={() => setStatus(selected, 'active')}
-                  className="w-full py-2.5 rounded-xl text-white font-medium text-sm bg-green-600 hover:bg-green-700 disabled:opacity-60"
-                >
-                  {loadingAction === 'set-status' ? 'Reactivating…' : 'Reactivate membership'}
-                </button>
-              )}
+                  {selected.status === 'inactive' && (
+                    <button
+                      disabled={!!loadingAction}
+                      onClick={() => setStatus(selected, 'active')}
+                      className="w-full py-2.5 rounded-xl text-white font-medium text-sm bg-green-600 hover:bg-green-700 disabled:opacity-60"
+                    >
+                      {loadingAction === 'set-status' ? 'Reactivating…' : 'Reactivate membership'}
+                    </button>
+                  )}
 
-              {/* Always: delete */}
-              <button
-                disabled={!!loadingAction}
-                onClick={() => deleteMember(selected)}
-                className="w-full py-2.5 rounded-xl font-medium text-sm border border-red-800 text-red-400 hover:bg-red-900/20 disabled:opacity-60"
-              >
-                {loadingAction === 'delete-member' ? 'Deleting…' : 'Delete member record'}
-              </button>
+                  <button
+                    disabled={!!loadingAction}
+                    onClick={() => deleteMember(selected)}
+                    className="w-full py-2.5 rounded-xl font-medium text-sm border border-red-800 text-red-400 hover:bg-red-900/20 disabled:opacity-60"
+                  >
+                    {loadingAction === 'delete-member' ? 'Deleting…' : 'Delete member record'}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -357,6 +475,8 @@ export default function MembersTable({
   )
 }
 
+// ── helpers ──────────────────────────────────────────────────────────────────
+
 function StatusBadge({ status }: { status: string }) {
   const cls =
     status === 'active'   ? 'bg-green-900/60 text-green-300' :
@@ -364,4 +484,49 @@ function StatusBadge({ status }: { status: string }) {
     status === 'inactive' ? 'bg-gray-700 text-gray-400' :
     'bg-yellow-900/60 text-yellow-300'
   return <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${cls}`}>{status}</span>
+}
+
+function SortIcon({ col, sortBy, sortDir }: { col: string; sortBy?: string; sortDir?: string }) {
+  if (sortBy !== col) return <span className="text-gray-600 text-xs">↕</span>
+  return <span className="text-white text-xs">{sortDir === 'asc' ? '↑' : '↓'}</span>
+}
+
+function Section({ label }: { label: string }) {
+  return <div className="text-xs font-semibold uppercase tracking-widest text-gray-500 pb-1 border-b border-gray-700 pt-2">{label}</div>
+}
+
+const inputCls = "w-full px-3 py-1.5 rounded-lg border border-gray-600 bg-gray-800 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500"
+
+function EF({ label, value, onChange, type = 'text' }: { label: string; value: string; onChange: (v: string) => void; type?: string }) {
+  return (
+    <div className="flex flex-col gap-1">
+      <label className="text-xs text-gray-500">{label}</label>
+      <input type={type} value={value} onChange={e => onChange(e.target.value)} className={inputCls} />
+    </div>
+  )
+}
+
+function ESelect({ label, value, onChange, options }: {
+  label: string
+  value: string
+  onChange: (v: string) => void
+  options: { value: string; label: string }[]
+}) {
+  return (
+    <div className="flex flex-col gap-1">
+      <label className="text-xs text-gray-500">{label}</label>
+      <select value={value} onChange={e => onChange(e.target.value)} className={inputCls}>
+        {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+      </select>
+    </div>
+  )
+}
+
+function EArea({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <div className="flex flex-col gap-1">
+      <label className="text-xs text-gray-500">{label}</label>
+      <textarea rows={3} value={value} onChange={e => onChange(e.target.value)} className={`${inputCls} resize-none`} />
+    </div>
+  )
 }
