@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useMemo, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import type { Member } from '@/lib/types'
 import FadeCard from '@/components/FadeCard'
 
-type DirectoryMember = Pick<Member, 'id' | 'member_id' | 'full_name' | 'business_name' | 'business_sector' | 'business_size' | 'membership_type' | 'status'>
+type DirectoryMember = Pick<Member, 'id' | 'member_id' | 'full_name' | 'email' | 'phone' | 'business_name' | 'business_sector' | 'business_size' | 'membership_type' | 'status'>
 
 type Company = {
   business_name: string
@@ -32,6 +33,12 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
   const [activeLetter, setActiveLetter] = useState<string | null>(null)
   const [sliderActive, setSliderActive] = useState(false)
   const [sliderTop, setSliderTop]       = useState(160) // will be updated after mount
+  const [selected, setSelected]         = useState<Company | null>(null)
+  const [sheetVisible, setSheetVisible] = useState(false)
+  const sheetEl    = useRef<HTMLDivElement>(null)
+  const backdropEl = useRef<HTMLDivElement>(null)
+  const dragStartY = useRef(0)
+  const dragOffset = useRef(0)
 
   const headerInputRef = useRef<HTMLInputElement>(null)
   const stickyInputRef = useRef<HTMLInputElement>(null)
@@ -84,6 +91,60 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
 
   function onInputBlur() {
     setTimeout(() => setSearchOpen(false), 200)
+  }
+
+  // ── Company sheet ────────────────────────────────────────────
+  function openSheet(company: Company) {
+    setSelected(company)
+    setTimeout(() => setSheetVisible(true), 10)
+  }
+
+  function closeSheet() {
+    setSheetVisible(false)
+    setTimeout(() => setSelected(null), 300)
+  }
+
+  function onSheetTouchStart(e: React.TouchEvent) {
+    dragStartY.current = e.touches[0].clientY
+    dragOffset.current = 0
+  }
+
+  function onSheetTouchMove(e: React.TouchEvent) {
+    const delta = Math.max(0, e.touches[0].clientY - dragStartY.current)
+    dragOffset.current = delta
+    if (sheetEl.current) {
+      sheetEl.current.style.transition = 'none'
+      sheetEl.current.style.transform = `translateY(${delta}px)`
+    }
+    if (backdropEl.current) {
+      const opacity = Math.max(0, 0.6 * (1 - delta / 350))
+      backdropEl.current.style.backgroundColor = `rgba(0,0,0,${opacity.toFixed(2)})`
+    }
+  }
+
+  function onSheetTouchEnd() {
+    const offset = dragOffset.current
+    dragOffset.current = 0
+    if (offset > 80) {
+      if (sheetEl.current) {
+        sheetEl.current.style.transition = 'transform 0.25s ease'
+        sheetEl.current.style.transform = 'translateY(110%)'
+      }
+      if (backdropEl.current) {
+        backdropEl.current.style.transition = 'background-color 0.25s ease'
+        backdropEl.current.style.backgroundColor = 'rgba(0,0,0,0)'
+      }
+      setTimeout(() => { setSelected(null); setSheetVisible(false) }, 250)
+    } else {
+      if (sheetEl.current) {
+        sheetEl.current.style.transition = 'transform 0.3s ease'
+        sheetEl.current.style.transform = 'translateY(0)'
+      }
+      if (backdropEl.current) {
+        backdropEl.current.style.transition = 'background-color 0.3s ease'
+        backdropEl.current.style.backgroundColor = 'rgba(0,0,0,0.6)'
+      }
+    }
   }
 
   // ── Alphabet slider ──────────────────────────────────────────
@@ -318,19 +379,32 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
           <div key={group.letter} className="mb-4">
             <div id={`dir-${group.letter}`} />
             <div className="space-y-3">
-              {group.companies.map(c => (
-                <FadeCard key={c.business_name}>
-                  <div className="bg-white rounded-2xl border border-gray-200 p-4">
-                    <p className="font-semibold text-gray-900">{c.business_name}</p>
-                    {c.business_sector && <p className="text-sm text-gray-500 mt-0.5">{c.business_sector}</p>}
-                    {c.business_size && (
-                      <div className="mt-2">
-                        <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{c.business_size}</span>
+              {group.companies.map(c => {
+                const hasLife = c.members.some(m => m.membership_type === 'Life')
+                return (
+                  <FadeCard key={c.business_name}>
+                    <button
+                      onClick={() => openSheet(c)}
+                      className="w-full text-left bg-white rounded-2xl border border-gray-200 p-4 active:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="font-semibold text-gray-900 min-w-0">{c.business_name}</p>
+                        <span className={`flex-none text-xs px-2 py-0.5 rounded-full font-medium ${
+                          hasLife ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
+                        }`}>
+                          {hasLife ? 'Life' : 'Ordinary'}
+                        </span>
                       </div>
-                    )}
-                  </div>
-                </FadeCard>
-              ))}
+                      {c.business_sector && <p className="text-sm text-gray-500 mt-0.5">{c.business_sector}</p>}
+                      {c.business_size && (
+                        <div className="mt-2">
+                          <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{c.business_size}</span>
+                        </div>
+                      )}
+                    </button>
+                  </FadeCard>
+                )
+              })}
             </div>
           </div>
         ))}
@@ -385,6 +459,131 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
           <span className="text-white text-4xl font-bold">{activeLetter}</span>
         </div>
       )}
+
+      {/* ── Company detail sheet ── */}
+      {selected && typeof document !== 'undefined' && createPortal(
+        <div
+          ref={backdropEl}
+          className="fixed inset-0 flex items-end justify-center"
+          style={{
+            zIndex: 9999,
+            backgroundColor: sheetVisible ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0)',
+            transition: 'background-color 0.3s ease',
+          }}
+          onClick={closeSheet}
+        >
+          <div
+            ref={sheetEl}
+            className="w-full max-w-lg rounded-t-3xl shadow-2xl overflow-hidden"
+            style={{
+              backgroundColor: '#fff',
+              transform: sheetVisible ? 'translateY(0)' : 'translateY(100%)',
+              transition: 'transform 0.3s cubic-bezier(0.34,1.56,0.64,1)',
+            }}
+            onClick={e => e.stopPropagation()}
+            onTouchStart={onSheetTouchStart}
+            onTouchMove={onSheetTouchMove}
+            onTouchEnd={onSheetTouchEnd}
+          >
+            {/* Drag handle */}
+            <div className="flex justify-center pt-3 pb-2">
+              <div className="w-10 h-1 bg-gray-300 rounded-full" />
+            </div>
+
+            <div className="px-6 pb-10 space-y-5">
+              {/* Company header */}
+              <div>
+                <div className="flex items-start justify-between gap-3">
+                  <p className="text-xl font-bold text-gray-900 leading-tight">{selected.business_name}</p>
+                  {(() => {
+                    const hasLife = selected.members.some(m => m.membership_type === 'Life')
+                    return (
+                      <span className={`flex-none text-xs px-2.5 py-1 rounded-full font-semibold ${
+                        hasLife ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
+                      }`}>
+                        {hasLife ? 'Life' : 'Ordinary'}
+                      </span>
+                    )
+                  })()}
+                </div>
+                {selected.business_sector && (
+                  <p className="text-sm text-gray-500 mt-1">{selected.business_sector}</p>
+                )}
+                {selected.business_size && (
+                  <span className="inline-block mt-2 text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                    {selected.business_size}
+                  </span>
+                )}
+              </div>
+
+              {/* Members */}
+              <div className="space-y-4">
+                {selected.members.map(m => {
+                  const displayEmail = m.email && !m.email.includes('@smelabuan.noemail') ? m.email : null
+                  return (
+                    <div key={m.id} className="border-t border-gray-100 pt-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <p className="font-semibold text-gray-900 text-sm">{m.full_name}</p>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                          m.membership_type === 'Life' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
+                        }`}>
+                          {m.membership_type ?? 'Ordinary'}
+                        </span>
+                      </div>
+                      <div className="space-y-2">
+                        {m.phone ? (
+                          <a
+                            href={`tel:${m.phone.replace(/\s/g, '')}`}
+                            className="flex items-center gap-3 text-sm text-gray-700 active:opacity-70"
+                          >
+                            <span className="flex-none w-8 h-8 bg-green-50 rounded-full flex items-center justify-center">
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.65 3.48 2 2 0 0 1 3.62 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.86a16 16 0 0 0 6 6l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+                              </svg>
+                            </span>
+                            <span>{m.phone}</span>
+                          </a>
+                        ) : (
+                          <div className="flex items-center gap-3 text-sm text-gray-300">
+                            <span className="flex-none w-8 h-8 bg-gray-50 rounded-full flex items-center justify-center">
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.65 3.48 2 2 0 0 1 3.62 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.86a16 16 0 0 0 6 6l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+                              </svg>
+                            </span>
+                            <span>No phone</span>
+                          </div>
+                        )}
+                        {displayEmail ? (
+                          <a
+                            href={`mailto:${displayEmail}`}
+                            className="flex items-center gap-3 text-sm text-gray-700 active:opacity-70"
+                          >
+                            <span className="flex-none w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center">
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                                <rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                              </svg>
+                            </span>
+                            <span className="break-all">{displayEmail}</span>
+                          </a>
+                        ) : (
+                          <div className="flex items-center gap-3 text-sm text-gray-300">
+                            <span className="flex-none w-8 h-8 bg-gray-50 rounded-full flex items-center justify-center">
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                                <rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                              </svg>
+                            </span>
+                            <span>No email</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      , document.body)}
     </div>
   )
 }
