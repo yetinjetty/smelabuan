@@ -40,6 +40,25 @@ export default function MembersTable({
   const [actionError, setActionError] = useState('')
   const [actionInfo, setActionInfo] = useState('')
   const [loadingAction, setLoadingAction] = useState<string | null>(null)
+  const [colWidths, setColWidths] = useState<Record<string, number>>({})
+
+  // ── Column resize ────────────────────────────────────────────
+  function startResize(e: React.MouseEvent, colKey: string, currentWidth: number) {
+    e.preventDefault()
+    const startX = e.clientX
+    const startW = currentWidth
+
+    function onMove(ev: MouseEvent) {
+      const w = Math.max(60, startW + ev.clientX - startX)
+      setColWidths(prev => ({ ...prev, [colKey]: w }))
+    }
+    function onUp() {
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup', onUp)
+    }
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
+  }
 
   const isFirstRender = useRef(true)
   useEffect(() => {
@@ -197,26 +216,47 @@ className="border border-gray-600 rounded-lg px-3 py-2 text-sm w-56 focus:outlin
             Search
           </button>
           <span className="text-sm text-gray-500 whitespace-nowrap">{total} result{total !== 1 ? 's' : ''}</span>
+          <a
+            href="/api/admin/export-members"
+            download="SME member list.csv"
+            className="px-4 py-2 text-sm rounded-lg text-white font-medium flex items-center gap-1.5 whitespace-nowrap"
+            style={{ backgroundColor: '#374151' }}
+          >
+            ↓ Export CSV
+          </a>
         </div>
       </div>
 
       {/* Table */}
       <div className="rounded-xl border border-gray-700 overflow-hidden" style={{ backgroundColor: '#1f2937' }}>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm" style={{ tableLayout: Object.keys(colWidths).length ? 'fixed' : 'auto' }}>
             <thead className="border-b border-gray-700 text-gray-400 text-xs uppercase tracking-wide">
               <tr>
-                {COLUMNS.map(col => (
-                  <th key={col.key} className="px-4 py-3 text-left">
-                    <button
-                      onClick={() => handleSort(col.key)}
-                      className="flex items-center gap-1 hover:text-white transition-colors group"
+                {COLUMNS.map(col => {
+                  const w = colWidths[col.key]
+                  return (
+                    <th
+                      key={col.key}
+                      className="px-4 py-3 text-left relative select-none"
+                      style={w ? { width: w, minWidth: w } : {}}
                     >
-                      {col.label}
-                      <SortIcon col={col.key} sortBy={sortBy} sortDir={sortDir} />
-                    </button>
-                  </th>
-                ))}
+                      <button
+                        onClick={() => handleSort(col.key)}
+                        className="flex items-center gap-1 hover:text-white transition-colors group"
+                      >
+                        {col.label}
+                        <SortIcon col={col.key} sortBy={sortBy} sortDir={sortDir} />
+                      </button>
+                      {/* Drag handle — right edge */}
+                      <span
+                        onMouseDown={e => startResize(e, col.key, w ?? (e.currentTarget.closest('th') as HTMLTableCellElement)?.offsetWidth ?? 120)}
+                        className="absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-[#E05A4E]/50 transition-colors"
+                        title="Drag to resize"
+                      />
+                    </th>
+                  )
+                })}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-700/50" style={{ color: '#ffffff' }}>
