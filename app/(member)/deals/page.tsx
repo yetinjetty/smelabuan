@@ -69,7 +69,42 @@ export default async function DealsPage() {
         )}
 
         {(!deals || deals.length === 0) && (
-          <p className="text-center text-gray-400 py-20">No deals available yet</p>
+          <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
+            {/* Animated icon */}
+            <div className="relative mb-6">
+              <div
+                className="w-24 h-24 rounded-3xl flex items-center justify-center animate-bounce"
+                style={{ background: 'linear-gradient(135deg, #E05A4E 0%, #c0392b 100%)', boxShadow: '0 8px 32px rgba(224,90,78,0.3)' }}
+              >
+                <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="m20.59 13.41-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+                  <line x1="7" y1="7" x2="7.01" y2="7"/>
+                </svg>
+              </div>
+              {/* Decorative dots */}
+              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-300 animate-ping opacity-75" />
+              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-400" />
+            </div>
+
+            <h3 className="text-2xl font-extrabold text-gray-900 mb-2">Coming Soon!</h3>
+            <p className="text-gray-500 text-sm leading-relaxed max-w-xs mb-6">
+              Exclusive member deals and discounts are on their way.
+              Keep an eye out for special offers from our partners!
+            </p>
+
+            {/* Decorative tags */}
+            <div className="flex gap-2 flex-wrap justify-center">
+              {['Dining', 'Travel', 'Business', 'Retail'].map(tag => (
+                <span
+                  key={tag}
+                  className="text-xs px-3 py-1 rounded-full border font-medium"
+                  style={{ borderColor: '#E05A4E', color: '#E05A4E', backgroundColor: 'rgba(224,90,78,0.06)' }}
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
         )}
       </div>
     </div>
