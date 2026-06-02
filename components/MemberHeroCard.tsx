@@ -34,7 +34,7 @@ export default function MemberHeroCard({ fullName, memberId, membershipType, sta
   return (
     /* Sticky wrapper — sits at top of viewport when scrolled */
     <div
-      className="sticky px-4"
+      className="sticky"
       style={{ top: 0, zIndex: 50 }}
     >
       {/* Hairline bg strip so content scrolling beneath doesn't bleed through gaps */}
@@ -48,7 +48,7 @@ export default function MemberHeroCard({ fullName, memberId, membershipType, sta
         className="block relative overflow-hidden text-white"
         style={{
           background: 'linear-gradient(135deg, #E05A4E 0%, #c0392b 100%)',
-          borderRadius: collapsed ? '0 0 20px 20px' : 16,
+          borderRadius: collapsed ? '0 0 20px 20px' : '0 0 24px 24px',
           transition: 'border-radius 0.35s ease',
         }}
       >
