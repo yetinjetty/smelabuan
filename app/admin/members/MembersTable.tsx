@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { format } from 'date-fns'
 import type { Member } from '@/lib/types'
@@ -40,6 +40,13 @@ export default function MembersTable({
   const [actionError, setActionError] = useState('')
   const [actionInfo, setActionInfo] = useState('')
   const [loadingAction, setLoadingAction] = useState<string | null>(null)
+
+  const isFirstRender = useRef(true)
+  useEffect(() => {
+    if (isFirstRender.current) { isFirstRender.current = false; return }
+    const t = setTimeout(() => applyFilters(search, filter), 300)
+    return () => clearTimeout(t)
+  }, [search]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function openMember(m: Member) {
     setSelected(m)
@@ -168,8 +175,7 @@ export default function MembersTable({
             placeholder="Search name, email, ID…"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && applyFilters(search, filter)}
-            className="border border-gray-600 rounded-lg px-3 py-2 text-sm w-56 focus:outline-none focus:ring-2 focus:ring-[#E05A4E] text-white placeholder-gray-500"
+className="border border-gray-600 rounded-lg px-3 py-2 text-sm w-56 focus:outline-none focus:ring-2 focus:ring-[#E05A4E] text-white placeholder-gray-500"
             style={{ backgroundColor: '#1f2937' }}
           />
           <select
