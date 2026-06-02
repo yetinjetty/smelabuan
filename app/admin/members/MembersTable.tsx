@@ -7,10 +7,10 @@ import type { Member } from '@/lib/types'
 import { PaginationBar } from '@/components/TablePagination'
 
 const COLUMNS = [
-  { key: 'full_name',       label: 'Name' },
+  { key: 'business_name',   label: 'Business' },
   { key: 'member_id',       label: 'Member ID' },
   { key: 'membership_type', label: 'Type' },
-  { key: 'business_name',   label: 'Business' },
+  { key: 'full_name',       label: 'Name' },
   { key: 'status',          label: 'Status' },
   { key: 'expiry_date',     label: 'Expiry' },
   { key: 'created_at',      label: 'Joined' },
@@ -248,11 +248,14 @@ className="border border-gray-600 rounded-lg px-3 py-2 text-sm w-56 focus:outlin
                         {col.label}
                         <SortIcon col={col.key} sortBy={sortBy} sortDir={sortDir} />
                       </button>
-                      {/* Drag handle — right edge */}
+                      {/* Resize divider — always visible line, turns red on hover/drag */}
                       <span
                         onMouseDown={e => startResize(e, col.key, w ?? (e.currentTarget.closest('th') as HTMLTableCellElement)?.offsetWidth ?? 120)}
-                        className="absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-[#E05A4E]/50 transition-colors"
-                        title="Drag to resize"
+                        className="absolute right-0 top-1 bottom-1 w-px cursor-col-resize group/resize"
+                        style={{ backgroundColor: '#374151' }}
+                        onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#E05A4E')}
+                        onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#374151')}
+                        title="Drag to resize column"
                       />
                     </th>
                   )
@@ -264,17 +267,17 @@ className="border border-gray-600 rounded-lg px-3 py-2 text-sm w-56 focus:outlin
                 <tr
                   key={m.id}
                   onClick={() => openMember(m)}
-                  className="hover:bg-white/5 cursor-pointer transition-colors"
+                  className="hover:bg-white/5 cursor-pointer transition-colors [&>td:not(:last-child)]:border-r [&>td:not(:last-child)]:border-gray-700/50"
                 >
                   <td className="px-4 py-3">
-                    <p className="font-medium text-white">{m.full_name}</p>
-                    <p className="text-xs text-gray-400">{m.email}</p>
+                    <p className="text-gray-300 truncate max-w-[160px]">{m.business_name ?? '—'}</p>
+                    <p className="text-xs text-gray-500">{m.business_sector ?? ''}</p>
                   </td>
                   <td className="px-4 py-3 font-mono text-white">{m.member_id || '—'}</td>
                   <td className="px-4 py-3 text-white">{m.membership_type ?? '—'}</td>
                   <td className="px-4 py-3">
-                    <p className="text-gray-300 truncate max-w-[160px]">{m.business_name ?? '—'}</p>
-                    <p className="text-xs text-gray-500">{m.business_sector ?? ''}</p>
+                    <p className="font-medium text-white">{m.full_name}</p>
+                    <p className="text-xs text-gray-400">{m.email}</p>
                   </td>
                   <td className="px-4 py-3">
                     <StatusBadge status={m.status} />
