@@ -111,9 +111,15 @@ export default function CardFace({
   const light     = textColor === 'black'
   const isLifetime = membershipType === 'Life'
 
+  // Glow shadow for large bold text (name, ID)
   const textShadow = light
     ? '0 2px 6px rgba(255,255,255,1), 0 0 4px rgba(255,255,255,1), 0 0 12px rgba(255,255,255,0.8)'
     : '0 2px 8px rgba(0,0,0,0.9), 0 0 4px rgba(0,0,0,0.85), 0 0 14px rgba(0,0,0,0.6)'
+
+  // Outline-stroke shadow for small/light text (company, expiry) — covers all directions
+  const subTextShadow = light
+    ? '-1px -1px 0 rgba(255,255,255,0.95), 1px -1px 0 rgba(255,255,255,0.95), -1px 1px 0 rgba(255,255,255,0.95), 1px 1px 0 rgba(255,255,255,0.95), 0 0 10px rgba(255,255,255,1)'
+    : '-1px -1px 0 rgba(0,0,0,0.9), 1px -1px 0 rgba(0,0,0,0.9), -1px 1px 0 rgba(0,0,0,0.9), 1px 1px 0 rgba(0,0,0,0.9), 0 0 10px rgba(0,0,0,0.95), 0 2px 12px rgba(0,0,0,0.8)'
 
   function openPicker() {
     setPending(bg)
@@ -205,7 +211,7 @@ export default function CardFace({
               {fullName}
             </p>
             {businessName && (
-              <p className={`text-sm mt-1 leading-snug ${light ? 'text-gray-700' : 'text-white/80'}`} style={{ textShadow }}>
+              <p className={`text-sm mt-1 leading-snug font-medium ${light ? 'text-gray-800' : 'text-white'}`} style={{ textShadow: subTextShadow }}>
                 {businessName}
               </p>
             )}
@@ -213,7 +219,7 @@ export default function CardFace({
               {memberId}
             </p>
             {expiryDate && (
-              <p className={`text-xs mt-1 ${light ? 'text-gray-700' : 'text-white/80'}`} style={{ textShadow }}>
+              <p className={`text-xs mt-1 font-medium ${light ? 'text-gray-800' : 'text-white'}`} style={{ textShadow: subTextShadow }}>
                 Exp {format(new Date(expiryDate), 'MMM yyyy')}
               </p>
             )}
