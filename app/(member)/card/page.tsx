@@ -92,7 +92,7 @@ export default async function CardPage() {
       {/* Card — portrait, standard ID card proportions (54 × 86 mm) */}
       <div
         className="w-full max-w-xs rounded-3xl p-7 text-white shadow-2xl flex flex-col justify-between relative overflow-hidden"
-        style={{ backgroundImage: "url('/card1.jpeg')", backgroundSize: 'cover', backgroundPosition: 'center', aspectRatio: '1 / 1.586' }}
+        style={{ backgroundImage: "url('/card1.jpg')", backgroundSize: 'cover', backgroundPosition: 'center', aspectRatio: '1 / 1.586' }}
       >
         {/* Bottom gradient overlay for text legibility */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none rounded-3xl" />
