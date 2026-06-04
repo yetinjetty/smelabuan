@@ -94,8 +94,6 @@ export default async function CardPage() {
         className="w-full max-w-xs rounded-3xl p-7 text-white shadow-none hover:shadow-2xl active:shadow-2xl transition-shadow duration-200 flex flex-col justify-between relative overflow-hidden"
         style={{ backgroundImage: "url('/card1.jpg')", backgroundSize: 'cover', backgroundPosition: 'center', aspectRatio: '1 / 1.586' }}
       >
-        {/* Bottom gradient overlay for text legibility */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none rounded-3xl" />
 
         {/* Top: logo only */}
         <div className="relative">
