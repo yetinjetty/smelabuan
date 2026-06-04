@@ -98,8 +98,8 @@ export default async function CardPage() {
         <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/10 pointer-events-none" />
         <div className="absolute -bottom-12 -left-10 w-52 h-52 rounded-full bg-white/10 pointer-events-none" />
 
-        {/* Top: logo + membership type */}
-        <div className="relative flex items-start justify-between">
+        {/* Top: logo only */}
+        <div className="relative">
           <Image
             src="/SMEA Labuan Logo v1.png"
             alt="SMEA Labuan"
@@ -107,35 +107,27 @@ export default async function CardPage() {
             height={54}
             className="object-contain"
           />
-          <span className="text-xs bg-white/20 px-3 py-1.5 rounded-full font-medium">
-            {member.membership_type === 'Life' ? 'Lifetime' : member.membership_type}
-          </span>
         </div>
 
-        {/* Middle: name + business */}
-        <div className="relative flex-1 flex flex-col justify-center py-4">
-          <p className="text-2xl font-bold leading-snug">{member.full_name}</p>
-          {member.business_name && (
-            <p className="text-sm text-white/70 mt-2 leading-snug">{member.business_name}</p>
-          )}
-        </div>
+        {/* Middle: spacer */}
+        <div className="flex-1" />
 
-        {/* Bottom: member ID + status */}
+        {/* Bottom: name, company, ID, expiry + membership type badge */}
         <div className="relative flex items-end justify-between">
           <div>
-            <p className="text-xl font-mono font-bold tracking-widest">{member.member_id}</p>
+            <p className="text-2xl font-bold leading-snug">{member.full_name}</p>
+            {member.business_name && (
+              <p className="text-sm text-white/70 mt-1 leading-snug">{member.business_name}</p>
+            )}
+            <p className="text-lg font-mono font-bold tracking-widest mt-3">{member.member_id}</p>
             {member.expiry_date && (
               <p className="text-xs text-white/60 mt-1">
                 Exp {format(new Date(member.expiry_date), 'MMM yyyy')}
               </p>
             )}
           </div>
-          <span className={`text-xs px-3 py-1.5 rounded-full font-semibold ${
-            member.status === 'active'
-              ? 'bg-white/20 text-white'
-              : 'bg-red-400/30 text-red-100'
-          }`}>
-            {member.status.toUpperCase()}
+          <span className="text-xs bg-white/20 px-3 py-1.5 rounded-full font-medium self-end mb-0.5">
+            {member.membership_type === 'Life' ? 'Lifetime' : member.membership_type}
           </span>
         </div>
       </div>
