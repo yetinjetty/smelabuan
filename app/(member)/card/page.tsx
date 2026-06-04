@@ -92,11 +92,10 @@ export default async function CardPage() {
       {/* Card — portrait, standard ID card proportions (54 × 86 mm) */}
       <div
         className="w-full max-w-xs rounded-3xl p-7 text-white shadow-2xl flex flex-col justify-between relative overflow-hidden"
-        style={{ background: 'linear-gradient(160deg, #E05A4E 0%, #c0392b 100%)', aspectRatio: '1 / 1.586' }}
+        style={{ backgroundImage: "url('/card1.jpeg')", backgroundSize: 'cover', backgroundPosition: 'center', aspectRatio: '1 / 1.586' }}
       >
-        {/* Decorative circles */}
-        <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/10 pointer-events-none" />
-        <div className="absolute -bottom-12 -left-10 w-52 h-52 rounded-full bg-white/10 pointer-events-none" />
+        {/* Bottom gradient overlay for text legibility */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none rounded-3xl" />
 
         {/* Top: logo only */}
         <div className="relative">
