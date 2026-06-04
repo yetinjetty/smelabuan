@@ -142,7 +142,6 @@ export default async function HomePage() {
             </a>
           </div>
         </div>
-        </div>
 
       </div>
     </div>
