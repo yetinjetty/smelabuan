@@ -50,6 +50,7 @@ export interface Event {
   access_type: EventAccess
   registered_count: number
   description: string | null
+  listed: boolean
   created_at: string
 }
 
@@ -68,6 +69,7 @@ export interface Deal {
   discount_value: string | null
   valid_until: string | null
   status: DealStatus
+  listed: boolean
   created_at: string
 }
 

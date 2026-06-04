@@ -8,6 +8,7 @@ export default async function EventsPage() {
   const { data: events } = await supabase
     .from('events')
     .select('*')
+    .eq('listed', true)
     .gte('event_date', new Date().toISOString().split('T')[0])
     .order('event_date', { ascending: true })
     .returns<Event[]>()

@@ -21,6 +21,7 @@ export default function DealsAdmin({ deals }: { deals: Deal[] }) {
   const [editing, setEditing] = useState<Deal | null>(null)
   const [form, setForm] = useState<DealForm>(empty)
   const [saving, setSaving] = useState(false)
+  const [toggling, setToggling] = useState<string | null>(null)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
 
@@ -37,6 +38,13 @@ export default function DealsAdmin({ deals }: { deals: Deal[] }) {
     if (editing) { await supabase.from('deals').update(payload).eq('id', editing.id) }
     else { await supabase.from('deals').insert(payload) }
     setSaving(false); setShowForm(false)
+    startTransition(() => router.refresh())
+  }
+
+  async function toggleListed(d: Deal) {
+    setToggling(d.id)
+    await createClient().from('deals').update({ listed: !d.listed }).eq('id', d.id)
+    setToggling(null)
     startTransition(() => router.refresh())
   }
 
@@ -59,7 +67,7 @@ export default function DealsAdmin({ deals }: { deals: Deal[] }) {
         <table className="w-full text-sm">
           <thead className="border-b border-gray-700 text-white text-xs uppercase tracking-wide">
             <tr>
-              {['Merchant', 'Category', 'Discount', 'Valid until', 'Status', ''].map(h => (
+              {['Merchant', 'Category', 'Discount', 'Valid until', 'Status', 'Listed', ''].map(h => (
                 <th key={h} className="px-4 py-3 text-left">{h}</th>
               ))}
             </tr>
@@ -79,13 +87,26 @@ export default function DealsAdmin({ deals }: { deals: Deal[] }) {
                     {d.status}
                   </span>
                 </td>
+                <td className="px-4 py-3">
+                  <button
+                    onClick={() => toggleListed(d)}
+                    disabled={toggling === d.id}
+                    className={`text-xs px-2.5 py-1 rounded-full font-medium transition-colors disabled:opacity-50 ${
+                      d.listed
+                        ? 'bg-green-900/60 text-green-300 hover:bg-green-900/80'
+                        : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                    }`}
+                  >
+                    {toggling === d.id ? '…' : d.listed ? 'Listed' : 'Unlisted'}
+                  </button>
+                </td>
                 <td className="px-4 py-3 flex gap-3 justify-end">
                   <button onClick={() => openEdit(d)} className="text-xs text-blue-400 hover:text-blue-300 hover:underline">Edit</button>
                   <button onClick={() => deleteDeal(d.id)} className="text-xs text-red-400 hover:text-red-300 hover:underline">Delete</button>
                 </td>
               </tr>
             ))}
-            {!deals.length && <tr><td colSpan={6} className="px-4 py-10 text-center text-gray-500">No deals yet</td></tr>}
+            {!deals.length && <tr><td colSpan={7} className="px-4 py-10 text-center text-gray-500">No deals yet</td></tr>}
           </tbody>
         </table>
         <PaginationBar

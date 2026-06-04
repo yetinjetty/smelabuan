@@ -21,6 +21,7 @@ export default function EventsAdmin({ events }: { events: Event[] }) {
   const [form, setForm] = useState<EventForm>(empty)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [toggling, setToggling] = useState<string | null>(null)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
 
@@ -40,6 +41,13 @@ export default function EventsAdmin({ events }: { events: Event[] }) {
       await supabase.from('events').insert({ ...form, venue: form.venue || null, description: form.description || null })
     }
     setSaving(false); setShowForm(false)
+    startTransition(() => router.refresh())
+  }
+
+  async function toggleListed(e: Event) {
+    setToggling(e.id)
+    await createClient().from('events').update({ listed: !e.listed }).eq('id', e.id)
+    setToggling(null)
     startTransition(() => router.refresh())
   }
 
@@ -65,7 +73,7 @@ export default function EventsAdmin({ events }: { events: Event[] }) {
         <table className="w-full text-sm">
           <thead className="border-b border-gray-700 text-white text-xs uppercase tracking-wide">
             <tr>
-              {['Title', 'Date', 'Venue', 'Access', 'Registrations', ''].map(h => (
+              {['Title', 'Date', 'Venue', 'Access', 'Registrations', 'Listed', ''].map(h => (
                 <th key={h} className="px-4 py-3 text-left">{h}</th>
               ))}
             </tr>
@@ -86,6 +94,19 @@ export default function EventsAdmin({ events }: { events: Event[] }) {
                   </span>
                 </td>
                 <td className="px-4 py-3 text-white">{e.registered_count}</td>
+                <td className="px-4 py-3">
+                  <button
+                    onClick={() => toggleListed(e)}
+                    disabled={toggling === e.id}
+                    className={`text-xs px-2.5 py-1 rounded-full font-medium transition-colors disabled:opacity-50 ${
+                      e.listed
+                        ? 'bg-green-900/60 text-green-300 hover:bg-green-900/80'
+                        : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                    }`}
+                  >
+                    {toggling === e.id ? '…' : e.listed ? 'Listed' : 'Unlisted'}
+                  </button>
+                </td>
                 <td className="px-4 py-3 flex gap-3 justify-end">
                   <button onClick={() => openEdit(e)} className="text-xs text-blue-400 hover:text-blue-300 hover:underline">Edit</button>
                   <button onClick={() => deleteEvent(e.id)} className="text-xs text-red-400 hover:text-red-300 hover:underline">Delete</button>
@@ -93,7 +114,7 @@ export default function EventsAdmin({ events }: { events: Event[] }) {
               </tr>
             ))}
             {!events.length && (
-              <tr><td colSpan={6} className="px-4 py-10 text-center text-gray-500">No events yet</td></tr>
+              <tr><td colSpan={7} className="px-4 py-10 text-center text-gray-500">No events yet</td></tr>
             )}
           </tbody>
         </table>

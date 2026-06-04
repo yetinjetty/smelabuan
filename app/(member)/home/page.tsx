@@ -34,6 +34,7 @@ export default async function HomePage() {
     service
       .from('events')
       .select('*')
+      .eq('listed', true)
       .gte('event_date', today)
       .order('event_date', { ascending: true })
       .limit(5)

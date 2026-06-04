@@ -1,7 +1,9 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { format } from 'date-fns'
+import { createClient } from '@/lib/supabase/client'
 import type { Advertisement } from '@/lib/types'
 import { PaginationBar } from '@/components/TablePagination'
 
@@ -31,12 +33,15 @@ const BG_COLORS = [
 ]
 
 export default function AdsAdmin({ ads }: { ads: Advertisement[] }) {
+  const router = useRouter()
+  const [, startTransition] = useTransition()
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Advertisement | null>(null)
   const [form, setForm] = useState<AdForm>(empty)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [toggling, setToggling] = useState<string | null>(null)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -117,6 +122,14 @@ export default function AdsAdmin({ ads }: { ads: Advertisement[] }) {
     }
   }
 
+  async function toggleStatus(ad: Advertisement) {
+    setToggling(ad.id)
+    const newStatus = ad.status === 'active' ? 'inactive' : 'active'
+    await createClient().from('advertisements').update({ status: newStatus }).eq('id', ad.id)
+    setToggling(null)
+    startTransition(() => router.refresh())
+  }
+
   async function deleteAd(id: string) {
     if (!confirm('Delete this ad?')) return
     await fetch('/api/admin/delete-ad', {
@@ -168,9 +181,17 @@ export default function AdsAdmin({ ads }: { ads: Advertisement[] }) {
                 </td>
                 <td className="px-4 py-3 text-white">{ad.click_count}</td>
                 <td className="px-4 py-3">
-                  <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${ad.status === 'active' ? 'bg-green-900/60 text-green-300' : 'bg-gray-700 text-gray-400'}`}>
-                    {ad.status}
-                  </span>
+                  <button
+                    onClick={() => toggleStatus(ad)}
+                    disabled={toggling === ad.id}
+                    className={`text-xs px-2.5 py-1 rounded-full font-medium transition-colors disabled:opacity-50 ${
+                      ad.status === 'active'
+                        ? 'bg-green-900/60 text-green-300 hover:bg-green-900/80'
+                        : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                    }`}
+                  >
+                    {toggling === ad.id ? '…' : ad.status === 'active' ? 'Listed' : 'Unlisted'}
+                  </button>
                 </td>
                 <td className="px-4 py-3 flex gap-3 justify-end">
                   <button onClick={() => openEdit(ad)} className="text-xs text-blue-400 hover:text-blue-300 hover:underline">Edit</button>

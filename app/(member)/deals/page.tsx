@@ -9,6 +9,7 @@ export default async function DealsPage() {
     .from('deals')
     .select('*')
     .eq('status', 'active')
+    .eq('listed', true)
     .order('created_at', { ascending: false })
     .returns<Deal[]>()
 
