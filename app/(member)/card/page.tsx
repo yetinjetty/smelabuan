@@ -116,7 +116,6 @@ export default async function CardPage() {
 
         <div className="flex items-end justify-between">
           <div>
-            <p className="text-xs text-white/50 uppercase tracking-wide">Member ID</p>
             <p className="text-lg font-mono font-bold tracking-wider">{member.member_id}</p>
             {member.expiry_date ? (
               <p className="text-xs text-white/60 mt-1">
