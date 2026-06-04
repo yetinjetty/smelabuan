@@ -19,18 +19,12 @@ export default async function CardPage() {
 
   const isAdmin = !!adminUser
 
-  const STATIC_BACKGROUNDS = [
-    { src: '/card1.jpg', isStatic: true },
-    { src: '/card2.png', isStatic: true },
-    { src: '/card3.png', isStatic: true },
-  ]
-  const dynamicBackgrounds = ((storageFiles as { name: string }[] | null) ?? [])
+  const backgrounds = ((storageFiles as { name: string }[] | null) ?? [])
     .filter(f => !f.name.startsWith('.'))
     .map(f => ({
       src: service.storage.from('card-images').getPublicUrl(f.name).data.publicUrl,
       isStatic: false,
     }))
-  const backgrounds = [...STATIC_BACKGROUNDS, ...dynamicBackgrounds]
 
   if (!member || member.status === 'pending') {
     return (
@@ -116,7 +110,7 @@ export default async function CardPage() {
         memberId={member.member_id}
         membershipType={member.membership_type}
         expiryDate={member.expiry_date}
-        backgroundImage="/card1.jpg"
+        backgroundImage={backgrounds[0]?.src ?? ''}
         backgrounds={backgrounds}
       />
 

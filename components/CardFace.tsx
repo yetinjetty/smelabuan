@@ -21,12 +21,6 @@ interface Props {
 
 const LS_KEY = 'sme_card_bg'
 
-const DEFAULT_BACKGROUNDS: Background[] = [
-  { src: '/card1.jpg', isStatic: true },
-  { src: '/card2.png', isStatic: true },
-  { src: '/card3.png', isStatic: true },
-]
-
 const CARD_W   = 160
 const CARD_GAP = 16
 
@@ -85,7 +79,7 @@ export default function CardFace({
   fullName, businessName, memberId, membershipType, expiryDate,
   backgroundImage, backgrounds: bgProp,
 }: Props) {
-  const backgrounds = bgProp ?? DEFAULT_BACKGROUNDS
+  const backgrounds = bgProp ?? []
 
   const [bg, setBg]                 = useState(backgroundImage)
   const [pickerOpen, setPickerOpen]   = useState(false)
@@ -98,12 +92,14 @@ export default function CardFace({
   const dragStartY  = useRef(0)
   const dragOffset  = useRef(0)
 
-  // Restore saved choice
+  // Restore saved choice, fall back to first available background
   useEffect(() => {
+    if (backgrounds.length === 0) { setBg(''); return }
     try {
       const saved = localStorage.getItem(LS_KEY)
-      if (saved && backgrounds.some(b => b.src === saved)) setBg(saved)
+      if (saved && backgrounds.some(b => b.src === saved)) { setBg(saved); return }
     } catch { /* ignore */ }
+    setBg(backgrounds[0].src)
   }, [backgrounds])
 
   // Non-passive touchmove to block page scroll while dragging sheet down
@@ -210,7 +206,7 @@ export default function CardFace({
         onClick={openPicker}
         className="w-full max-w-xs rounded-3xl p-7 shadow-none hover:shadow-2xl active:shadow-2xl active:scale-[0.99] transition-all duration-200 flex flex-col justify-between relative overflow-hidden text-left"
         style={{
-          backgroundImage: `url('${bg}')`,
+          backgroundImage: bg ? `url('${bg}')` : 'linear-gradient(160deg, #E05A4E 0%, #c0392b 100%)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           aspectRatio: '1 / 1.586',
@@ -287,6 +283,13 @@ export default function CardFace({
               <h3 className="font-bold text-gray-900 text-center">Choose card design</h3>
               <p className="text-xs text-gray-400 text-center mt-0.5">Swipe to browse, then tap Apply</p>
             </div>
+
+            {/* Empty state */}
+            {backgrounds.length === 0 && (
+              <p className="text-sm text-gray-400 text-center px-6 pb-5">
+                No card designs uploaded yet. Ask your admin to upload backgrounds in the Settings page.
+              </p>
+            )}
 
             {/* Horizontal tap-to-select carousel */}
             <div

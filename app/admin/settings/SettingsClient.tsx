@@ -157,9 +157,9 @@ export default function SettingsClient({ admins, currentAdminId, currentAdminRol
         <div className="rounded-xl border border-gray-700 p-4 space-y-4" style={{ backgroundColor: '#1f2937' }}>
           {/* Uploaded thumbnails */}
           {cardBgs.length > 0 && (
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-4">
               {cardBgs.map(bg => (
-                <div key={bg.path} className="relative group">
+                <div key={bg.path} className="flex flex-col items-center gap-1.5">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={bg.src}
@@ -169,9 +169,9 @@ export default function SettingsClient({ admins, currentAdminId, currentAdminRol
                   />
                   <button
                     onClick={() => deleteCardBg(bg.path)}
-                    className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="text-xs text-red-400 hover:text-red-300 font-medium transition-colors"
                   >
-                    ×
+                    Delete
                   </button>
                 </div>
               ))}
