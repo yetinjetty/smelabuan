@@ -29,7 +29,7 @@ export default function FacebookEmbed() {
           <p className="text-xs text-gray-500">Tap to see our latest posts</p>
         </div>
         <span className="ml-auto text-xs font-medium" style={{ color: '#E05A4E' }}>
-          Open →
+          Open {'→'}
         </span>
       </a>
     )

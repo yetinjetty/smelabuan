@@ -137,7 +137,7 @@ export default async function HomePage() {
                 <p className="text-xs text-gray-500">smelabuan@gmail.com</p>
               </div>
               <span className="ml-auto text-xs font-medium" style={{ color: '#E05A4E' }}>
-                Send →
+                Send {'→'}
               </span>
             </a>
           </div>
