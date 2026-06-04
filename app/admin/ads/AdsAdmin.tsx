@@ -125,7 +125,11 @@ export default function AdsAdmin({ ads }: { ads: Advertisement[] }) {
   async function toggleStatus(ad: Advertisement) {
     setToggling(ad.id)
     const newStatus = ad.status === 'active' ? 'inactive' : 'active'
-    await createClient().from('advertisements').update({ status: newStatus }).eq('id', ad.id)
+    await fetch('/api/admin/save-ad', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: ad.id, status: newStatus }),
+    })
     setToggling(null)
     startTransition(() => router.refresh())
   }

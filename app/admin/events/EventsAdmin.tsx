@@ -46,7 +46,11 @@ export default function EventsAdmin({ events }: { events: Event[] }) {
 
   async function toggleListed(e: Event) {
     setToggling(e.id)
-    await createClient().from('events').update({ listed: !e.listed }).eq('id', e.id)
+    await fetch('/api/admin/toggle-listed', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ table: 'events', id: e.id, listed: !e.listed }),
+    })
     setToggling(null)
     startTransition(() => router.refresh())
   }

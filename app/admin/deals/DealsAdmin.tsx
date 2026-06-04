@@ -43,7 +43,11 @@ export default function DealsAdmin({ deals }: { deals: Deal[] }) {
 
   async function toggleListed(d: Deal) {
     setToggling(d.id)
-    await createClient().from('deals').update({ listed: !d.listed }).eq('id', d.id)
+    await fetch('/api/admin/toggle-listed', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ table: 'deals', id: d.id, listed: !d.listed }),
+    })
     setToggling(null)
     startTransition(() => router.refresh())
   }
