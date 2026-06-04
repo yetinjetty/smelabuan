@@ -69,6 +69,11 @@ export default function CardFace({
   const light = textColor === 'black'
   const isLifetime = membershipType === 'Life'
 
+  // Contrasting halo so text stays legible over busy / mid-tone areas
+  const textShadow = light
+    ? '0 1px 3px rgba(255,255,255,0.9), 0 0 2px rgba(255,255,255,0.9)'
+    : '0 1px 4px rgba(0,0,0,0.7), 0 0 2px rgba(0,0,0,0.6)'
+
   return (
     <div
       className="w-full max-w-xs rounded-3xl p-7 shadow-none hover:shadow-2xl active:shadow-2xl transition-shadow duration-200 flex flex-col justify-between relative overflow-hidden"
@@ -96,19 +101,19 @@ export default function CardFace({
       {/* Bottom: name / company / ID / expiry + badge */}
       <div className="relative flex items-end justify-between">
         <div>
-          <p className={`text-2xl font-bold leading-snug ${light ? 'text-gray-900' : 'text-white'}`}>
+          <p className={`text-2xl font-bold leading-snug ${light ? 'text-gray-900' : 'text-white'}`} style={{ textShadow }}>
             {fullName}
           </p>
           {businessName && (
-            <p className={`text-sm mt-1 leading-snug ${light ? 'text-gray-600' : 'text-white/70'}`}>
+            <p className={`text-sm mt-1 leading-snug ${light ? 'text-gray-700' : 'text-white/80'}`} style={{ textShadow }}>
               {businessName}
             </p>
           )}
-          <p className={`text-lg font-mono font-bold tracking-widest mt-3 ${light ? 'text-gray-900' : 'text-white'}`}>
+          <p className={`text-lg font-mono font-bold tracking-widest mt-3 ${light ? 'text-gray-900' : 'text-white'}`} style={{ textShadow }}>
             {memberId}
           </p>
           {expiryDate && (
-            <p className={`text-xs mt-1 ${light ? 'text-gray-500' : 'text-white/60'}`}>
+            <p className={`text-xs mt-1 ${light ? 'text-gray-700' : 'text-white/80'}`} style={{ textShadow }}>
               Exp {format(new Date(expiryDate), 'MMM yyyy')}
             </p>
           )}
