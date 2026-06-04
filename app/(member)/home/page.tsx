@@ -117,21 +117,31 @@ export default async function HomePage() {
           </div>
         )}
 
-        {/* Facebook feed */}
+        {/* Socials */}
         <div>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-gray-700">Facebook</h2>
+          <h2 className="text-sm font-semibold text-gray-700 mb-3">Socials</h2>
+          <div className="space-y-3">
+            <FacebookEmbed />
             <a
-              href="https://www.facebook.com/smelabuan"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs font-medium"
-              style={{ color: '#E05A4E' }}
+              href="mailto:smelabuan@gmail.com"
+              className="flex items-center gap-3 bg-white rounded-2xl border border-gray-100 shadow-sm p-4 active:scale-[0.98] transition-transform duration-150"
             >
-              View page
+              <span className="flex-none w-11 h-11 rounded-xl flex items-center justify-center bg-red-500">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="4" width="20" height="16" rx="2"/>
+                  <path d="m2 7 10 7 10-7"/>
+                </svg>
+              </span>
+              <div className="min-w-0">
+                <p className="font-semibold text-gray-900 text-sm">Email Us</p>
+                <p className="text-xs text-gray-500">smelabuan@gmail.com</p>
+              </div>
+              <span className="ml-auto text-xs font-medium" style={{ color: '#E05A4E' }}>
+                Send →
+              </span>
             </a>
           </div>
-          <FacebookEmbed />
+        </div>
         </div>
 
       </div>
