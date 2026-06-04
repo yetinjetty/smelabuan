@@ -103,7 +103,7 @@ export default async function CardPage() {
             className="object-contain"
           />
           <span className="text-xs bg-white/20 px-3 py-1 rounded-full">
-            {member.membership_type}
+            {member.membership_type === 'Life' ? 'Lifetime' : member.membership_type}
           </span>
         </div>
 
@@ -117,12 +117,10 @@ export default async function CardPage() {
         <div className="flex items-end justify-between">
           <div>
             <p className="text-lg font-mono font-bold tracking-wider">{member.member_id}</p>
-            {member.expiry_date ? (
+            {member.expiry_date && (
               <p className="text-xs text-white/60 mt-1">
                 Exp {format(new Date(member.expiry_date), 'MMM yyyy')}
               </p>
-            ) : (
-              <p className="text-xs text-white/60 mt-1">Lifetime</p>
             )}
           </div>
           <span className={`text-xs px-3 py-1 rounded-full font-medium ${

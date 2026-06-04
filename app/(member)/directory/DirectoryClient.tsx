@@ -406,7 +406,7 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
                         <span className={`flex-none text-xs px-2 py-0.5 rounded-full font-medium ${
                           hasLife ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
                         }`}>
-                          {hasLife ? 'Life' : 'Ordinary'}
+                          {hasLife ? 'Lifetime' : 'Ordinary'}
                         </span>
                       </div>
                       {c.business_sector && <p className="text-sm text-gray-500 mt-0.5">{c.business_sector}</p>}
@@ -515,7 +515,7 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
                       <span className={`flex-none text-xs px-2.5 py-1 rounded-full font-semibold ${
                         hasLife ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
                       }`}>
-                        {hasLife ? 'Life' : 'Ordinary'}
+                        {hasLife ? 'Lifetime' : 'Ordinary'}
                       </span>
                     )
                   })()}
@@ -541,7 +541,7 @@ export default function DirectoryClient({ members }: { members: DirectoryMember[
                         <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                           m.membership_type === 'Life' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
                         }`}>
-                          {m.membership_type ?? 'Ordinary'}
+                          {m.membership_type === 'Life' ? 'Lifetime' : (m.membership_type ?? 'Ordinary')}
                         </span>
                       </div>
                       <div className="space-y-2">
