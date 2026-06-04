@@ -195,11 +195,14 @@ export default function CardFace({
           aspectRatio: '1 / 1.586',
         }}
       >
-        {/* Logo — white pill on dark background */}
-        <div className="relative self-start">
+        {/* Top row: logo (left) + member ID (right) */}
+        <div className="relative flex items-start justify-between">
           <div className={`transition-all duration-300 ${logoDark ? 'bg-white rounded-xl px-2 py-1.5' : ''}`}>
             <Image src="/SMEA Labuan Logo v1.png" alt="SMEA Labuan" width={72} height={54} className="object-contain" />
           </div>
+          <p className={`text-sm font-mono font-bold tracking-widest ${light ? 'text-gray-900' : 'text-white'}`} style={{ textShadow }}>
+            {memberId}
+          </p>
         </div>
 
         <div className="flex-1" />
@@ -211,15 +214,12 @@ export default function CardFace({
               {fullName}
             </p>
             {businessName && (
-              <p className={`text-sm mt-1 leading-snug font-medium ${light ? 'text-gray-800' : 'text-white'}`} style={{ textShadow: subTextShadow }}>
+              <p className={`text-sm mt-4 leading-snug font-medium ${light ? 'text-gray-800' : 'text-white'}`} style={{ textShadow: subTextShadow }}>
                 {businessName}
               </p>
             )}
-            <p className={`text-lg font-mono font-bold tracking-widest mt-3 ${light ? 'text-gray-900' : 'text-white'}`} style={{ textShadow }}>
-              {memberId}
-            </p>
             {expiryDate && (
-              <p className={`text-xs mt-1 font-medium ${light ? 'text-gray-800' : 'text-white'}`} style={{ textShadow: subTextShadow }}>
+              <p className={`text-xs mt-1.5 font-medium ${light ? 'text-gray-800' : 'text-white'}`} style={{ textShadow: subTextShadow }}>
                 Exp {format(new Date(expiryDate), 'MMM yyyy')}
               </p>
             )}
