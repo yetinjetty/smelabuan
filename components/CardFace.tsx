@@ -20,51 +20,50 @@ const BACKGROUNDS = [
   { id: 'card2', src: '/card2.png', label: 'Coastal' },
 ]
 
-// Samples the bottom 40% of the image (where text lives) and returns
-// 'white' or 'black' based on average relative luminance.
+// Samples a region of the image and returns its average relative luminance (0–1).
+function sampleLuminance(imageUrl: string, cropTopFraction: number, cropHeightFraction: number, cb: (lum: number) => void) {
+  const img = new window.Image()
+  img.crossOrigin = 'anonymous'
+  img.onload = () => {
+    try {
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
+      const sw = 100
+      const sh = Math.round(img.height * (100 / img.width))
+      canvas.width = sw
+      canvas.height = sh
+      ctx.drawImage(img, 0, 0, sw, sh)
+      const y0 = Math.floor(sh * cropTopFraction)
+      const h  = Math.max(1, Math.floor(sh * cropHeightFraction))
+      const { data } = ctx.getImageData(0, y0, sw, h)
+      let total = 0
+      for (let i = 0; i < data.length; i += 4) {
+        total += 0.2126 * (data[i] / 255) + 0.7152 * (data[i + 1] / 255) + 0.0722 * (data[i + 2] / 255)
+      }
+      cb(total / (data.length / 4))
+    } catch { cb(0) }
+  }
+  img.onerror = () => cb(0)
+  img.src = imageUrl
+}
+
+// Bottom 40% → text colour
 function useAdaptiveTextColor(imageUrl: string): 'white' | 'black' {
   const [color, setColor] = useState<'white' | 'black'>('white')
-
   useEffect(() => {
-    const img = new window.Image()
-    img.crossOrigin = 'anonymous'
-
-    img.onload = () => {
-      try {
-        const canvas = document.createElement('canvas')
-        const ctx = canvas.getContext('2d')
-        if (!ctx) return
-
-        const scale = 100 / img.width
-        const sw = 100
-        const sh = Math.round(img.height * scale)
-        canvas.width = sw
-        canvas.height = sh
-        ctx.drawImage(img, 0, 0, sw, sh)
-
-        const cropY = Math.floor(sh * 0.6)
-        const { data } = ctx.getImageData(0, cropY, sw, sh - cropY)
-
-        let total = 0
-        for (let i = 0; i < data.length; i += 4) {
-          const r = data[i] / 255
-          const g = data[i + 1] / 255
-          const b = data[i + 2] / 255
-          total += 0.2126 * r + 0.7152 * g + 0.0722 * b
-        }
-
-        const avg = total / (data.length / 4)
-        setColor(avg > 0.5 ? 'black' : 'white')
-      } catch {
-        setColor('white')
-      }
-    }
-
-    img.onerror = () => setColor('white')
-    img.src = imageUrl
+    sampleLuminance(imageUrl, 0.6, 0.4, lum => setColor(lum > 0.5 ? 'black' : 'white'))
   }, [imageUrl])
-
   return color
+}
+
+// Top 25% → whether logo needs a white backing
+function useLogoDark(imageUrl: string): boolean {
+  const [dark, setDark] = useState(false)
+  useEffect(() => {
+    sampleLuminance(imageUrl, 0, 0.25, lum => setDark(lum < 0.4))
+  }, [imageUrl])
+  return dark
 }
 
 export default function CardFace({
@@ -84,6 +83,7 @@ export default function CardFace({
   }, [])
 
   const textColor = useAdaptiveTextColor(bg)
+  const logoDark = useLogoDark(bg)
   const light = textColor === 'black'
   const isLifetime = membershipType === 'Life'
 
@@ -121,15 +121,17 @@ export default function CardFace({
           aspectRatio: '1 / 1.586',
         }}
       >
-        {/* Top: logo */}
-        <div className="relative">
-          <Image
-            src="/SMEA Labuan Logo v1.png"
-            alt="SMEA Labuan"
-            width={72}
-            height={54}
-            className="object-contain"
-          />
+        {/* Top: logo — white pill backing on dark backgrounds */}
+        <div className="relative self-start">
+          <div className={`transition-all duration-300 ${logoDark ? 'bg-white rounded-xl px-2 py-1.5' : ''}`}>
+            <Image
+              src="/SMEA Labuan Logo v1.png"
+              alt="SMEA Labuan"
+              width={72}
+              height={54}
+              className="object-contain"
+            />
+          </div>
         </div>
 
         <div className="flex-1" />
