@@ -220,16 +220,14 @@ export default function CardFace({
             <Image src="/SMEA Labuan Logo v1.png" alt="SMEA Labuan" width={96} height={72} className="object-contain" />
           </div>
           <div className="text-right">
-            <div className="flex items-center justify-end gap-2">
-              <span className={`text-xs px-3 py-1 rounded-full font-medium ${
-                isLifetime ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
-              }`}>
-                {isLifetime ? 'Life' : membershipType}
-              </span>
-              <p className={`text-xs font-bold uppercase tracking-[0.2em] ${light ? 'text-gray-800' : 'text-white'}`} style={{ textShadow: subTextShadow }}>
-                Member ID
-              </p>
-            </div>
+            <span className={`inline-block text-xs px-3 py-1 rounded-full font-medium ${
+              isLifetime ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
+            }`}>
+              {isLifetime ? 'Life' : membershipType}
+            </span>
+            <p className={`text-xs font-bold uppercase tracking-[0.2em] mt-1.5 ${light ? 'text-gray-800' : 'text-white'}`} style={{ textShadow: subTextShadow }}>
+              Member ID
+            </p>
             <p className={`text-base font-mono font-bold tracking-widest mt-0.5 ${light ? 'text-gray-900' : 'text-white'}`} style={{ textShadow }}>
               {memberId}
             </p>
