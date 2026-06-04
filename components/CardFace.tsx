@@ -119,10 +119,12 @@ export default function CardFace({
   useEffect(() => {
     if (!pickerOpen) return
     const t = setTimeout(() => {
-      if (!carouselEl.current) return
+      const el = carouselEl.current
+      if (!el) return
       const idx = backgrounds.findIndex(b => b.src === pending)
       if (idx > 0) {
-        carouselEl.current.scrollTo({ left: idx * (CARD_W + CARD_GAP), behavior: 'instant' })
+        // Each card is CARD_W + CARD_GAP wide; centred padding is (50% - 80px) on left
+        el.scrollTo({ left: idx * (CARD_W + CARD_GAP), behavior: 'instant' })
       }
     }, 120) // wait for sheet animation
     return () => clearTimeout(t)
@@ -294,15 +296,16 @@ export default function CardFace({
             {/* Horizontal tap-to-select carousel */}
             <div
               ref={carouselEl}
-              className="flex pb-5"
+              className="flex pb-6"
               style={{
                 overflowX: 'scroll',
                 scrollSnapType: 'x mandatory',
                 scrollbarWidth: 'none',
                 WebkitOverflowScrolling: 'touch',
                 gap: CARD_GAP,
-                paddingLeft: 24,
-                paddingRight: 24,
+                // Centre first & last cards by padding both sides
+                paddingLeft: 'calc(50% - 80px)',
+                paddingRight: 'calc(50% - 80px)',
               }}
             >
               {backgrounds.map((b) => {
@@ -313,17 +316,21 @@ export default function CardFace({
                     onClick={() => setPending(b.src)}
                     className="flex-none rounded-2xl overflow-hidden relative"
                     style={{
+                      // pan-x tells the browser: horizontal drag = scroll, not button press
+                      touchAction: 'pan-x',
                       width: CARD_W,
                       aspectRatio: '1 / 1.586',
                       scrollSnapAlign: 'center',
                       backgroundImage: `url('${b.src}')`,
                       backgroundSize: 'cover',
                       backgroundPosition: 'center',
+                      // Use outline ring instead of transform so layout is unaffected
+                      outline: isSelected ? '4px solid #E05A4E' : '4px solid transparent',
+                      outlineOffset: '2px',
                       boxShadow: isSelected
-                        ? '0 0 0 4px #E05A4E, 0 8px 24px rgba(0,0,0,0.18)'
+                        ? '0 8px 24px rgba(224,90,78,0.3)'
                         : '0 4px 16px rgba(0,0,0,0.12)',
-                      transform: isSelected ? 'scale(1.04)' : 'scale(1)',
-                      transition: 'box-shadow 0.2s, transform 0.2s',
+                      transition: 'outline-color 0.15s, box-shadow 0.15s',
                     }}
                   >
                     {isSelected && (
