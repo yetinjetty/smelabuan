@@ -223,14 +223,16 @@ export default function CardFace({
             <p className={`text-[10px] font-semibold uppercase tracking-widest ${light ? 'text-gray-600' : 'text-white/70'}`} style={{ textShadow: subTextShadow }}>
               Member ID
             </p>
-            <p className={`text-xl font-mono font-black tracking-[0.18em] mt-0.5 ${light ? 'text-gray-900' : 'text-white'}`} style={{ textShadow, fontVariantNumeric: 'tabular-nums' }}>
-              {memberId}
-            </p>
-            <span className={`inline-block mt-1.5 text-xs px-3 py-1 rounded-full font-medium ${
-              isLifetime ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
-            }`}>
-              {isLifetime ? 'Life' : membershipType}
-            </span>
+            <div className="flex items-center justify-end gap-2 mt-0.5">
+              <span className={`text-xs px-3 py-1 rounded-full font-medium ${
+                isLifetime ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
+              }`}>
+                {isLifetime ? 'Life' : membershipType}
+              </span>
+              <p className={`text-xl font-mono font-black tracking-[0.18em] ${light ? 'text-gray-900' : 'text-white'}`} style={{ textShadow, fontVariantNumeric: 'tabular-nums' }}>
+                {memberId}
+              </p>
+            </div>
           </div>
         </div>
 
