@@ -86,8 +86,14 @@ export default async function CardPage() {
   ]
 
   return (
-    <div className="px-4 py-6 flex flex-col items-center">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6 self-start">My Card</h1>
+    <div className="flex flex-col items-center">
+      <div
+        className="w-full px-6 pt-8 pb-8"
+        style={{ background: 'linear-gradient(160deg, #E05A4E 0%, #c0392b 100%)' }}
+      >
+        <h1 className="text-xl font-bold text-white">My Card</h1>
+      </div>
+      <div className="w-full px-4 py-6 flex flex-col items-center">
 
       {/* Card — portrait, standard ID card proportions (54 × 86 mm) */}
       <div
@@ -164,6 +170,7 @@ export default async function CardPage() {
       )}
 
       <SignOutButton />
+      </div>
     </div>
   )
 }
