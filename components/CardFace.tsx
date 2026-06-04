@@ -4,6 +4,11 @@ import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { format } from 'date-fns'
 
+interface Background {
+  src: string
+  isStatic?: boolean
+}
+
 interface Props {
   fullName: string
   businessName: string | null
@@ -11,15 +16,19 @@ interface Props {
   membershipType: string | null
   expiryDate: string | null
   backgroundImage: string
+  backgrounds?: Background[]
 }
 
 const LS_KEY = 'sme_card_bg'
 
-const BACKGROUNDS = [
-  { id: 'card1', src: '/card1.jpg',  label: 'Heritage' },
-  { id: 'card2', src: '/card2.png',  label: 'Coastal'  },
-  { id: 'card3', src: '/card3.png',  label: 'Classic'  },
+const DEFAULT_BACKGROUNDS: Background[] = [
+  { src: '/card1.jpg', isStatic: true },
+  { src: '/card2.png', isStatic: true },
+  { src: '/card3.png', isStatic: true },
 ]
+
+const CARD_W   = 160
+const CARD_GAP = 16
 
 // ── Luminance helpers ────────────────────────────────────────────────────────
 
@@ -73,27 +82,32 @@ function useLogoDark(imageUrl: string): boolean {
 // ── Component ────────────────────────────────────────────────────────────────
 
 export default function CardFace({
-  fullName, businessName, memberId, membershipType, expiryDate, backgroundImage,
+  fullName, businessName, memberId, membershipType, expiryDate,
+  backgroundImage, backgrounds: bgProp,
 }: Props) {
-  const [bg, setBg]               = useState(backgroundImage)
-  const [pickerOpen, setPickerOpen] = useState(false)
+  const backgrounds = bgProp ?? DEFAULT_BACKGROUNDS
+
+  const [bg, setBg]                 = useState(backgroundImage)
+  const [pickerOpen, setPickerOpen]   = useState(false)
   const [sheetVisible, setSheetVisible] = useState(false)
-  const [pending, setPending]     = useState(bg)
+  const [pending, setPending]         = useState(bg)
 
   const sheetEl    = useRef<HTMLDivElement>(null)
   const backdropEl = useRef<HTMLDivElement>(null)
-  const dragStartY = useRef(0)
-  const dragOffset = useRef(0)
+  const carouselEl = useRef<HTMLDivElement>(null)
+  const scrollTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const dragStartY  = useRef(0)
+  const dragOffset  = useRef(0)
 
-  // Load saved choice on mount
+  // Restore saved choice
   useEffect(() => {
     try {
       const saved = localStorage.getItem(LS_KEY)
-      if (saved && BACKGROUNDS.some(b => b.src === saved)) setBg(saved)
+      if (saved && backgrounds.some(b => b.src === saved)) setBg(saved)
     } catch { /* ignore */ }
-  }, [])
+  }, [backgrounds])
 
-  // Non-passive touchmove to block page scroll while dragging down
+  // Non-passive touchmove to block page scroll while dragging sheet down
   useEffect(() => {
     if (!pickerOpen) return
     const el = sheetEl.current
@@ -106,17 +120,27 @@ export default function CardFace({
     return () => el.removeEventListener('touchmove', block)
   }, [pickerOpen])
 
-  const textColor = useAdaptiveTextColor(bg)
-  const logoDark  = useLogoDark(bg)
-  const light     = textColor === 'black'
+  // Scroll carousel to current selection when picker opens
+  useEffect(() => {
+    if (!pickerOpen) return
+    const t = setTimeout(() => {
+      if (!carouselEl.current) return
+      const idx = backgrounds.findIndex(b => b.src === pending)
+      if (idx > 0) {
+        carouselEl.current.scrollTo({ left: idx * (CARD_W + CARD_GAP), behavior: 'instant' })
+      }
+    }, 120) // wait for sheet animation
+    return () => clearTimeout(t)
+  }, [pickerOpen, pending, backgrounds])
+
+  const textColor  = useAdaptiveTextColor(bg)
+  const logoDark   = useLogoDark(bg)
+  const light      = textColor === 'black'
   const isLifetime = membershipType === 'Life'
 
-  // Glow shadow for large bold text (name, ID)
   const textShadow = light
     ? '0 2px 6px rgba(255,255,255,1), 0 0 4px rgba(255,255,255,1), 0 0 12px rgba(255,255,255,0.8)'
     : '0 2px 8px rgba(0,0,0,0.9), 0 0 4px rgba(0,0,0,0.85), 0 0 14px rgba(0,0,0,0.6)'
-
-  // Outline-stroke shadow for small/light text (company, expiry) — covers all directions
   const subTextShadow = light
     ? '-1px -1px 0 rgba(255,255,255,0.95), 1px -1px 0 rgba(255,255,255,0.95), -1px 1px 0 rgba(255,255,255,0.95), 1px 1px 0 rgba(255,255,255,0.95), 0 0 10px rgba(255,255,255,1)'
     : '-1px -1px 0 rgba(0,0,0,0.9), 1px -1px 0 rgba(0,0,0,0.9), -1px 1px 0 rgba(0,0,0,0.9), 1px 1px 0 rgba(0,0,0,0.9), 0 0 10px rgba(0,0,0,0.95), 0 2px 12px rgba(0,0,0,0.8)'
@@ -138,12 +162,23 @@ export default function CardFace({
     closePicker()
   }
 
-  // ── Swipe-to-dismiss ──────────────────────────────────────────────────────
+  // Scroll-to-select: debounce scroll end, pick whichever card is snapped
+  function onCarouselScroll() {
+    if (scrollTimer.current) clearTimeout(scrollTimer.current)
+    scrollTimer.current = setTimeout(() => {
+      const el = carouselEl.current
+      if (!el) return
+      const idx = Math.round(el.scrollLeft / (CARD_W + CARD_GAP))
+      const clamped = Math.max(0, Math.min(idx, backgrounds.length - 1))
+      if (backgrounds[clamped]) setPending(backgrounds[clamped].src)
+    }, 80)
+  }
+
+  // ── Sheet swipe-to-dismiss ───────────────────────────────────────────────
   function onSheetTouchStart(e: React.TouchEvent) {
     dragStartY.current = e.touches[0].clientY
     dragOffset.current = 0
   }
-
   function onSheetTouchMove(e: React.TouchEvent) {
     const delta = Math.max(0, e.touches[0].clientY - dragStartY.current)
     dragOffset.current = delta
@@ -156,7 +191,6 @@ export default function CardFace({
       backdropEl.current.style.backgroundColor = `rgba(0,0,0,${opacity.toFixed(2)})`
     }
   }
-
   function onSheetTouchEnd() {
     const offset = dragOffset.current
     dragOffset.current = 0
@@ -195,7 +229,7 @@ export default function CardFace({
           aspectRatio: '1 / 1.586',
         }}
       >
-        {/* Top row: logo (left) + member ID (right) */}
+        {/* Top row: logo + member ID */}
         <div className="relative flex items-start justify-between">
           <div className={`transition-all duration-300 ${logoDark ? 'bg-white rounded-xl px-2 py-1.5' : ''}`}>
             <Image src="/SMEA Labuan Logo v1.png" alt="SMEA Labuan" width={72} height={54} className="object-contain" />
@@ -207,7 +241,7 @@ export default function CardFace({
 
         <div className="flex-1" />
 
-        {/* Bottom: name / company / ID / expiry + badge */}
+        {/* Bottom: name / company / expiry + badge */}
         <div className="relative flex items-end justify-between">
           <div>
             <p className={`text-2xl font-bold leading-snug ${light ? 'text-gray-900' : 'text-white'}`} style={{ textShadow }}>
@@ -232,10 +266,9 @@ export default function CardFace({
         </div>
       </button>
 
-      {/* Hint */}
       <p className="text-xs text-gray-400 mt-2">Tap card to change design</p>
 
-      {/* ── Picker bottom sheet ── */}
+      {/* ── Picker sheet ── */}
       {pickerOpen && (
         <div
           ref={backdropEl}
@@ -263,43 +296,57 @@ export default function CardFace({
               <div className="w-10 h-1 rounded-full bg-gray-300" />
             </div>
 
-            <div className="px-5 pt-2 pb-3">
+            <div className="px-5 pt-2 pb-4">
               <h3 className="font-bold text-gray-900 text-center">Choose card design</h3>
-              <p className="text-xs text-gray-400 text-center mt-0.5">Swipe to browse</p>
+              <p className="text-xs text-gray-400 text-center mt-0.5">Swipe to browse, then tap Apply</p>
             </div>
 
-            {/* Horizontal swipe carousel */}
-            <div className="overflow-x-auto snap-x snap-mandatory flex gap-4 px-6 pb-5" style={{ scrollbarWidth: 'none' }}>
-              {BACKGROUNDS.map(b => {
+            {/* Horizontal scroll-to-select carousel */}
+            <div
+              ref={carouselEl}
+              onScroll={onCarouselScroll}
+              className="flex pb-5"
+              style={{
+                overflowX: 'scroll',
+                scrollSnapType: 'x mandatory',
+                scrollbarWidth: 'none',
+                WebkitOverflowScrolling: 'touch',
+                gap: CARD_GAP,
+                paddingLeft: 24,
+                paddingRight: 24,
+              }}
+            >
+              {backgrounds.map((b) => {
                 const isSelected = pending === b.src
                 return (
-                  <button
-                    key={b.id}
-                    onClick={() => setPending(b.src)}
-                    className="flex-none snap-center rounded-2xl overflow-hidden relative transition-all"
+                  <div
+                    key={b.src}
+                    className="flex-none rounded-2xl overflow-hidden relative"
                     style={{
-                      width: 160,
+                      width: CARD_W,
                       aspectRatio: '1 / 1.586',
+                      scrollSnapAlign: 'center',
                       backgroundImage: `url('${b.src}')`,
                       backgroundSize: 'cover',
                       backgroundPosition: 'center',
-                      boxShadow: isSelected ? '0 0 0 4px #E05A4E' : '0 4px 16px rgba(0,0,0,0.12)',
+                      boxShadow: isSelected
+                        ? '0 0 0 4px #E05A4E, 0 8px 24px rgba(0,0,0,0.18)'
+                        : '0 4px 16px rgba(0,0,0,0.12)',
+                      transform: isSelected ? 'scale(1.04)' : 'scale(1)',
+                      transition: 'box-shadow 0.2s, transform 0.2s',
                     }}
                   >
-                    <span className="absolute bottom-3 left-3 text-xs font-semibold text-white px-2.5 py-1 rounded-full bg-black/40">
-                      {b.label}
-                    </span>
                     {isSelected && (
                       <span
                         className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center text-white"
                         style={{ backgroundColor: '#E05A4E' }}
                       >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
                           <path d="M20 6 9 17l-5-5" />
                         </svg>
                       </span>
                     )}
-                  </button>
+                  </div>
                 )
               })}
             </div>

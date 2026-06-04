@@ -11,12 +11,26 @@ export default async function CardPage() {
   if (!user) redirect('/login')
 
   const service = createServiceClient()
-  const [{ data: member }, { data: adminUser }] = await Promise.all([
+  const [{ data: member }, { data: adminUser }, { data: storageFiles }] = await Promise.all([
     service.from('members').select('*').eq('email', user.email!).single<Member>(),
     service.from('admin_users').select('id').eq('auth_user_id', user.id).single(),
+    service.storage.from('card-images').list('', { limit: 100 }).catch(() => ({ data: null, error: null })),
   ])
 
   const isAdmin = !!adminUser
+
+  const STATIC_BACKGROUNDS = [
+    { src: '/card1.jpg', isStatic: true },
+    { src: '/card2.png', isStatic: true },
+    { src: '/card3.png', isStatic: true },
+  ]
+  const dynamicBackgrounds = ((storageFiles as { name: string }[] | null) ?? [])
+    .filter(f => !f.name.startsWith('.'))
+    .map(f => ({
+      src: service.storage.from('card-images').getPublicUrl(f.name).data.publicUrl,
+      isStatic: false,
+    }))
+  const backgrounds = [...STATIC_BACKGROUNDS, ...dynamicBackgrounds]
 
   if (!member || member.status === 'pending') {
     return (
@@ -103,6 +117,7 @@ export default async function CardPage() {
         membershipType={member.membership_type}
         expiryDate={member.expiry_date}
         backgroundImage="/card1.jpg"
+        backgrounds={backgrounds}
       />
 
       {/* Member info rows */}

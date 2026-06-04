@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import type { AdminUser, Member } from '@/lib/types'
 
 type EligibleMember = Pick<Member, 'id' | 'full_name' | 'email' | 'business_name' | 'membership_type' | 'status'>
@@ -29,6 +29,42 @@ export default function SettingsClient({ admins, currentAdminId, currentAdminRol
   const [transferring, setTransferring] = useState(false)
   const [transferError, setTransferError] = useState('')
   const [showTransferConfirm, setShowTransferConfirm] = useState(false)
+
+  // Card backgrounds
+  const [cardBgs, setCardBgs] = useState<{ path: string; src: string }[]>([])
+  const [bgUploading, setBgUploading] = useState(false)
+  const [bgError, setBgError] = useState('')
+  const bgFileRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    fetch('/api/admin/list-card-bgs')
+      .then(r => r.json())
+      .then(d => setCardBgs(d.backgrounds ?? []))
+      .catch(() => {})
+  }, [])
+
+  async function uploadCardBg(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setBgUploading(true); setBgError('')
+    const fd = new FormData(); fd.append('file', file)
+    const res = await fetch('/api/admin/upload-card-bg', { method: 'POST', body: fd })
+    const json = await res.json()
+    if (!res.ok) { setBgError(json.error ?? 'Upload failed'); setBgUploading(false); return }
+    setCardBgs(prev => [...prev, { path: json.path, src: json.url }])
+    setBgUploading(false)
+    if (bgFileRef.current) bgFileRef.current.value = ''
+  }
+
+  async function deleteCardBg(path: string) {
+    if (!confirm('Remove this card background?')) return
+    const res = await fetch('/api/admin/delete-card-bg', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path }),
+    })
+    if (res.ok) setCardBgs(prev => prev.filter(b => b.path !== path))
+  }
 
   async function callApi(path: string, body: object): Promise<{ ok: boolean; json: Record<string, unknown> }> {
     const res = await fetch(path, {
@@ -109,6 +145,56 @@ export default function SettingsClient({ admins, currentAdminId, currentAdminRol
 
   return (
     <div className="space-y-10">
+
+      {/* Card Backgrounds */}
+      <section>
+        <h2 className="text-base font-semibold text-white mb-1">Card Backgrounds</h2>
+        <p className="text-xs text-gray-400 mb-4">
+          The 3 default designs (Heritage, Coastal, Classic) are always available. Upload additional backgrounds here — they appear instantly in the member card picker.
+        </p>
+        {bgError && <p className="text-red-400 text-sm mb-3">{bgError}</p>}
+
+        <div className="rounded-xl border border-gray-700 p-4 space-y-4" style={{ backgroundColor: '#1f2937' }}>
+          {/* Uploaded thumbnails */}
+          {cardBgs.length > 0 && (
+            <div className="flex flex-wrap gap-3">
+              {cardBgs.map(bg => (
+                <div key={bg.path} className="relative group">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={bg.src}
+                    alt=""
+                    className="w-20 rounded-xl object-cover"
+                    style={{ aspectRatio: '1 / 1.586' }}
+                  />
+                  <button
+                    onClick={() => deleteCardBg(bg.path)}
+                    className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          {cardBgs.length === 0 && (
+            <p className="text-sm text-gray-500">No custom backgrounds uploaded yet.</p>
+          )}
+
+          {/* Upload button */}
+          <input ref={bgFileRef} type="file" accept="image/*" className="hidden" onChange={uploadCardBg} />
+          <button
+            onClick={() => bgFileRef.current?.click()}
+            disabled={bgUploading}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-gray-500 text-sm text-gray-300 hover:border-gray-300 hover:text-white transition-colors disabled:opacity-50"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            {bgUploading ? 'Uploading…' : 'Upload background image'}
+          </button>
+        </div>
+      </section>
 
       {/* Association details */}
       <section>
