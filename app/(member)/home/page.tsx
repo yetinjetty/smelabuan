@@ -5,7 +5,7 @@ import type { Member, Advertisement, Event, Announcement } from '@/lib/types'
 import AdCarousel from '@/components/AdCarousel'
 import MemberHeroCard from '@/components/MemberHeroCard'
 import HomeWidgets from '@/components/HomeWidgets'
-import FacebookPosts from '@/components/FacebookPosts'
+import FacebookEmbed from '@/components/FacebookEmbed'
 
 export default async function HomePage() {
   const supabase = await createClient()
@@ -131,7 +131,7 @@ export default async function HomePage() {
               View page
             </a>
           </div>
-          <FacebookPosts />
+          <FacebookEmbed />
         </div>
 
       </div>
