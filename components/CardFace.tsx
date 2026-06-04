@@ -226,11 +226,11 @@ export default function CardFace({
               }`}>
                 {isLifetime ? 'Life' : membershipType}
               </span>
-              <p className={`text-[10px] font-semibold uppercase tracking-widest ${light ? 'text-gray-600' : 'text-white/70'}`} style={{ textShadow: subTextShadow }}>
+              <p className={`text-xs font-bold uppercase tracking-[0.2em] ${light ? 'text-gray-800' : 'text-white'}`} style={{ textShadow: subTextShadow }}>
                 Member ID
               </p>
             </div>
-            <p className={`text-xl font-mono font-black tracking-[0.18em] mt-0.5 ${light ? 'text-gray-900' : 'text-white'}`} style={{ textShadow, fontVariantNumeric: 'tabular-nums' }}>
+            <p className={`text-base font-mono font-bold tracking-widest mt-0.5 ${light ? 'text-gray-900' : 'text-white'}`} style={{ textShadow }}>
               {memberId}
             </p>
           </div>
