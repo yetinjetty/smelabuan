@@ -123,7 +123,11 @@ export default async function CardPage() {
               </p>
             )}
           </div>
-          <span className="text-xs bg-white/20 px-3 py-1.5 rounded-full font-medium self-end mb-0.5">
+          <span className={`text-xs px-3 py-1.5 rounded-full font-medium self-end mb-0.5 ${
+            member.membership_type === 'Life'
+              ? 'bg-amber-100 text-amber-700'
+              : 'bg-blue-100 text-blue-700'
+          }`}>
             {member.membership_type === 'Life' ? 'Lifetime' : member.membership_type}
           </span>
         </div>
