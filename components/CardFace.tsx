@@ -95,7 +95,6 @@ export default function CardFace({
   const sheetEl    = useRef<HTMLDivElement>(null)
   const backdropEl = useRef<HTMLDivElement>(null)
   const carouselEl = useRef<HTMLDivElement>(null)
-  const scrollTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const dragStartY  = useRef(0)
   const dragOffset  = useRef(0)
 
@@ -160,18 +159,6 @@ export default function CardFace({
     setBg(pending)
     try { localStorage.setItem(LS_KEY, pending) } catch { /* ignore */ }
     closePicker()
-  }
-
-  // Scroll-to-select: debounce scroll end, pick whichever card is snapped
-  function onCarouselScroll() {
-    if (scrollTimer.current) clearTimeout(scrollTimer.current)
-    scrollTimer.current = setTimeout(() => {
-      const el = carouselEl.current
-      if (!el) return
-      const idx = Math.round(el.scrollLeft / (CARD_W + CARD_GAP))
-      const clamped = Math.max(0, Math.min(idx, backgrounds.length - 1))
-      if (backgrounds[clamped]) setPending(backgrounds[clamped].src)
-    }, 80)
   }
 
   // ── Sheet swipe-to-dismiss ───────────────────────────────────────────────
@@ -301,10 +288,9 @@ export default function CardFace({
               <p className="text-xs text-gray-400 text-center mt-0.5">Swipe to browse, then tap Apply</p>
             </div>
 
-            {/* Horizontal scroll-to-select carousel */}
+            {/* Horizontal tap-to-select carousel */}
             <div
               ref={carouselEl}
-              onScroll={onCarouselScroll}
               className="flex pb-5"
               style={{
                 overflowX: 'scroll',
@@ -319,8 +305,9 @@ export default function CardFace({
               {backgrounds.map((b) => {
                 const isSelected = pending === b.src
                 return (
-                  <div
+                  <button
                     key={b.src}
+                    onClick={() => setPending(b.src)}
                     className="flex-none rounded-2xl overflow-hidden relative"
                     style={{
                       width: CARD_W,
@@ -346,7 +333,7 @@ export default function CardFace({
                         </svg>
                       </span>
                     )}
-                  </div>
+                  </button>
                 )
               })}
             </div>
