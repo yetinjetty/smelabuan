@@ -90,10 +90,10 @@ export default async function CardPage() {
 
       {/* Card */}
       <div
-        className="w-full max-w-sm rounded-3xl p-6 text-white shadow-xl"
-        style={{ background: 'linear-gradient(135deg, #E05A4E 0%, #c0392b 100%)' }}
+        className="w-full max-w-sm rounded-3xl p-6 text-white shadow-xl flex flex-col justify-between"
+        style={{ background: 'linear-gradient(135deg, #E05A4E 0%, #c0392b 100%)', aspectRatio: '1.586 / 1' }}
       >
-        <div className="flex items-start justify-between mb-8">
+        <div className="flex items-start justify-between">
           <div>
             <p className="text-xs text-white/60 uppercase tracking-widest">SME Association</p>
             <p className="text-sm font-medium text-white/80">Labuan</p>
@@ -103,7 +103,7 @@ export default async function CardPage() {
           </span>
         </div>
 
-        <div className="mb-6">
+        <div>
           <p className="text-2xl font-bold">{member.full_name}</p>
           {member.business_name && (
             <p className="text-sm text-white/70 mt-1">{member.business_name}</p>
