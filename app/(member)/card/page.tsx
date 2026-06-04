@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { format } from 'date-fns'
+import Image from 'next/image'
 import type { Member } from '@/lib/types'
 import SignOutButton from './SignOutButton'
 
@@ -94,17 +95,20 @@ export default async function CardPage() {
         style={{ background: 'linear-gradient(135deg, #E05A4E 0%, #c0392b 100%)', aspectRatio: '1.586 / 1' }}
       >
         <div className="flex items-start justify-between">
-          <div>
-            <p className="text-xs text-white/60 uppercase tracking-widest">SME Association</p>
-            <p className="text-sm font-medium text-white/80">Labuan</p>
-          </div>
+          <Image
+            src="/SMEA Labuan Logo v1.png"
+            alt="SMEA Labuan"
+            width={64}
+            height={48}
+            className="object-contain"
+          />
           <span className="text-xs bg-white/20 px-3 py-1 rounded-full">
             {member.membership_type}
           </span>
         </div>
 
         <div>
-          <p className="text-2xl font-bold">{member.full_name}</p>
+          <p className="text-lg font-bold leading-snug">{member.full_name}</p>
           {member.business_name && (
             <p className="text-sm text-white/70 mt-1">{member.business_name}</p>
           )}
