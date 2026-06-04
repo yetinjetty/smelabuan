@@ -71,8 +71,8 @@ export default function CardFace({
 
   // Contrasting halo so text stays legible over busy / mid-tone areas
   const textShadow = light
-    ? '0 1px 3px rgba(255,255,255,0.9), 0 0 2px rgba(255,255,255,0.9)'
-    : '0 1px 4px rgba(0,0,0,0.7), 0 0 2px rgba(0,0,0,0.6)'
+    ? '0 2px 6px rgba(255,255,255,1), 0 0 4px rgba(255,255,255,1), 0 0 12px rgba(255,255,255,0.8)'
+    : '0 2px 8px rgba(0,0,0,0.9), 0 0 4px rgba(0,0,0,0.85), 0 0 14px rgba(0,0,0,0.6)'
 
   return (
     <div
