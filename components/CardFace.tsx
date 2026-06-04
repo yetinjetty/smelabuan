@@ -228,7 +228,13 @@ export default function CardFace({
             <p className={`text-xs font-bold uppercase tracking-[0.2em] mt-1.5 ${light ? 'text-gray-800' : 'text-white'}`} style={{ textShadow: subTextShadow }}>
               Member ID
             </p>
-            <p className={`text-base font-mono font-bold tracking-widest mt-0.5 ${light ? 'text-gray-900' : 'text-white'}`} style={{ textShadow }}>
+            <p
+              className={`text-base font-mono font-bold tracking-widest mt-0.5 ${light ? 'text-gray-900' : 'text-white'}`}
+              style={{
+                textShadow,
+                WebkitTextStroke: light ? '0.5px rgba(0,0,0,0.6)' : '0.5px rgba(255,255,255,0.6)',
+              }}
+            >
               {memberId}
             </p>
           </div>
@@ -238,7 +244,10 @@ export default function CardFace({
 
         {/* Bottom left: name / company / expiry */}
         <div className="relative">
-          <p className={`text-2xl font-bold leading-snug ${light ? 'text-gray-900' : 'text-white'}`} style={{ textShadow }}>
+          <p
+            className={`text-2xl font-bold leading-snug ${light ? 'text-gray-900' : 'text-white'}`}
+            style={{ textShadow, fontFamily: 'var(--font-josefin), sans-serif' }}
+          >
             {fullName}
           </p>
           {businessName && (
