@@ -1,9 +1,9 @@
 import { redirect } from 'next/navigation'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { format } from 'date-fns'
-import Image from 'next/image'
+import { format } from 'date-fns' // still used for info rows
 import type { Member } from '@/lib/types'
 import SignOutButton from './SignOutButton'
+import CardFace from '@/components/CardFace'
 
 export default async function CardPage() {
   const supabase = await createClient()
@@ -95,49 +95,15 @@ export default async function CardPage() {
       </div>
       <div className="w-full px-4 py-6 flex flex-col items-center">
 
-      {/* Card — portrait, standard ID card proportions (54 × 86 mm) */}
-      <div
-        className="w-full max-w-xs rounded-3xl p-7 text-white shadow-none hover:shadow-2xl active:shadow-2xl transition-shadow duration-200 flex flex-col justify-between relative overflow-hidden"
-        style={{ backgroundImage: "url('/card1.jpg')", backgroundSize: 'cover', backgroundPosition: 'center', aspectRatio: '1 / 1.586' }}
-      >
-
-        {/* Top: logo only */}
-        <div className="relative">
-          <Image
-            src="/SMEA Labuan Logo v1.png"
-            alt="SMEA Labuan"
-            width={72}
-            height={54}
-            className="object-contain"
-          />
-        </div>
-
-        {/* Middle: spacer */}
-        <div className="flex-1" />
-
-        {/* Bottom: name, company, ID, expiry + membership type badge */}
-        <div className="relative flex items-end justify-between">
-          <div>
-            <p className="text-2xl font-bold leading-snug">{member.full_name}</p>
-            {member.business_name && (
-              <p className="text-sm text-white/70 mt-1 leading-snug">{member.business_name}</p>
-            )}
-            <p className="text-lg font-mono font-bold tracking-widest mt-3">{member.member_id}</p>
-            {member.expiry_date && (
-              <p className="text-xs text-white/60 mt-1">
-                Exp {format(new Date(member.expiry_date), 'MMM yyyy')}
-              </p>
-            )}
-          </div>
-          <span className={`text-xs px-3 py-1.5 rounded-full font-medium self-end mb-0.5 ${
-            member.membership_type === 'Life'
-              ? 'bg-amber-100 text-amber-700'
-              : 'bg-blue-100 text-blue-700'
-          }`}>
-            {member.membership_type === 'Life' ? 'Lifetime' : member.membership_type}
-          </span>
-        </div>
-      </div>
+      {/* Card */}
+      <CardFace
+        fullName={member.full_name}
+        businessName={member.business_name}
+        memberId={member.member_id}
+        membershipType={member.membership_type}
+        expiryDate={member.expiry_date}
+        backgroundImage="/card1.jpg"
+      />
 
       {/* Member info rows */}
       <div className="w-full max-w-sm mt-4 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
