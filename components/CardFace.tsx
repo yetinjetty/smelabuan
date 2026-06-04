@@ -214,40 +214,47 @@ export default function CardFace({
           aspectRatio: '1 / 1.586',
         }}
       >
-        {/* Top row: logo + member ID */}
-        <div className="relative flex items-start justify-between">
-          <div className={`transition-all duration-300 ${logoDark ? 'bg-white rounded-xl px-2 py-1.5' : ''}`}>
-            <Image src="/SMEA Labuan Logo v1.png" alt="SMEA Labuan" width={72} height={54} className="object-contain" />
+        {/* Top: logo */}
+        <div className="relative self-start">
+          <div className={`transition-all duration-300 ${logoDark ? 'bg-white rounded-xl px-2 py-2' : ''}`}>
+            <Image src="/SMEA Labuan Logo v1.png" alt="SMEA Labuan" width={96} height={72} className="object-contain" />
           </div>
-          <p className={`text-sm font-mono font-bold tracking-widest ${light ? 'text-gray-900' : 'text-white'}`} style={{ textShadow }}>
-            {memberId}
-          </p>
         </div>
 
         <div className="flex-1" />
 
-        {/* Bottom: name / company / expiry + badge */}
-        <div className="relative flex items-end justify-between">
-          <div>
-            <p className={`text-2xl font-bold leading-snug ${light ? 'text-gray-900' : 'text-white'}`} style={{ textShadow }}>
-              {fullName}
+        {/* Bottom: name / company / member ID + label + badge */}
+        <div className="relative">
+          <p className={`text-2xl font-bold leading-snug ${light ? 'text-gray-900' : 'text-white'}`} style={{ textShadow }}>
+            {fullName}
+          </p>
+          {businessName && (
+            <p className={`text-sm mt-4 leading-snug font-medium ${light ? 'text-gray-800' : 'text-white'}`} style={{ textShadow: subTextShadow }}>
+              {businessName}
             </p>
-            {businessName && (
-              <p className={`text-sm mt-4 leading-snug font-medium ${light ? 'text-gray-800' : 'text-white'}`} style={{ textShadow: subTextShadow }}>
-                {businessName}
-              </p>
-            )}
+          )}
+          {/* Member ID block */}
+          <div className="mt-4">
+            <p className={`text-[10px] font-semibold uppercase tracking-widest ${light ? 'text-gray-600' : 'text-white/70'}`} style={{ textShadow: subTextShadow }}>
+              Member ID
+            </p>
+            <p className={`text-lg font-mono font-bold tracking-widest mt-0.5 ${light ? 'text-gray-900' : 'text-white'}`} style={{ textShadow }}>
+              {memberId}
+            </p>
+          </div>
+          {/* Membership type badge + expiry */}
+          <div className="flex items-center justify-between mt-2">
+            <span className={`text-xs px-3 py-1.5 rounded-full font-medium ${
+              isLifetime ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
+            }`}>
+              {isLifetime ? 'Life' : membershipType}
+            </span>
             {expiryDate && (
-              <p className={`text-xs mt-1.5 font-medium ${light ? 'text-gray-800' : 'text-white'}`} style={{ textShadow: subTextShadow }}>
+              <p className={`text-xs font-medium ${light ? 'text-gray-800' : 'text-white'}`} style={{ textShadow: subTextShadow }}>
                 Exp {format(new Date(expiryDate), 'MMM yyyy')}
               </p>
             )}
           </div>
-          <span className={`text-xs px-3 py-1.5 rounded-full font-medium self-end mb-0.5 ${
-            isLifetime ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
-          }`}>
-            {isLifetime ? 'Lifetime' : membershipType}
-          </span>
         </div>
       </button>
 
